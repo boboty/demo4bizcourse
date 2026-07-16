@@ -1,0 +1,24 @@
+$ /usr/bin/time -p ./scripts/test.sh
+.......F..........                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_null_display_name_is_mapped_to_empty_string _______________
+
+    def test_null_display_name_is_mapped_to_empty_string() -> None:
+        user = make_user(1, display_name=None)
+
+>       row = UserExportService._to_row(user)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_user_export_service.py:34:
+app/services/user_export_service.py:44: in _to_row
+    clean_text(user.display_name),
+app/utils/excel.py:14: in clean_text
+    return value.strip()
+E   AttributeError: 'NoneType' object has no attribute 'strip'
+
+=========================== short test summary info ============================
+FAILED tests/test_user_export_service.py::test_null_display_name_is_mapped_to_empty_string
+1 failed, 17 passed in 0.36s
+real 0.73
+user 0.58
+sys 0.06

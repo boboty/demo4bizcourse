@@ -51,4 +51,3 @@ def test_more_than_maximum_rows_is_rejected() -> None:
 
     with pytest.raises(ExportLimitExceeded, match="10001.*10000"):
         service.export_users()
-

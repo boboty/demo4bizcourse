@@ -1,10 +1,14 @@
+from datetime import datetime, timezone
 from io import BytesIO
 
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 
 from app.api.users import EXCEL_MEDIA_TYPE
-from app.services.user_export_service import USER_EXPORT_HEADERS
+from app.main import create_app
+from app.models.user import User, UserStatus
+from app.repositories.user_repository import InMemoryUserRepository
+from app.services.user_export_service import MAX_EXPORT_ROWS, USER_EXPORT_HEADERS
 
 
 def read_rows(content: bytes) -> list[tuple[object, ...]]:
@@ -60,3 +64,24 @@ def test_export_and_list_share_filter_semantics(client: TestClient) -> None:
     list_ids = [item["id"] for item in list_response.json()["items"]]
     export_ids = [row[0] for row in read_rows(export_response.content)[1:]]
     assert export_ids == list_ids == [10]
+
+
+def test_export_over_limit_returns_http_422() -> None:
+    users = [
+        User(
+            id=index,
+            username=f"user{index}",
+            display_name="Demo User",
+            email=f"user{index}@example.com",
+            status=UserStatus.ACTIVE,
+            created_at=datetime(2024, 6, 1, 12, 30, tzinfo=timezone.utc),
+        )
+        for index in range(1, MAX_EXPORT_ROWS + 2)
+    ]
+
+    with TestClient(create_app(InMemoryUserRepository(users))) as oversized_client:
+        response = oversized_client.get("/api/users/export")
+
+    assert response.status_code == 422
+    assert "10001" in response.json()["detail"]
+    assert "10000" in response.json()["detail"]
