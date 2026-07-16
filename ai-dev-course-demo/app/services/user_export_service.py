@@ -41,7 +41,7 @@ class UserExportService:
         return [
             user.id,
             clean_text(user.username),
-            clean_text(user.display_name),
+            clean_text(user.display_name or ""),
             clean_text(user.email),
             user.status.value,
             user.created_at.strftime("%Y-%m-%d %H:%M:%S"),

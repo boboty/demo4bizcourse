@@ -42,6 +42,16 @@ def test_empty_export_contains_headers_and_no_data_rows(client: TestClient) -> N
     assert read_rows(response.content) == [USER_EXPORT_HEADERS]
 
 
+def test_null_display_name_is_an_empty_excel_cell(client: TestClient) -> None:
+    response = client.get("/api/users/export", params={"username": "ann.ops"})
+
+    assert response.status_code == 200
+    exported_user = read_rows(response.content)[1]
+    assert exported_user[1] == "ann.ops"
+    # openpyxl 将写入的空字符串回读为 None，二者都表示空单元格。
+    assert exported_user[2] is None
+
+
 def test_export_and_list_share_filter_semantics(client: TestClient) -> None:
     params = {"username": "ANN", "status": "active"}
     list_response = client.get("/api/users", params=params)
