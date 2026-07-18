@@ -37,6 +37,35 @@ GET /api/users/export?username=ali&status=active
 - Git 检查点说明：`DEMO_CHECKPOINTS.md`
 - 完整运行手册：`DEMO_RUNBOOK.md`
 
+## 课堂 Demo 页面
+
+终端 A（准备与启动）：
+
+```bash
+./scripts/setup.sh
+./scripts/run.sh
+```
+
+终端 B（测试）：
+
+```bash
+./scripts/test.sh
+```
+
+- 页面地址：`http://127.0.0.1:8000/demo/users`（单文件静态页 `app/static/demo_users.html`，无外部 CDN，离线可用）
+- 页面复用列表接口：`GET /api/users?page=&page_size=&username=&status=`，页面默认每页 8 条
+- 导出功能：已连接现有 `GET /api/users/export`，按当前用户名/状态筛选导出全部匹配结果（不受分页限制）
+- 演示数据：应用启动时由 `InMemoryUserRepository.with_sample_data()` 在内存中幂等构建 23 条用户（含 active/inactive/pending 与空显示名边界），每页 8 条时默认数据 3 页、active 筛选 2 页；不影响测试
+- 浏览器冒烟验收（可选，需系统 Python 已装 Playwright）：`python3 scripts/demo_smoke_check.py`
+
+最小课堂操作步骤：
+
+1. 打开页面，确认无筛选时显示 8 条、共 3 页；
+2. 输入用户名（如 `chen`）或选择状态（如 `active`）后点“查询”，观察筛选摘要与分页回到第一页；
+3. 点“重置”恢复默认条件；
+4. 点“导出 Excel”，观察下载的 `users.xlsx` 与当前筛选一致；
+5. 展开页面底部“请求详情”，对照页面与 API 请求/响应。
+
 ## 演示重置
 
 ```bash
