@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Demo 2 · 完整任务包驱动研发闭环</title>
+<style>
+  :root {
+    --border: #c9ced6;
+    --text: #1c2330;
+    --muted: #4a5462;
+    --bg-soft: #f2f4f7;
+    --ok: #1a7f37;
+    --info: #175cd3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 10px 16px 28px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text);
+    background: #ffffff;
+  }
+  main { max-width: 1320px; margin: 0 auto; }
+
+  /* ---- 顶部导航 ---- */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .top-bar a.nav-home { font-size: 14px; color: var(--info); text-decoration: none; font-weight: 600; }
+  .top-bar a.nav-home:hover { text-decoration: underline; }
+  .top-bar .page-label { margin-left: 4px; font-size: 14px; font-weight: 700; color: var(--text); }
+  .nav-btn, .guide-toggle {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .guide-toggle { background: var(--bg-soft); margin-left: auto; }
+  :focus-visible { outline: 3px solid #84caff; outline-offset: 1px; }
+
+  h1 { font-size: 21px; margin: 4px 0 2px; }
+  .subtitle { font-size: 15px; color: var(--muted); margin: 0 0 8px; }
+
+  /* ---- 讲师说明 ---- */
+  details.instructor-guide {
+    margin: 0 0 10px;
+    border: 1px solid #f0c36d;
+    border-radius: 8px;
+    padding: 4px 14px;
+    font-size: 15px;
+    background: #fffdf5;
+  }
+  details.instructor-guide[hidden] { display: none; }
+  details.instructor-guide summary { cursor: pointer; font-size: 15px; font-weight: 600; padding: 4px 0; }
+  .guide-body h2 { font-size: 16px; margin: 10px 0 4px; }
+  .guide-body p, .guide-body li { font-size: 15px; }
+  .guide-body ol { margin: 4px 0; padding-left: 24px; }
+  .guide-body p { margin: 4px 0; }
+
+  /* ---- 工作区：任务包 + 执行控制台 ---- */
+  .workspace {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+
+  .task-col { display: flex; flex-direction: column; gap: 6px; }
+  details.task-package {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    padding: 8px 16px;
+  }
+  details.task-package summary { cursor: pointer; font-size: 16px; font-weight: 700; padding: 6px 0; }
+  .task-body h2 { font-size: 16px; margin: 6px 0 8px; }
+  pre.task-text {
+    margin: 0 0 8px;
+    max-height: 520px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .task-hint { font-size: 14px; color: var(--muted); margin: 0; }
+
+  .console-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ---- 阶段进度条 ---- */
+  .stage-track {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .stage-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    background: #fff;
+    color: var(--muted);
+  }
+  .stage-dot .dot-no { font-weight: 700; }
+  .stage-dot.pending { opacity: 0.6; }
+  .stage-dot.active { border-color: #f0c36d; background: #fffdf0; color: var(--text); font-weight: 600; }
+  .stage-dot.done { border-color: var(--ok); background: #ecf9ef; color: var(--ok); font-weight: 700; }
+
+  /* ---- 控制按钮 ---- */
+  .console-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ctrl-btn {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 14.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .ctrl-btn.primary { background: #1c2330; color: #fff; border-color: #1c2330; font-weight: 700; }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ctrl-btn:hover:not(:disabled) { filter: brightness(0.95); }
+
+  /* ---- 执行控制台（终端风格） ---- */
+  .console-output {
+    height: 430px;
+    overflow-y: auto;
+    background: #0d1117;
+    color: #d6f5df;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .console-placeholder { color: #7d8b9a; }
+  .log-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #22303c; }
+  .log-block:last-child { border-bottom: none; }
+  .log-block h3 { margin: 0 0 6px; font-size: 16px; color: #7ee2a8; }
+  .log-checklist, .log-plain { margin: 0 0 6px; padding-left: 18px; list-style: none; }
+  .log-checklist li { margin: 2px 0; }
+  .log-plain li { margin: 2px 0; color: #cfe0ff; }
+  .log-plain li::before { content: "› "; color: #7ee2a8; }
+  pre.log-terminal, pre.log-diff {
+    margin: 6px 0;
+    background: #05080b;
+    border: 1px solid #22303c;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #eef7f0;
+    white-space: pre-wrap;
+  }
+  .log-note { color: #cfe0ff; margin: 6px 0; }
+  .log-note-strong { color: #7ee2a8; font-weight: 700; margin: 6px 0; }
+  .log-conclusion { color: #f0c36d; font-weight: 600; margin: 8px 0 0; }
+  .log-running { border-bottom: none; }
+  .log-running-text {
+    margin: 0;
+    color: #9fb3c8;
+    font-style: italic;
+  }
+  .evidence-cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+  .evidence-card {
+    flex: 1 1 200px;
+    background: #05080b;
+    border: 1px solid #22303c;
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+  .evidence-card h4 { margin: 0 0 4px; font-size: 14px; color: #7ee2a8; }
+  .evidence-card pre { margin: 0; background: none; border: none; padding: 0; color: #eef7f0; }
+
+  /* ---- 完成报告 ---- */
+  .final-report {
+    margin-top: 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    background: #fff;
+  }
+  .final-report[hidden] { display: none; }
+  .final-report h2 { font-size: 18px; margin: 0 0 8px; }
+  pre.report-summary {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    white-space: pre-wrap;
+    margin: 0 0 12px;
+  }
+  .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px; }
+  .mapping-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; background: var(--bg-soft); }
+  .mapping-item h3 { font-size: 15px; margin: 0 0 4px; }
+  .mapping-item p { font-size: 14.5px; margin: 0; color: var(--muted); }
+  .final-highlight {
+    border-left: 4px solid var(--info);
+    background: #eef4ff;
+    padding: 10px 16px;
+    margin: 0 0 12px;
+  }
+  .final-highlight p { margin: 2px 0; font-size: 16px; }
+  .final-conclusion-main p, .final-conclusion-aux p { margin: 2px 0; font-size: 16px; }
+  .final-conclusion-main { font-weight: 700; margin: 0 0 8px; }
+  .final-conclusion-aux { color: var(--muted); margin: 0; }
+
+  /* ---- Demo 1 / Demo 2 对照 ---- */
+  .comparison { margin-top: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; }
+  .comparison h2 { font-size: 18px; margin: 0 0 10px; }
+  .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .comparison-col h3 { font-size: 15px; margin: 0 0 6px; }
+  .flow-list { margin: 0 0 8px; padding-left: 20px; font-size: 14.5px; }
+  .flow-list li { margin: 2px 0; }
+  .comparison-note { font-size: 14.5px; color: var(--muted); margin: 0; }
+  @media (max-width: 900px) { .comparison-grid, .mapping-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <nav class="top-bar" aria-label="Demo 2 导航">
+    <a class="nav-home" href="/demo">← 返回演示导航</a>
+    <a class="nav-home" href="/demo/users/base">← 返回 Demo 1</a>
+    <span class="page-label">Demo 2 · 完整任务包驱动研发闭环</span>
+    <button type="button" class="guide-toggle" id="btn-toggle-guide" aria-expanded="false">显示讲师说明</button>
+    <button type="button" class="nav-btn" id="btn-reset-top">重新演示</button>
+  </nav>
+
+  <h1>Demo 2 · 完整任务包驱动研发闭环</h1>
+  <p class="subtitle">把完整任务包一次性交给研发智能体，观察它如何沿着目标、边界和验收标准完成执行闭环。</p>
+
+  <details class="instructor-guide" id="instructor-guide" hidden>
+    <summary>课堂演示说明（讲师用，点击展开 / 收起）</summary>
+    <div class="guide-body">
+      <section>
+        <h2>本轮给AI的命令</h2>
+        <p>不是一句命令，而是左侧完整任务包原文。</p>
+      </section>
+      <section>
+        <h2>当前演示什么</h2>
+        <p>模拟Codex根据完整任务包读取工程、制定计划、实现功能、生成测试、运行验证并输出证据。</p>
+      </section>
+      <section>
+        <h2>固定演示步骤</h2>
+        <ol>
+          <li>先展示完整任务包，强调目标、边界和验收标准。</li>
+          <li>点击“提交任务包并开始执行”。</li>
+          <li>在“制定计划”阶段停顿，指出实现计划和验证计划同时产生。</li>
+          <li>在测试通过时指出：没有经历Demo 1的两次需求遗漏。</li>
+          <li>在浏览器验收阶段强调：测试通过后仍需证明原始目标。</li>
+          <li>展示最终验收标准与证据映射。</li>
+          <li>切换到Demo 1与Demo 2对比。</li>
+        </ol>
+      </section>
+      <section>
+        <h2>本轮结论</h2>
+        <p>完整任务包不会让AI变成永不出错的机器，但能显著减少因目标和边界缺失造成的无效返工。</p>
+      </section>
+    </div>
+  </details>
+
+  <section class="workspace">
+    <div class="task-col">
+      <details class="task-package" id="task-package" open>
+        <summary>提交给 Codex 的完整任务包</summary>
+        <div class="task-body">
+          <h2>任务：为用户列表增加 Excel 导出功能</h2>
+          <pre class="task-text">【任务目标】
+
+为现有用户列表增加 Excel 导出能力，导出当前筛选条件下的全部结果，而不是当前分页数据。
+
+【功能要求】
+
+1. 用户列表页面增加“导出 Excel”按钮。
+2. 导出复用当前 username 和 status 筛选条件。
+3. 导出请求不得携带 page 和 page_size。
+4. 未设置筛选条件时，应导出全部23条用户数据。
+5. 空姓名、空字符串及空结果必须正常处理，不得导致接口异常。
+6. 生成的文件必须是真实有效、可以正常打开和读取的 xlsx 文件。
+7. 不得破坏现有用户列表、筛选和分页功能。
+
+【技术约束】
+
+1. 保持现有 FastAPI 后端结构。
+2. 前端继续使用静态 HTML、CSS 和原生 JavaScript。
+3. 不引入 React、Vue、Vite、npm 或外部 CDN。
+4. 正式接口使用 /api/users/export。
+5. 实现应尽量复用现有用户查询与筛选逻辑。
+6. 不创建新的服务、端口、分支或 worktree。
+
+【验收标准】
+
+1. 默认状态导出23条数据。
+2. username 筛选后，只导出匹配结果。
+3. status 筛选后，只导出匹配结果。
+4. username 与 status 组合筛选正确。
+5. 导出请求包含筛选参数，但不包含 page 和 page_size。
+6. 姓名为空的 bob 可以正常导出。
+7. 无匹配数据时，仍生成合法 xlsx，表头正确且无数据行。
+8. 文件扩展名、Content-Type 和 Content-Disposition 正确。
+9. xlsx 文件可以被程序真实读取，记录数量与筛选结果一致。
+10. 现有列表、筛选和分页功能无回归。
+
+【验证要求】
+
+1. 增加或更新自动化测试。
+2. 运行完整测试集。
+3. 使用真实浏览器执行默认导出、筛选导出和空结果导出。
+4. 检查浏览器实际发出的请求参数。
+5. 使用 xlsx 读取工具检查导出文件内容和行数。
+6. 最终输出变更文件、验证结果、验收标准映射和残余风险。</pre>
+        </div>
+      </details>
+      <p class="task-hint">这次交给AI的，不再只是一句话，而是一份包含目标、边界、约束和验收标准的工作定义。</p>
+    </div>
+
+    <div class="console-col">
+      <div class="stage-track" id="stage-track" role="list" aria-label="执行阶段">
+        <div class="stage-dot pending" data-stage="1"><span class="dot-no">01</span><span class="dot-label">读取任务与项目</span></div>
+        <div class="stage-dot pending" data-stage="2"><span class="dot-no">02</span><span class="dot-label">制定计划</span></div>
+        <div class="stage-dot pending" data-stage="3"><span class="dot-no">03</span><span class="dot-label">实现功能</span></div>
+        <div class="stage-dot pending" data-stage="4"><span class="dot-no">04</span><span class="dot-label">建立验证证据</span></div>
+        <div class="stage-dot pending" data-stage="5"><span class="dot-no">05</span><span class="dot-label">运行自动化测试</span></div>
+        <div class="stage-dot pending" data-stage="6"><span class="dot-no">06</span><span class="dot-label">真实场景验证</span></div>
+        <div class="stage-dot pending" data-stage="7"><span class="dot-no">07</span><span class="dot-label">完成与证据映射</span></div>
+      </div>
+
+      <div class="console-controls">
+        <button type="button" class="ctrl-btn primary" id="btn-start">提交任务包并开始执行</button>
+        <button type="button" class="ctrl-btn" id="btn-pause">暂停</button>
+        <button type="button" class="ctrl-btn" id="btn-continue">继续</button>
+        <button type="button" class="ctrl-btn" id="btn-step">单步执行</button>
+        <button type="button" class="ctrl-btn" id="btn-jump-end">直接查看最终结果</button>
+        <button type="button" class="ctrl-btn" id="btn-reset">重新演示</button>
+      </div>
+
+      <div class="console-output" id="console-log">
+        <p class="console-placeholder" id="console-placeholder">点击“提交任务包并开始执行”，或使用“单步执行”查看第一阶段。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-report" id="final-report" hidden>
+    <h2>07 · 完成与证据映射</h2>
+    <pre class="report-summary">任务状态：PASS
+
+代码实现：PASS
+自动化测试：18/18 PASS
+浏览器 smoke：PASS
+xlsx内容验证：PASS
+原功能回归：PASS
+验收标准：10/10 已覆盖
+残余风险：未发现阻断性风险</pre>
+
+    <div class="mapping-grid">
+      <div class="mapping-item">
+        <h3>目标：导出全部筛选结果</h3>
+        <p>证据：默认23条、筛选数量一致、请求无分页参数</p>
+      </div>
+      <div class="mapping-item">
+        <h3>边界：空姓名与空结果</h3>
+        <p>证据：bob导出成功、空结果工作簿可读取</p>
+      </div>
+      <div class="mapping-item">
+        <h3>质量：真实有效的xlsx</h3>
+        <p>证据：程序读取成功、响应头正确</p>
+      </div>
+      <div class="mapping-item">
+        <h3>回归：列表功能不受影响</h3>
+        <p>证据：列表、筛选、分页 smoke PASS</p>
+      </div>
+    </div>
+
+    <div class="final-highlight">
+      <p>如果这个导出功能从一开始收到的就是完整任务包，</p>
+      <p>AI就不需要先经历“空值失败”和“只导出当前页”两轮弯路。</p>
+      <p>它可以从一开始就围绕同一组目标、边界和验收标准，</p>
+      <p>完成读取、计划、实现、测试、验证和交付。</p>
+    </div>
+
+    <div class="final-conclusion-main">
+      <p>完整任务包的价值，不是让AI绝不犯错，</p>
+      <p>而是让实现、测试和验收从一开始对准同一个目标。</p>
+    </div>
+    <div class="final-conclusion-aux">
+      <p>AI写出代码不是闭环；</p>
+      <p>目标、实现、反馈和证据形成一致链条，才是研发闭环。</p>
+    </div>
+  </section>
+
+  <section class="comparison" id="comparison">
+    <h2>Demo 1 与 Demo 2 对照</h2>
+    <div class="comparison-grid">
+      <div class="comparison-col">
+        <h3>模糊需求驱动</h3>
+        <ol class="flow-list">
+          <li>一句话开始</li>
+          <li>默认理解</li>
+          <li>功能出现</li>
+          <li>空值失败</li>
+          <li>补测试</li>
+          <li>测试通过</li>
+          <li>目标仍遗漏</li>
+          <li>再次修正</li>
+          <li>最终通过</li>
+        </ol>
+        <p class="comparison-note">问题不是AI不会写，而是工作没有被完整定义。</p>
+      </div>
+      <div class="comparison-col">
+        <h3>完整任务包驱动</h3>
+        <ol class="flow-list">
+          <li>目标与边界明确</li>
+          <li>读取工程</li>
+          <li>同时规划实现与验证</li>
+          <li>完成功能</li>
+          <li>自动化测试</li>
+          <li>浏览器验收</li>
+          <li>一次形成证据闭环</li>
+        </ol>
+        <p class="comparison-note">不是省掉验证，而是避免验证到最后才发现目标定义不完整。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+// 讲师说明整体显示/隐藏：与其他 Demo 页面共用同一个 sessionStorage key。
+var GUIDE_PREF_KEY = "ai-demo.instructorNotes";
+
+function $(id) { return document.getElementById(id); }
+
+function guidePrefVisible() {
+  try { return window.sessionStorage.getItem(GUIDE_PREF_KEY) === "1"; }
+  catch (err) { return false; }
+}
+
+function applyGuidePref() {
+  var visible = guidePrefVisible();
+  var guide = $("instructor-guide");
+  guide.hidden = !visible;
+  var toggle = $("btn-toggle-guide");
+  toggle.textContent = visible ? "隐藏讲师说明" : "显示讲师说明";
+  toggle.setAttribute("aria-expanded", visible ? "true" : "false");
+}
+
+$("btn-toggle-guide").addEventListener("click", function () {
+  var visible = !guidePrefVisible();
+  try { window.sessionStorage.setItem(GUIDE_PREF_KEY, visible ? "1" : "0"); }
+  catch (err) { /* sessionStorage 不可用时仅当前页生效 */ }
+  applyGuidePref();
+});
+
+applyGuidePref();
+
+// ============================================================
+// Codex 执行闭环模拟：固定顺序、固定内容、固定短延迟，
+// 不调用任何模型接口，不发出网络请求，不修改项目文件。
+// ============================================================
+// 每个阶段的固定执行时长（毫秒）：01..07 依次对应，单步 10~60 秒，总计 300000ms（约 5 分钟）。
+// 时长按各阶段的真实工作量估算（实现功能/真实场景验证最长，运行测试/输出报告最短），
+// 不使用随机值，暂停/继续会保留剩余时间，保证课堂复现稳定可预期。
+var STAGE_DELAYS_MS = [40000, 35000, 60000, 55000, 25000, 60000, 25000];
+
+var STAGES = [
+  {
+    id: 1,
+    title: "01 · 读取任务与项目",
+    kind: "checklist",
+    lines: [
+      "已读取任务目标、功能要求、技术约束与10项验收标准",
+      "已识别项目为 FastAPI + 静态 HTML/CSS/原生 JavaScript",
+      "已定位用户列表页面、查询接口、数据模型和测试目录",
+      "已确认现有筛选参数：username、status",
+      "已确认现有分页参数：page、page_size",
+      "已确认不得引入前端框架或外部依赖"
+    ],
+    conclusion: "先建立工程上下文，再决定如何修改。"
+  },
+  {
+    id: 2,
+    title: "02 · 制定计划",
+    kind: "plain",
+    lines: [
+      "计划1：复用现有用户筛选逻辑，新增正式导出接口",
+      "计划2：前端导出只传 username 和 status，不传分页参数",
+      "计划3：统一处理空值和空结果",
+      "计划4：生成真实 xlsx 并设置下载响应头",
+      "计划5：补充接口测试、文件内容测试和浏览器 smoke",
+      "计划6：最后运行完整回归并逐项映射验收标准"
+    ],
+    conclusion: "实现计划与验证计划同时形成，而不是写完代码再考虑怎么证明。"
+  },
+  {
+    id: 3,
+    title: "03 · 实现功能",
+    kind: "checklist",
+    lines: [
+      "新增 GET /api/users/export",
+      "复用 username/status 筛选逻辑",
+      "导出查询不应用 page/page_size",
+      "空姓名统一转换为空字符串",
+      "空结果保留表头并生成合法工作簿",
+      "页面增加“导出 Excel”按钮",
+      "前端导出参数与列表分页参数解耦"
+    ],
+    diff: [
+      "M app/main.py",
+      "M app/services/users.py",
+      "M app/static/users.html",
+      "M app/static/users.js",
+      "A tests/test_user_export.py",
+      "A tests/browser_smoke.py"
+    ]
+  },
+  {
+    id: 4,
+    title: "04 · 建立验证证据",
+    kind: "checklist",
+    lines: [
+      "默认导出全部23条",
+      "username 筛选",
+      "status 筛选",
+      "组合筛选",
+      "bob空姓名",
+      "空结果工作簿",
+      "xlsx文件可读取",
+      "响应头与文件名",
+      "导出请求不携带分页参数",
+      "原有列表、筛选和分页回归"
+    ],
+    conclusion: "测试不是为了增加数量，而是覆盖任务包中承诺的边界。"
+  },
+  {
+    id: 5,
+    title: "05 · 运行自动化测试",
+    kind: "terminal",
+    terminal: "$ pytest -q\n\n18 passed in 1.84s\n\n✓ API测试通过\n✓ xlsx结构与内容检查通过\n✓ 原有功能回归测试通过",
+    note1: "因为目标、边界和验收标准在编码前已经明确，实现和测试从一开始就围绕同一目标展开。",
+    note2: "这次没有因为需求遗漏而走前两轮弯路。"
+  },
+  {
+    id: 6,
+    title: "06 · 真实场景验证",
+    kind: "checklist",
+    lines: [
+      "打开用户列表：共23条，每页8条",
+      "默认导出：请求不含 page/page_size",
+      "读取文件：23条数据",
+      "筛选 bob：导出成功，姓名为空但文件有效",
+      "status=active：导出数量与页面筛选结果一致",
+      "无匹配筛选：生成只有表头的合法 xlsx",
+      "返回页面：列表、筛选和分页仍然正常"
+    ],
+    evidence: {
+      request: ["username=bob", "status=", "无 page", "无 page_size"],
+      file: ["格式：XLSX", "数据行：1", "空姓名：正常", "读取结果：PASS"]
+    },
+    conclusion: "自动化测试给出证据，真实浏览器验证最终目标。"
+  },
+  {
+    id: 7,
+    title: "07 · 完成与证据映射",
+    kind: "report"
+  }
+];
+
+var currentStage = 0; // 完成的阶段数：0 = 尚无阶段渲染完成
+var started = false;  // 执行是否已经开始（从点击“开始执行”/“单步执行”到“重新演示”前恒为 true）
+var playing = false;
+var timer = null;          // setTimeout：本阶段等待结束后触发 advanceStage
+var displayTimer = null;   // setInterval：更新“执行中”已用时文案（正向计时，仅展示，不驱动进度）
+var remainingMs = null;    // 暂停时保留的剩余等待时间；null 表示按 STAGE_DELAYS_MS 从头等待
+var waitStartedAt = null;  // 本次等待开始的时间戳，用于暂停时计算已消耗时间
+
+function stageDot(index) { return document.querySelector('.stage-dot[data-stage="' + index + '"]'); }
+
+// 注意：第一阶段完成前 currentStage 仍为 0，因此“是否已开始”不能用 currentStage>0 判断，
+// 必须用独立的 started 标志——否则暂停/继续在第一阶段等待期间会失效（继续按钮判断不出已开始）。
+function updateTracker() {
+  for (var i = 1; i <= STAGES.length; i++) {
+    var el = stageDot(i);
+    el.classList.remove("pending", "active", "done");
+    if (i <= currentStage) el.classList.add("done");
+    else if (i === currentStage + 1 && started) el.classList.add("active");
+    else el.classList.add("pending");
+  }
+}
+
+function updateControls() {
+  var finished = currentStage >= STAGES.length;
+  $("btn-start").disabled = started;
+  $("btn-pause").disabled = !playing;
+  $("btn-continue").disabled = !(started && !finished && !playing);
+  $("btn-step").disabled = finished;
+  $("btn-jump-end").disabled = finished;
+}
+
+function evidenceCard(title, lines) {
+  var card = document.createElement("div");
+  card.className = "evidence-card";
+  var h4 = document.createElement("h4");
+  h4.textContent = title;
+  card.appendChild(h4);
+  var pre = document.createElement("pre");
+  pre.textContent = lines.join("\n");
+  card.appendChild(pre);
+  return card;
+}
+
+function renderStage(stage) {
+  var log = $("console-log");
+  var placeholder = $("console-placeholder");
+  if (placeholder) placeholder.remove();
+
+  var block = document.createElement("div");
+  block.className = "log-block";
+  var h3 = document.createElement("h3");
+  h3.textContent = stage.title;
+  block.appendChild(h3);
+
+  if (stage.kind === "checklist") {
+    var ul = document.createElement("ul");
+    ul.className = "log-checklist";
+    stage.lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = "✓ " + line;
+      ul.appendChild(li);
+    });
+    block.appendChild(ul);
+    if (stage.diff) {
+      var diffBox = document.createElement("pre");
+      diffBox.className = "log-diff";
+      diffBox.textContent = stage.diff.join("\n");
+      block.appendChild(diffBox);
+    }
+    if (stage.evidence) {
+      var cardsWrap = document.createElement("div");
+      cardsWrap.className = "evidence-cards";
+      cardsWrap.appendChild(evidenceCard("请求参数", stage.evidence.request));
+      cardsWrap.appendChild(evidenceCard("文件检查", stage.evidence.file));
+      block.appendChild(cardsWrap);
+    }
+  } else if (stage.kind === "plain") {
+    var ol = document.createElement("ul");
+    ol.className = "log-plain";
+    stage.lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      ol.appendChild(li);
+    });
+    block.appendChild(ol);
+  } else if (stage.kind === "terminal") {
+    var pre = document.createElement("pre");
+    pre.className = "log-terminal";
+    pre.textContent = stage.terminal;
+    block.appendChild(pre);
+    var note1 = document.createElement("p");
+    note1.className = "log-note";
+    note1.textContent = stage.note1;
+    block.appendChild(note1);
+    var note2 = document.createElement("p");
+    note2.className = "log-note-strong";
+    note2.textContent = stage.note2;
+    block.appendChild(note2);
+  } else if (stage.kind === "report") {
+    var p = document.createElement("p");
+    p.className = "log-note";
+    p.textContent = "已生成完成报告与验收映射，见下方“完成与证据映射”。";
+    block.appendChild(p);
+  }
+
+  if (stage.conclusion) {
+    var conclusion = document.createElement("p");
+    conclusion.className = "log-conclusion";
+    conclusion.textContent = stage.conclusion;
+    block.appendChild(conclusion);
+  }
+
+  log.appendChild(block);
+  log.scrollTop = log.scrollHeight;
+}
+
+function revealFinalReport() {
+  $("final-report").hidden = false;
+}
+
+// ---- “执行中”计时提示：正向计时（已用时），不参与推进逻辑 ----
+// 真实研发执行不会预先知道某一步要跑多久，所以这里只展示已经过去的时间，
+// 不展示或暗示总时长/剩余时间；内部仍用 STAGE_DELAYS_MS 驱动何时推进到下一阶段。
+function showRunningIndicator(stageIndex) {
+  clearRunningIndicator();
+  var placeholder = $("console-placeholder");
+  if (placeholder) placeholder.remove();
+
+  var block = document.createElement("div");
+  block.className = "log-block log-running";
+  block.id = "log-running";
+  var label = document.createElement("p");
+  label.className = "log-running-text";
+  block.appendChild(label);
+  $("console-log").appendChild(block);
+  $("console-log").scrollTop = $("console-log").scrollHeight;
+
+  var total = STAGE_DELAYS_MS[stageIndex];
+
+  function render() {
+    var currentRemaining = remainingMs != null ? remainingMs : total;
+    if (waitStartedAt != null) {
+      currentRemaining = Math.max(0, currentRemaining - (Date.now() - waitStartedAt));
+    }
+    var elapsedSeconds = Math.max(0, Math.floor((total - currentRemaining) / 1000));
+    label.textContent = "▸ " + STAGES[stageIndex].title + " 执行中…（已用时 " + elapsedSeconds + " 秒）";
+  }
+  render();
+  displayTimer = setInterval(render, 1000);
+}
+
+function clearRunningIndicator() {
+  if (displayTimer) { clearInterval(displayTimer); displayTimer = null; }
+  var el = $("log-running");
+  if (el) el.remove();
+}
+
+function advanceStage() {
+  if (currentStage >= STAGES.length) return;
+  currentStage += 1;
+  renderStage(STAGES[currentStage - 1]);
+  updateTracker();
+  updateControls();
+  if (currentStage === STAGES.length) {
+    playing = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+    revealFinalReport();
+    updateTracker();
+    updateControls();
+  }
+}
+
+function scheduleNext() {
+  if (!playing) return;
+  var stageIndex = currentStage; // 0-based，即将产出 STAGES[stageIndex]
+  var duration = remainingMs != null ? remainingMs : STAGE_DELAYS_MS[stageIndex];
+  remainingMs = duration;
+  waitStartedAt = Date.now();
+  showRunningIndicator(stageIndex);
+  timer = setTimeout(function () {
+    remainingMs = null;
+    waitStartedAt = null;
+    clearRunningIndicator();
+    advanceStage();
+    if (playing && currentStage < STAGES.length) scheduleNext();
+  }, duration);
+}
+
+function startAutoPlay() {
+  if (currentStage >= STAGES.length) return;
+  started = true;
+  playing = true;
+  updateTracker();
+  updateControls();
+  scheduleNext();
+}
+
+function pauseAutoPlay() {
+  if (timer && waitStartedAt != null && remainingMs != null) {
+    var elapsed = Date.now() - waitStartedAt;
+    remainingMs = Math.max(0, remainingMs - elapsed);
+  }
+  playing = false;
+  if (timer) { clearTimeout(timer); timer = null; }
+  waitStartedAt = null;
+  clearRunningIndicator();
+  updateTracker();
+  updateControls();
+}
+
+function continueAutoPlay() {
+  if (started && currentStage < STAGES.length && !playing) {
+    startAutoPlay();
+  }
+}
+
+function stepOnce() {
+  started = true;
+  pauseAutoPlay();
+  remainingMs = null; // 手动单步：跳过等待，立即推进，下一阶段仍从完整时长开始
+  advanceStage();
+}
+
+function jumpToEnd() {
+  started = true;
+  pauseAutoPlay();
+  remainingMs = null;
+  while (currentStage < STAGES.length) advanceStage();
+}
+
+function resetDemo() {
+  pauseAutoPlay();
+  started = false;
+  remainingMs = null;
+  waitStartedAt = null;
+  currentStage = 0;
+  $("console-log").innerHTML = '<p class="console-placeholder" id="console-placeholder">点击“提交任务包并开始执行”，或使用“单步执行”查看第一阶段。</p>';
+  $("final-report").hidden = true;
+  updateTracker();
+  updateControls();
+}
+
+$("btn-start").addEventListener("click", startAutoPlay);
+$("btn-pause").addEventListener("click", pauseAutoPlay);
+$("btn-continue").addEventListener("click", continueAutoPlay);
+$("btn-step").addEventListener("click", stepOnce);
+$("btn-jump-end").addEventListener("click", jumpToEnd);
+$("btn-reset").addEventListener("click", resetDemo);
+$("btn-reset-top").addEventListener("click", resetDemo);
+
+updateTracker();
+updateControls();
+</script>
+</body>
+</html>

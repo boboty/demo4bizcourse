@@ -13,11 +13,12 @@
     --bg-soft: #f2f4f7;
     --ok: #1a7f37;
     --err: #b42318;
+    --info: #175cd3;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    padding: 16px 16px 32px;
+    padding: 10px 16px 32px;
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     font-size: 16px;
     line-height: 1.5;
@@ -25,22 +26,91 @@
     background: #ffffff;
   }
   main { max-width: 1080px; margin: 0 auto; }
-  h1 { font-size: 24px; margin: 0 0 2px; }
-  .subtitle { font-size: 15px; color: var(--muted); margin: 0 0 14px; }
+
+  /* ---- 顶部演示导航条 ---- */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .top-bar a.nav-home {
+    font-size: 14px;
+    color: var(--info);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .top-bar a.nav-home:hover { text-decoration: underline; }
+  .nav-btn {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .stage-badge {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: #1c2330;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .guide-toggle {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  :focus-visible { outline: 3px solid #84caff; outline-offset: 1px; }
+
+  h1 { font-size: 22px; margin: 0 0 2px; }
+  h1 .subtitle-inline { font-size: 15px; font-weight: 400; color: var(--muted); }
+  .stage-subtitle { font-size: 15px; color: var(--muted); margin: 0 0 10px; }
+
+  /* ---- 课堂演示说明（讲师说明，默认隐藏；显示后默认折叠） ---- */
+  details.instructor-guide {
+    margin: 0 0 10px;
+    border: 1px solid #f0c36d;
+    border-radius: 8px;
+    padding: 4px 14px;
+    font-size: 15px;
+    background: #fffdf5;
+  }
+  details.instructor-guide[hidden] { display: none; }
+  details.instructor-guide summary { cursor: pointer; font-size: 15px; font-weight: 600; padding: 4px 0; }
+  .guide-body { padding: 4px 0 8px; }
+  .guide-body h2 { font-size: 16px; margin: 10px 0 4px; }
+  .guide-body p, .guide-body li { font-size: 15px; }
+  .guide-body ul, .guide-body ol { margin: 4px 0; padding-left: 24px; }
+  .guide-body p { margin: 4px 0; }
+  .guide-note { color: var(--muted); }
 
   .filter-bar {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     align-items: flex-end;
-    padding: 12px;
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--bg-soft);
   }
-  .filter-bar label { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
+  .filter-bar label { display: flex; flex-direction: column; gap: 3px; font-size: 15px; color: var(--muted); }
   .filter-bar input, .filter-bar select {
-    height: 40px;
+    height: 38px;
     padding: 0 12px;
     font-size: 16px;
     border: 1px solid var(--border);
@@ -49,7 +119,7 @@
     min-width: 190px;
   }
   .filter-bar button {
-    height: 40px;
+    height: 38px;
     padding: 0 18px;
     font-size: 16px;
     border: 1px solid var(--border);
@@ -62,21 +132,22 @@
   .filter-bar button:hover:not(:disabled) { filter: brightness(0.94); }
 
   .summary {
-    margin: 12px 0;
-    padding: 8px 14px;
+    margin: 10px 0;
+    padding: 6px 14px;
     font-size: 16px;
     border-left: 4px solid #1c2330;
     background: var(--bg-soft);
   }
 
-  .status-line { min-height: 22px; margin: 4px 0; font-size: 16px; }
+  .status-line { min-height: 20px; margin: 2px 0; font-size: 16px; }
   .status-line.error { color: var(--err); font-weight: 600; }
   .status-line.ok { color: var(--ok); }
+  .status-line.info { color: var(--info); font-weight: 600; }
 
   table { width: 100%; border-collapse: collapse; font-size: 16px; }
   th, td {
     border: 1px solid var(--border);
-    padding: 8px 10px;
+    padding: 6px 10px;
     text-align: left;
     vertical-align: top;
     word-break: break-word;
@@ -92,11 +163,11 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-top: 12px;
+    margin-top: 10px;
     font-size: 16px;
   }
   .pagination button {
-    height: 38px;
+    height: 34px;
     padding: 0 16px;
     font-size: 16px;
     border: 1px solid var(--border);
@@ -107,7 +178,7 @@
   .pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
 
   details.request-info {
-    margin-top: 20px;
+    margin-top: 16px;
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 6px 14px;
@@ -121,8 +192,21 @@
 </head>
 <body>
 <main>
-  <h1>用户列表演示</h1>
-  <p class="subtitle">AI 研发闭环课堂 Demo</p>
+  <nav class="top-bar" aria-label="演示状态导航">
+    <a class="nav-home" href="/demo">← 返回演示导航</a>
+    <button type="button" class="nav-btn" id="nav-prev">← 上一个状态</button>
+    <button type="button" class="nav-btn" id="nav-next">下一个状态 →</button>
+    <span class="stage-badge" id="stage-badge">DEMO</span>
+    <button type="button" class="guide-toggle" id="btn-toggle-guide" aria-expanded="false">显示讲师说明</button>
+  </nav>
+
+  <h1>用户列表演示 <span class="subtitle-inline">AI 研发闭环课堂 Demo</span></h1>
+  <p class="stage-subtitle" id="stage-subtitle"></p>
+
+  <details class="instructor-guide" id="instructor-guide" hidden>
+    <summary>课堂演示说明（讲师用，点击展开 / 收起）</summary>
+    <div class="guide-body" id="guide-body"></div>
+  </details>
 
   <form id="filter-form" class="filter-bar">
     <label>用户名
@@ -183,11 +267,196 @@
 <script>
 "use strict";
 
+// ============================================================
+// 课堂演示状态配置：四个页面共用本文件，状态由受控路由
+// （/demo/users/<state>）决定，页面只从路径白名单中读取状态，
+// 不接收任意 query 参数注入；未知状态跳转回导航页。
+// ============================================================
+var STATE_ORDER = ["base", "null-failure", "page-only", "final"];
+
+var DEMO_STATES = {
+  "base": {
+    index: 0,
+    path: "/demo/users/base",
+    badge: "DEMO 00 · BASELINE",
+    subtitle: "需求尚未实现",
+    exportMode: "pending",
+    guide: {
+      command: { note: "即将交给AI的原始需求", text: "给用户列表增加Excel导出功能。" },
+      implemented: [
+        "用户列表已存在",
+        "支持用户名筛选",
+        "支持状态筛选",
+        "支持组合筛选",
+        "支持分页",
+        "页面已经预留导出入口"
+      ],
+      missing: [
+        "没有真实Excel导出能力",
+        "没有说明导出当前页还是全部结果",
+        "没有定义导出字段",
+        "没有定义空值和空结果",
+        "没有定义文件格式、数据上限和验收标准"
+      ],
+      steps: [
+        "查看默认23条数据和分页",
+        "输入用户名、状态做一次组合筛选",
+        "点击“导出Excel”",
+        "观察页面提示“Excel导出功能待实现”",
+        "向学员提出问题：一句需求是否已经足够开发？"
+      ],
+      next: "先按一句话需求完成第一版，观察AI会自行采用哪些默认假设。",
+      conclusion: "一句话可以启动任务，但不能定义完成。"
+    }
+  },
+  "null-failure": {
+    index: 1,
+    path: "/demo/users/null-failure",
+    badge: "DEMO 01 · ONE-LINE IMPLEMENTATION",
+    subtitle: "功能出现，但边界失败",
+    exportMode: "null-failure",
+    guide: {
+      command: "给用户列表增加Excel导出功能。",
+      implemented: [
+        "页面已经可以下载真实Excel",
+        "普通用户数据可以成功导出",
+        "文件可以正常打开",
+        "表头和基本字段已经存在",
+        "基础测试显示通过"
+      ],
+      missing: [
+        "用户姓名为空时导出失败",
+        "原始需求没有定义空值如何处理",
+        "当前测试没有覆盖空姓名记录",
+        "“正常数据可用”被错误地当成了“功能完成”"
+      ],
+      steps: [
+        "保持默认条件，点击“导出Excel”，确认文件成功下载",
+        "用户名输入 bob",
+        "点击“查询”",
+        "确认bob姓名显示为空值占位",
+        "再点击“导出Excel”",
+        "观察页面导出失败提示",
+        "查看请求详情或后端日志中的空值错误"
+      ],
+      next: {
+        prefix: "补充约束：",
+        items: [
+          "用户姓名可能为空",
+          "空值导出为空单元格，不得报错",
+          "空结果应生成只有表头的有效Excel",
+          "增加空值和空结果测试"
+        ]
+      },
+      conclusion: "没有写进验收标准的边界，往往会成为最先遗漏的边界。"
+    }
+  },
+  "page-only": {
+    index: 2,
+    path: "/demo/users/page-only",
+    badge: "DEMO 02 · TESTS GREEN, GOAL MISSED",
+    subtitle: "测试通过，但原始目标未达",
+    exportMode: "page-only",
+    guide: {
+      command: "修复空值和空结果导出，并增加相应测试。",
+      implemented: [
+        "空值可以正常导出",
+        "空结果可以生成有效Excel",
+        "文件格式正确",
+        "中文表头正确",
+        "当前页数据正确",
+        "局部测试全部通过"
+      ],
+      missing: [
+        "导出请求错误携带page和page_size",
+        "页面显示共23条，但Excel只有当前页8条",
+        "测试只验证“能导出”和“当前页数据正确”",
+        "没有验证导出范围是否满足原始目标"
+      ],
+      steps: [
+        "保持默认条件",
+        "确认页面显示“共23条、每页8条”",
+        "点击“导出Excel”",
+        "打开文件，确认只有8条数据",
+        "展开请求详情",
+        "观察导出请求包含page=1&page_size=8",
+        "可切到第二页再次导出，确认只包含第二页数据",
+        "展示Stage 2局部检查结果全部PASS"
+      ],
+      next: {
+        prefix: "补充原始目标和验收：",
+        items: [
+          "导出当前筛选条件下的全部结果",
+          "导出不受当前页影响",
+          "请求不得携带page和page_size",
+          "验证导出行数等于筛选结果总数",
+          "验证当前页之外的数据也存在于导出文件中"
+        ]
+      },
+      conclusion: "测试通过，只能证明写进测试里的那部分通过了。"
+    }
+  },
+  "final": {
+    index: 3,
+    path: "/demo/users/final",
+    badge: "DEMO 03 · FINAL PASS",
+    subtitle: "目标、边界与证据闭环",
+    exportMode: "final",
+    guide: {
+      command: "导出当前筛选条件下的全部用户，不受分页限制，并补齐完整验收。",
+      implemented: [
+        "默认23条全部导出",
+        "用户名筛选正确",
+        "状态筛选正确",
+        "组合筛选正确",
+        "导出不受当前页影响",
+        "空值和空结果正常",
+        "文件为真实有效xlsx",
+        "页面真实操作和浏览器smoke均通过",
+        "独立验收结论为PASS"
+      ],
+      missing: {
+        paragraphs: [
+          "本轮无已知关键缺口。",
+          "当前PASS只覆盖本任务已经明确的目标、边界和验收范围，不代表软件在所有未知场景下永久不存在问题。"
+        ]
+      },
+      steps: [
+        "保持默认条件，点击导出",
+        "打开Excel，确认共23条数据",
+        "输入 chen",
+        "状态选择 active",
+        "点击查询",
+        "点击导出",
+        "打开Excel，确认只包含匹配结果",
+        "展开请求详情",
+        "对比列表请求包含page/page_size",
+        "对比导出请求只保留username/status",
+        "展示最终测试和浏览器smoke结果",
+        "展示最终独立验收PASS"
+      ],
+      next: "本任务已经完成闭环。后续新增需求应重新定义目标、边界和验收证据，不能直接沿用本次PASS替代新任务验证。",
+      conclusion: "验证不是跑测试，而是证明结果满足原始目标。"
+    }
+  }
+};
+
+// ---- 状态识别：只接受路径白名单，未知状态跳回导航页 ----
+var pathMatch = window.location.pathname.match(/^\/demo\/users\/([a-z-]+)\/?$/);
+var stateKey = pathMatch ? pathMatch[1] : "";
+if (!DEMO_STATES[stateKey]) {
+  window.location.replace("/demo");
+}
+var CURRENT = DEMO_STATES[stateKey] || DEMO_STATES["final"];
+
 // ---- 常量与状态 ----
 // 每页 8 条：保证 1366×768 投屏时分页留在首屏，且默认数据与 active 筛选均有多页。
 var PAGE_SIZE = 8;
 var LIST_API = "/api/users";
 var EXPORT_API = "/api/users/export";
+var NULL_FAILURE_API = "/api/demo/users/export/null-failure";
+var PAGE_ONLY_API = "/api/demo/users/export/page-only";
+var GUIDE_PREF_KEY = "ai-demo.instructorNotes";
 
 var state = { username: "", status: "", page: 1 };
 // 仅在请求成功后提交的完整口径（筛选条件 + 分页）；请求失败时据其整体恢复页面，
@@ -230,6 +499,142 @@ function setStatus(el, message, kind) {
   el.className = "status-line" + (kind ? " " + kind : "");
 }
 
+// ---- 状态页框架渲染 ----
+function renderChrome() {
+  document.title = "用户列表演示 · " + CURRENT.badge;
+  $("stage-badge").textContent = CURRENT.badge;
+  $("stage-subtitle").textContent = CURRENT.subtitle;
+
+  var prevKey = STATE_ORDER[CURRENT.index - 1];
+  var nextKey = STATE_ORDER[CURRENT.index + 1];
+  var prevBtn = $("nav-prev");
+  var nextBtn = $("nav-next");
+  prevBtn.disabled = !prevKey;
+  nextBtn.disabled = !nextKey;
+  if (prevKey) {
+    prevBtn.addEventListener("click", function () {
+      window.location.assign(DEMO_STATES[prevKey].path);
+    });
+  }
+  if (nextKey) {
+    nextBtn.addEventListener("click", function () {
+      window.location.assign(DEMO_STATES[nextKey].path);
+    });
+  }
+
+  renderGuide();
+  applyGuidePref();
+}
+
+// ---- 课堂演示说明（讲师说明）----
+function guideSection(title, contentEl) {
+  var section = document.createElement("section");
+  var h2 = document.createElement("h2");
+  h2.textContent = title;
+  section.appendChild(h2);
+  section.appendChild(contentEl);
+  return section;
+}
+
+function guideParagraphs(lines) {
+  var frag = document.createDocumentFragment();
+  lines.forEach(function (line) {
+    var p = document.createElement("p");
+    p.textContent = line;
+    frag.appendChild(p);
+  });
+  var div = document.createElement("div");
+  div.appendChild(frag);
+  return div;
+}
+
+function guideList(items, ordered) {
+  var list = document.createElement(ordered ? "ol" : "ul");
+  items.forEach(function (item) {
+    var li = document.createElement("li");
+    li.textContent = item;
+    list.appendChild(li);
+  });
+  return list;
+}
+
+function renderGuide() {
+  var guide = CURRENT.guide;
+  var body = $("guide-body");
+  body.innerHTML = "";
+
+  // 1. 本轮给AI的命令
+  var commandDiv = document.createElement("div");
+  if (typeof guide.command === "object" && guide.command.note) {
+    var note = document.createElement("p");
+    note.className = "guide-note";
+    note.textContent = "（" + guide.command.note + "）";
+    commandDiv.appendChild(note);
+    var cmd = document.createElement("p");
+    cmd.textContent = guide.command.text;
+    commandDiv.appendChild(cmd);
+  } else {
+    var plain = document.createElement("p");
+    plain.textContent = guide.command;
+    commandDiv.appendChild(plain);
+  }
+  body.appendChild(guideSection("本轮给AI的命令", commandDiv));
+
+  // 2. 当前实现了什么
+  body.appendChild(guideSection("当前实现了什么", guideList(guide.implemented, false)));
+
+  // 3. 当前欠缺什么
+  var missingEl = Array.isArray(guide.missing)
+    ? guideList(guide.missing, false)
+    : guideParagraphs(guide.missing.paragraphs);
+  body.appendChild(guideSection("当前欠缺什么", missingEl));
+
+  // 4. 固定演示步骤
+  body.appendChild(guideSection("固定演示步骤", guideList(guide.steps, true)));
+
+  // 5. 下一轮如何改进
+  var nextDiv = document.createElement("div");
+  if (typeof guide.next === "object" && guide.next.items) {
+    var prefix = document.createElement("p");
+    prefix.textContent = guide.next.prefix;
+    nextDiv.appendChild(prefix);
+    nextDiv.appendChild(guideList(guide.next.items, true));
+  } else {
+    var nextP = document.createElement("p");
+    nextP.textContent = guide.next;
+    nextDiv.appendChild(nextP);
+  }
+  body.appendChild(guideSection("下一轮如何改进", nextDiv));
+
+  // 6. 本轮结论
+  var conclusion = document.createElement("p");
+  conclusion.textContent = guide.conclusion;
+  body.appendChild(guideSection("本轮结论", conclusion));
+}
+
+// 讲师说明整体显示/隐藏：偏好存 sessionStorage（不进后端），跨页面生效；
+// 默认隐藏，隐藏后说明模块完全不占位；<details> 的展开/折叠是第二层。
+function guidePrefVisible() {
+  try { return window.sessionStorage.getItem(GUIDE_PREF_KEY) === "1"; }
+  catch (err) { return false; }
+}
+
+function applyGuidePref() {
+  var visible = guidePrefVisible();
+  var guide = $("instructor-guide");
+  guide.hidden = !visible;
+  var toggle = $("btn-toggle-guide");
+  toggle.textContent = visible ? "隐藏讲师说明" : "显示讲师说明";
+  toggle.setAttribute("aria-expanded", visible ? "true" : "false");
+}
+
+$("btn-toggle-guide").addEventListener("click", function () {
+  var visible = !guidePrefVisible();
+  try { window.sessionStorage.setItem(GUIDE_PREF_KEY, visible ? "1" : "0"); }
+  catch (err) { /* sessionStorage 不可用时仅当前页生效 */ }
+  applyGuidePref();
+});
+
 // ---- 控件状态 ----
 // 加载期间禁用查询/重置/翻页；结束后按 lastGood 重新计算翻页可用性。
 // 导出按钮不受列表加载影响。
@@ -258,7 +663,7 @@ function renderSummary() {
     " ｜每页 " + PAGE_SIZE + " 条";
 }
 
-// ---- 列表加载 ----
+// ---- 列表加载（四个状态共用同一正式列表接口）----
 function loadUsers() {
   var requestId = ++requestSeq;
   if (listAbort) listAbort.abort(); // 取消上一次未完成的列表请求
@@ -388,11 +793,31 @@ function renderPagination(total, page, pageSize) {
   $("page-info").textContent = "第 " + page + " 页 / 共 " + totalPages + " 页 ｜ 共 " + total + " 条";
 }
 
-// ---- Excel 导出（已连接现有 GET /api/users/export）----
-// 复用当前用户名与状态筛选条件；不传分页参数，导出全部匹配结果。
-// 后续若后端导出接口调整，只需修改本函数。
+// ---- 导出：行为按当前演示状态的 exportMode 切换 ----
+// pending：需求入口，只提示待实现，不产生任何导出请求；
+// null-failure / page-only：调用教学专用接口（故障被隔离在其中）；
+// final：正式 /api/users/export，携带筛选、不携带分页，导出全部匹配结果。
+function buildExportUrl() {
+  if (CURRENT.exportMode === "null-failure") {
+    return NULL_FAILURE_API + buildQuery({ username: state.username, status: state.status });
+  }
+  if (CURRENT.exportMode === "page-only") {
+    return PAGE_ONLY_API + buildQuery({
+      page: state.page, page_size: PAGE_SIZE, username: state.username, status: state.status
+    });
+  }
+  return EXPORT_API + buildQuery({ username: state.username, status: state.status });
+}
+
 function exportUsers() {
-  var url = EXPORT_API + buildQuery({ username: state.username, status: state.status });
+  if (CURRENT.exportMode === "pending") {
+    $("info-export-url").textContent = "未发起（功能待实现，不产生导出请求）";
+    setStatus($("export-status"),
+      "Excel 导出功能待实现 —— 这是需求入口，不是功能故障。", "info");
+    return;
+  }
+
+  var url = buildExportUrl();
   $("info-export-url").textContent = url;
 
   var btn = $("btn-export");
@@ -459,6 +884,7 @@ $("btn-next").addEventListener("click", function () {
 $("btn-export").addEventListener("click", exportUsers);
 
 // ---- 首次加载 ----
+renderChrome();
 loadUsers();
 </script>
 </body>

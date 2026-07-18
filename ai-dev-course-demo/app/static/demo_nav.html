@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>AI研发验证闭环课堂演示</title>
+<style>
+  :root {
+    --border: #c9ced6;
+    --text: #1c2330;
+    --muted: #4a5462;
+    --bg-soft: #f2f4f7;
+    --info: #175cd3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 8px 16px 16px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--text);
+    background: #ffffff;
+  }
+  main { max-width: 1080px; margin: 0 auto; }
+
+  .head-row { display: flex; align-items: flex-start; gap: 12px; }
+  h1 { font-size: 21px; margin: 0 0 1px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin: 0 0 6px; }
+  .guide-toggle {
+    margin-left: auto;
+    height: 30px;
+    padding: 0 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  :focus-visible { outline: 3px solid #84caff; outline-offset: 1px; }
+
+  /* ---- 演进路线 ---- */
+  .route-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 6px;
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .route-line .arrow { color: var(--muted); font-weight: 400; }
+
+  /* ---- 讲师说明 ---- */
+  details.instructor-guide {
+    margin: 0 0 6px;
+    border: 1px solid #f0c36d;
+    border-radius: 8px;
+    padding: 2px 14px;
+    font-size: 14px;
+    background: #fffdf5;
+  }
+  details.instructor-guide[hidden] { display: none; }
+  details.instructor-guide summary { cursor: pointer; font-size: 14px; font-weight: 600; padding: 3px 0; }
+  details.instructor-guide ul { margin: 4px 0 8px; padding-left: 24px; }
+
+  /* ---- Demo 区块（Demo 1 / Demo 2）---- */
+  .demo-block { margin: 0 0 8px; }
+  .demo-block-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0; }
+  .demo-block-title { font-size: 16px; margin: 0; }
+  .demo-block-desc { font-size: 13px; color: var(--muted); margin: 0 0 5px; }
+
+  /* ---- 状态卡片（Demo 1）---- */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    background: #fff;
+  }
+  .card .card-no {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: #1c2330;
+    border-radius: 999px;
+    padding: 1px 10px;
+    align-self: flex-start;
+  }
+  .card h2 { font-size: 16px; margin: 1px 0 0; }
+  .card .card-cn { font-size: 14px; color: var(--muted); margin: 0; font-weight: 600; }
+  .card .card-desc { font-size: 13.5px; margin: 2px 0 0; }
+  .card .card-expect { font-size: 13px; margin: 1px 0 4px; color: var(--muted); }
+  .card .card-expect strong { color: var(--text); }
+  .card a.card-enter {
+    align-self: flex-start;
+    margin-top: auto;
+    display: inline-block;
+    padding: 5px 18px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #fff;
+    background: #1c2330;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .card a.card-enter:hover { filter: brightness(1.25); }
+
+  /* ---- Demo 2 入口大卡 ---- */
+  .codex-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #101820, #1c2330);
+    color: #e7ebf3;
+  }
+  .codex-card .codex-flow {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.7;
+    color: #cfe8d8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .codex-card a.codex-enter {
+    flex-shrink: 0;
+    display: inline-block;
+    padding: 10px 26px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #101820;
+    background: #7ee2a8;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .codex-card a.codex-enter:hover { filter: brightness(1.1); }
+
+  .footnote { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="head-row">
+    <div>
+      <h1>AI研发验证闭环课堂演示</h1>
+      <p class="subtitle">从一句模糊需求，到可以被证据证明的最终结果</p>
+    </div>
+    <button type="button" class="guide-toggle" id="btn-toggle-guide" aria-expanded="false">显示讲师说明</button>
+  </div>
+
+  <p class="route-line" aria-label="演进路线">
+    <span>需求未实现</span><span class="arrow">→</span>
+    <span>功能出现但边界失败</span><span class="arrow">→</span>
+    <span>测试通过但目标未达</span><span class="arrow">→</span>
+    <span>目标与证据闭环</span>
+  </p>
+
+  <details class="instructor-guide" id="instructor-guide" hidden>
+    <summary>课堂使用提示（讲师用，点击展开 / 收起）</summary>
+    <ul>
+      <li>建议先完整演示 Demo 1（00 → 01 → 02 → 03），状态页右上角可切换上一个 / 下一个状态。</li>
+      <li>01 中先保持默认条件导出成功，再筛选 bob 触发空值失败。</li>
+      <li>02 中导出后打开文件核对只有当前页 8 条，并展开请求详情查看 page 参数。</li>
+      <li>03 中展开请求详情，对比列表请求与导出请求的参数差异。</li>
+      <li>再演示 Demo 2：同一个任务，改由完整任务包一次性交办，观察执行闭环如何一次走完。</li>
+      <li>“显示讲师说明 / 隐藏讲师说明”的偏好会带入每个页面（含 Demo 2）。</li>
+    </ul>
+  </details>
+
+  <section class="demo-block">
+    <div class="demo-block-head">
+      <h2 class="demo-block-title">Demo 1 · 从模糊需求到可验证任务</h2>
+    </div>
+    <p class="demo-block-desc">通过四个结果状态，观察一句模糊需求如何遗漏边界，并最终形成完整任务包。</p>
+    <div class="cards">
+      <section class="card">
+        <span class="card-no">00 · Baseline</span>
+        <h2>需求尚未实现</h2>
+        <p class="card-desc">列表、筛选和分页已经存在，Excel导出仍待实现。</p>
+        <p class="card-expect"><strong>预期现象：</strong>点击导出只提示功能待实现，不调用真实导出接口。</p>
+        <a class="card-enter" href="/demo/users/base">进入演示 →</a>
+      </section>
+
+      <section class="card">
+        <span class="card-no">01 · One-line Implementation</span>
+        <h2>功能出现，但边界失败</h2>
+        <p class="card-desc">一句话交办后，普通数据可以导出，但空姓名记录会导致失败。</p>
+        <p class="card-expect"><strong>预期现象：</strong>默认导出成功；筛选固定空值用户后导出失败。</p>
+        <a class="card-enter" href="/demo/users/null-failure">进入演示 →</a>
+      </section>
+
+      <section class="card">
+        <span class="card-no">02 · Tests Green, Goal Missed</span>
+        <h2>测试通过，但原始目标未达</h2>
+        <p class="card-desc">空值已经修复，文件也合法，但23条数据只导出当前页8条。</p>
+        <p class="card-expect"><strong>预期现象：</strong>页面显示共23条，Excel中只有当前页8条。</p>
+        <a class="card-enter" href="/demo/users/page-only">进入演示 →</a>
+      </section>
+
+      <section class="card">
+        <span class="card-no">03 · Final Pass</span>
+        <h2>目标、边界与证据闭环</h2>
+        <p class="card-desc">导出全部筛选结果，不受分页限制，并通过完整验收。</p>
+        <p class="card-expect"><strong>预期现象：</strong>默认导出23条；组合筛选导出正确；导出请求不携带分页。</p>
+        <a class="card-enter" href="/demo/users/final">进入演示 →</a>
+      </section>
+    </div>
+  </section>
+
+  <section class="demo-block">
+    <div class="demo-block-head">
+      <h2 class="demo-block-title">Demo 2 · 完整任务包驱动研发闭环</h2>
+    </div>
+    <p class="demo-block-desc">把完整任务包一次性交给研发智能体，观察它如何沿着目标、边界和验收标准完成执行闭环。</p>
+    <section class="codex-card">
+      <p class="codex-flow">读取项目 → 制定计划 → 修改代码 → 生成测试 → 运行验证 → 独立验收 → 输出证据</p>
+      <a class="codex-enter" href="/demo/codex-loop">进入演示 →</a>
+    </section>
+  </section>
+
+  <p class="footnote">所有页面共用一个代码版本和一个服务；教学故障被隔离在 Demo 专用页面和接口中，Demo 2 只在浏览器中模拟执行过程、不调用任何模型接口，正式用户导出接口始终保持正确。</p>
+</main>
+
+<script>
+"use strict";
+
+// 讲师说明整体显示/隐藏：偏好存 sessionStorage（不进后端），进入状态页后继续生效。
+var GUIDE_PREF_KEY = "ai-demo.instructorNotes";
+
+function guidePrefVisible() {
+  try { return window.sessionStorage.getItem(GUIDE_PREF_KEY) === "1"; }
+  catch (err) { return false; }
+}
+
+function applyGuidePref() {
+  var visible = guidePrefVisible();
+  document.getElementById("instructor-guide").hidden = !visible;
+  var toggle = document.getElementById("btn-toggle-guide");
+  toggle.textContent = visible ? "隐藏讲师说明" : "显示讲师说明";
+  toggle.setAttribute("aria-expanded", visible ? "true" : "false");
+}
+
+document.getElementById("btn-toggle-guide").addEventListener("click", function () {
+  var visible = !guidePrefVisible();
+  try { window.sessionStorage.setItem(GUIDE_PREF_KEY, visible ? "1" : "0"); }
+  catch (err) { /* sessionStorage 不可用时仅当前页生效 */ }
+  applyGuidePref();
+});
+
+applyGuidePref();
+</script>
+</body>
+</html>
