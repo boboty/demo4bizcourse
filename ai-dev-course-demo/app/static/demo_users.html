@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>用户列表演示 · AI 研发闭环课堂 Demo</title>
+<style>
+  :root {
+    --border: #c9ced6;
+    --text: #1c2330;
+    --muted: #4a5462;
+    --bg-soft: #f2f4f7;
+    --ok: #1a7f37;
+    --err: #b42318;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 16px 32px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text);
+    background: #ffffff;
+  }
+  main { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 2px; }
+  .subtitle { font-size: 15px; color: var(--muted); margin: 0 0 14px; }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+  }
+  .filter-bar label { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
+  .filter-bar input, .filter-bar select {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    min-width: 190px;
+  }
+  .filter-bar button {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .filter-bar button.primary { background: #1c2330; color: #fff; border-color: #1c2330; }
+  .filter-bar button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .filter-bar button:hover:not(:disabled) { filter: brightness(0.94); }
+
+  .summary {
+    margin: 12px 0;
+    padding: 8px 14px;
+    font-size: 16px;
+    border-left: 4px solid #1c2330;
+    background: var(--bg-soft);
+  }
+
+  .status-line { min-height: 22px; margin: 4px 0; font-size: 16px; }
+  .status-line.error { color: var(--err); font-weight: 600; }
+  .status-line.ok { color: var(--ok); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+    word-break: break-word;
+  }
+  th { background: var(--bg-soft); font-weight: 600; }
+  td.empty-cell { color: var(--muted); }
+  .status-active { color: var(--ok); font-weight: 600; }
+  .status-inactive { color: var(--muted); }
+  .status-pending { color: #b54708; font-weight: 600; }
+  .table-empty td { text-align: center; padding: 24px; color: var(--muted); font-size: 17px; }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+    font-size: 16px;
+  }
+  .pagination button {
+    height: 38px;
+    padding: 0 16px;
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  details.request-info {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 15px;
+  }
+  details.request-info summary { cursor: pointer; font-size: 16px; padding: 4px 0; }
+  details.request-info dl { display: grid; grid-template-columns: 200px 1fr; gap: 6px 16px; margin: 10px 0; }
+  details.request-info dt { color: var(--muted); }
+  details.request-info dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+  <h1>用户列表演示</h1>
+  <p class="subtitle">AI 研发闭环课堂 Demo</p>
+
+  <form id="filter-form" class="filter-bar">
+    <label>用户名
+      <input id="filter-username" type="text" placeholder="包含匹配，不区分大小写" autocomplete="off">
+    </label>
+    <label>状态
+      <select id="filter-status">
+        <option value="">全部</option>
+        <option value="active">active</option>
+        <option value="inactive">inactive</option>
+        <option value="pending">pending</option>
+      </select>
+    </label>
+    <button type="submit" class="primary" id="btn-search">查询</button>
+    <button type="button" id="btn-reset">重置</button>
+    <button type="button" id="btn-export">导出 Excel</button>
+  </form>
+
+  <p class="summary" id="filter-summary">当前筛选：用户名 全部 ｜状态 全部 ｜第 1 页 ｜每页 8 条</p>
+
+  <p class="status-line" id="list-status" role="status"></p>
+  <p class="status-line" id="export-status" role="status"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>用户名</th>
+        <th>姓名</th>
+        <th>邮箱</th>
+        <th>状态</th>
+        <th>创建时间</th>
+      </tr>
+    </thead>
+    <tbody id="user-table-body">
+      <tr class="table-empty"><td colspan="6">正在加载…</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    <button id="btn-prev" type="button">上一页</button>
+    <span id="page-info">第 1 页 / 共 1 页 ｜ 共 0 条</span>
+    <button id="btn-next" type="button">下一页</button>
+  </div>
+
+  <details class="request-info" id="request-info">
+    <summary>请求详情（课堂讲解用，默认折叠）</summary>
+    <dl>
+      <dt>列表 API 请求 URL</dt><dd id="info-list-url">—</dd>
+      <dt>当前查询参数</dt><dd id="info-list-params">—</dd>
+      <dt>最近一次响应状态码</dt><dd id="info-list-status">—</dd>
+      <dt>最近一次返回记录数</dt><dd id="info-list-count">—</dd>
+      <dt>当前导出请求 URL</dt><dd id="info-export-url">尚未发起</dd>
+    </dl>
+  </details>
+</main>
+
+<script>
+"use strict";
+
+// ---- 常量与状态 ----
+// 每页 8 条：保证 1366×768 投屏时分页留在首屏，且默认数据与 active 筛选均有多页。
+var PAGE_SIZE = 8;
+var LIST_API = "/api/users";
+var EXPORT_API = "/api/users/export";
+
+var state = { username: "", status: "", page: 1 };
+// 仅在请求成功后提交的完整口径（筛选条件 + 分页）；请求失败时据其整体恢复页面，
+// 避免虚构 total=0 重算页数，也保证导出口径与画面一致。
+var lastGood = null;
+// 并发保护：递增 requestId + AbortController，只有最新请求允许更新 DOM。
+var requestSeq = 0;
+var listAbort = null;
+
+// ---- 工具函数 ----
+function $(id) { return document.getElementById(id); }
+
+function displayValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  return String(value);
+}
+
+function isEmptyValue(value) {
+  return value === null || value === undefined || value === "";
+}
+
+function formatTime(value) {
+  if (isEmptyValue(value)) return "—";
+  return String(value).replace("T", " ").replace(/Z$/, "");
+}
+
+function buildQuery(params) {
+  var search = new URLSearchParams();
+  Object.keys(params).forEach(function (key) {
+    if (params[key] !== "" && params[key] !== null && params[key] !== undefined) {
+      search.set(key, params[key]);
+    }
+  });
+  var text = search.toString();
+  return text ? "?" + text : "";
+}
+
+function setStatus(el, message, kind) {
+  el.textContent = message || "";
+  el.className = "status-line" + (kind ? " " + kind : "");
+}
+
+// ---- 控件状态 ----
+// 加载期间禁用查询/重置/翻页；结束后按 lastGood 重新计算翻页可用性。
+// 导出按钮不受列表加载影响。
+function refreshControls(loading) {
+  $("btn-search").disabled = loading;
+  $("btn-reset").disabled = loading;
+  if (loading || !lastGood) {
+    $("btn-prev").disabled = true;
+    $("btn-next").disabled = true;
+    if (loading) return;
+  }
+  if (!lastGood) return;
+  var totalPages = Math.max(1, Math.ceil(lastGood.total / lastGood.pageSize));
+  $("btn-prev").disabled = lastGood.page <= 1;
+  $("btn-next").disabled = lastGood.page >= totalPages || lastGood.total === 0;
+}
+
+// ---- 筛选摘要 ----
+function renderSummary() {
+  var username = state.username === "" ? "全部" : state.username;
+  var status = state.status === "" ? "全部" : state.status;
+  $("filter-summary").textContent =
+    "当前筛选：用户名 " + username +
+    " ｜状态 " + status +
+    " ｜第 " + state.page + " 页" +
+    " ｜每页 " + PAGE_SIZE + " 条";
+}
+
+// ---- 列表加载 ----
+function loadUsers() {
+  var requestId = ++requestSeq;
+  if (listAbort) listAbort.abort(); // 取消上一次未完成的列表请求
+  listAbort = new AbortController();
+
+  // 捕获本次请求的筛选条件快照，成功后才提交进 lastGood
+  var reqUsername = state.username;
+  var reqStatus = state.status;
+  var url = LIST_API + buildQuery({
+    page: state.page, page_size: PAGE_SIZE, username: reqUsername, status: reqStatus
+  });
+
+  renderSummary();
+  setStatus($("list-status"), "正在加载…");
+  setStatus($("export-status"), "");
+  refreshControls(true);
+  $("info-list-url").textContent = url;
+  $("info-list-params").textContent = JSON.stringify(
+    { page: state.page, page_size: PAGE_SIZE, username: reqUsername || null, status: reqStatus || null }
+  );
+
+  var gotResponse = false; // 区分 HTTP 错误与无响应的网络错误
+  fetch(url, { signal: listAbort.signal })
+    .then(function (resp) {
+      if (requestId !== requestSeq) return null; // 已有更新请求，丢弃本响应
+      gotResponse = true;
+      $("info-list-status").textContent = String(resp.status);
+      if (!resp.ok) throw new Error("列表请求失败（HTTP " + resp.status + "）");
+      return resp.json();
+    })
+    .then(function (payload) {
+      if (payload === null || requestId !== requestSeq) return;
+      var items = payload.items || [];
+      // 仅在成功后提交完整口径：筛选条件 + 分页，供失败时整体恢复
+      lastGood = {
+        username: reqUsername,
+        status: reqStatus,
+        page: payload.page,
+        total: payload.total,
+        pageSize: payload.page_size
+      };
+      $("info-list-count").textContent = items.length + " 条（筛选后共 " + payload.total + " 条）";
+      renderTable(items);
+      renderPagination(payload.total, payload.page, payload.page_size);
+      if (items.length === 0) {
+        setStatus($("list-status"), "没有符合当前筛选条件的用户");
+      } else {
+        setStatus($("list-status"), "查询成功，共 " + payload.total + " 条", "ok");
+      }
+    })
+    .catch(function (err) {
+      if (err.name === "AbortError") return; // 被取消的请求：静默，不算错误
+      if (requestId !== requestSeq) return;
+      // 请求详情展示“最近一次尝试”的真实结果，网络异常时不得残留旧的 200
+      if (!gotResponse) $("info-list-status").textContent = "无响应（网络错误）";
+      $("info-list-count").textContent = "本次请求失败，无返回数据";
+      // 失败：恢复上一次成功的筛选输入、state、摘要、表格与分页，
+      // 导出函数复用 state，口径随之一致；不用虚构 total 重算页数
+      if (lastGood) {
+        state.username = lastGood.username;
+        state.status = lastGood.status;
+        state.page = lastGood.page;
+        $("filter-username").value = lastGood.username;
+        $("filter-status").value = lastGood.status;
+        renderSummary();
+        renderPagination(lastGood.total, lastGood.page, lastGood.pageSize);
+      } else {
+        renderLoadFailure();
+      }
+      setStatus($("list-status"), "接口请求失败：" + err.message + "（请确认服务已启动，可再次查询重试）", "error");
+    })
+    .then(function () {
+      if (requestId !== requestSeq) return;
+      refreshControls(false);
+    });
+}
+
+function renderTable(items) {
+  var tbody = $("user-table-body");
+  tbody.innerHTML = "";
+  if (items.length === 0) {
+    var tr = document.createElement("tr");
+    tr.className = "table-empty";
+    var td = document.createElement("td");
+    td.colSpan = 6;
+    td.textContent = "没有符合当前筛选条件的用户";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+  items.forEach(function (user) {
+    var tr = document.createElement("tr");
+    [
+      { value: displayValue(user.id) },
+      { value: displayValue(user.username) },
+      { value: displayValue(user.display_name), empty: isEmptyValue(user.display_name) },
+      { value: displayValue(user.email), empty: isEmptyValue(user.email) },
+      { value: displayValue(user.status), cls: "status-" + user.status },
+      { value: formatTime(user.created_at) }
+    ].forEach(function (col) {
+      var td = document.createElement("td");
+      td.textContent = col.value;
+      if (col.empty) td.className = "empty-cell";
+      if (col.cls) td.className = col.cls;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// 仅首次加载就失败（无任何成功数据可保留）时使用
+function renderLoadFailure() {
+  var tbody = $("user-table-body");
+  tbody.innerHTML = "";
+  var tr = document.createElement("tr");
+  tr.className = "table-empty";
+  var td = document.createElement("td");
+  td.colSpan = 6;
+  td.textContent = "加载失败，请确认服务已启动后重试";
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+  $("page-info").textContent = "加载失败";
+}
+
+function renderPagination(total, page, pageSize) {
+  var totalPages = Math.max(1, Math.ceil(total / pageSize));
+  $("page-info").textContent = "第 " + page + " 页 / 共 " + totalPages + " 页 ｜ 共 " + total + " 条";
+}
+
+// ---- Excel 导出（已连接现有 GET /api/users/export）----
+// 复用当前用户名与状态筛选条件；不传分页参数，导出全部匹配结果。
+// 后续若后端导出接口调整，只需修改本函数。
+function exportUsers() {
+  var url = EXPORT_API + buildQuery({ username: state.username, status: state.status });
+  $("info-export-url").textContent = url;
+
+  var btn = $("btn-export");
+  btn.disabled = true;
+  setStatus($("export-status"), "正在导出…");
+
+  fetch(url)
+    .then(function (resp) {
+      if (!resp.ok) {
+        return resp.json().then(function (data) {
+          throw new Error("导出失败（HTTP " + resp.status + "）" + (data && data.detail ? "：" + data.detail : ""));
+        }, function () {
+          throw new Error("导出失败（HTTP " + resp.status + "）");
+        });
+      }
+      var disposition = resp.headers.get("Content-Disposition") || "";
+      var match = disposition.match(/filename="?([^";]+)"?/);
+      var filename = match ? match[1] : "users.xlsx";
+      return resp.blob().then(function (blob) {
+        var objectUrl = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 1000);
+        setStatus($("export-status"), "导出成功，已开始下载：" + filename, "ok");
+      });
+    })
+    .catch(function (err) {
+      setStatus($("export-status"), err.message || "导出失败", "error");
+    })
+    .then(function () {
+      btn.disabled = false;
+    });
+}
+
+// ---- 事件绑定 ----
+$("filter-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  // 用户名按真实输入原样发送（不 trim），由后端定义筛选语义
+  state.username = $("filter-username").value;
+  state.status = $("filter-status").value;
+  state.page = 1; // 筛选条件改变后回到第一页
+  loadUsers();
+});
+
+$("btn-reset").addEventListener("click", function () {
+  $("filter-username").value = "";
+  $("filter-status").value = "";
+  state = { username: "", status: "", page: 1 };
+  loadUsers();
+});
+
+$("btn-prev").addEventListener("click", function () {
+  if (state.page > 1) { state.page -= 1; loadUsers(); }
+});
+
+$("btn-next").addEventListener("click", function () {
+  state.page += 1; loadUsers();
+});
+
+$("btn-export").addEventListener("click", exportUsers);
+
+// ---- 首次加载 ----
+loadUsers();
+</script>
+</body>
+</html>
