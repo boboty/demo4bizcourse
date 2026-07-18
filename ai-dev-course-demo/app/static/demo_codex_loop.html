@@ -92,7 +92,7 @@
   .task-body h2 { font-size: 16px; margin: 6px 0 8px; }
   pre.task-text {
     margin: 0 0 8px;
-    max-height: 520px;
+    max-height: 420px;
     overflow-y: auto;
     white-space: pre-wrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -103,9 +103,57 @@
     border-radius: 6px;
     padding: 12px 14px;
   }
-  .task-hint { font-size: 14px; color: var(--muted); margin: 0; }
+  .task-hint { font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+
+  /* ---- 角色协作流程（静态说明图）---- */
+  .role-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+  }
+  .role-flow .role-flow-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 0 4px; }
+  .flow-node { padding: 3px 16px; border-radius: 6px; font-weight: 700; font-size: 13.5px; }
+  .flow-node.role-main { background: #e8f1ff; color: #1959b3; }
+  .flow-node.role-sub { background: #e8f9ee; color: #1a7f37; }
+  .flow-node.role-final { background: #f3e9ff; color: #6b3fa0; }
+  .flow-arrow { color: var(--muted); font-size: 12px; }
 
   .console-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ---- 角色图例 + 当前状态 ---- */
+  .console-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .role-legend { display: flex; gap: 6px; flex-wrap: wrap; }
+  .role-chip { padding: 2px 10px; border-radius: 999px; font-weight: 600; font-size: 12.5px; }
+  .role-chip.role-main { background: #e8f1ff; color: #1959b3; }
+  .role-chip.role-sub { background: #e8f9ee; color: #1a7f37; }
+  .role-chip.role-final { background: #f3e9ff; color: #6b3fa0; }
+  .flow-status-wrap { color: var(--muted); font-size: 13px; }
+  .flow-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  .flow-status.status-neutral { background: #e4e9f0; color: #3a4453; }
+  .flow-status.status-rejected { background: #fdecea; color: #b42318; border: 1px solid #f3a29a; }
+  .flow-status.status-fixing { background: #fff8e1; color: #8a6100; border: 1px solid #f0c36d; }
+  .flow-status.status-passed { background: #e6f7ea; color: #1a7f37; border: 1px solid #86dba0; }
+  .flow-status.status-final { background: #f1e9ff; color: #6b3fa0; border: 1px solid #c9a6f0; }
 
   /* ---- 阶段进度条 ---- */
   .stage-track {
@@ -116,14 +164,23 @@
   .stage-dot {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     padding: 4px 10px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    font-size: 13px;
+    font-size: 12.5px;
     background: #fff;
     color: var(--muted);
   }
+  .stage-dot .dot-role {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 0 4px;
+    border-radius: 4px;
+  }
+  .stage-dot.role-main .dot-role { background: #e8f1ff; color: #1959b3; }
+  .stage-dot.role-sub .dot-role { background: #e8f9ee; color: #1a7f37; }
+  .stage-dot.role-final .dot-role { background: #f3e9ff; color: #6b3fa0; }
   .stage-dot .dot-no { font-weight: 700; }
   .stage-dot.pending { opacity: 0.6; }
   .stage-dot.active { border-color: #f0c36d; background: #fffdf0; color: var(--text); font-weight: 600; }
@@ -146,7 +203,7 @@
 
   /* ---- 执行控制台（终端风格） ---- */
   .console-output {
-    height: 430px;
+    height: 400px;
     overflow-y: auto;
     background: #0d1117;
     color: #d6f5df;
@@ -159,12 +216,25 @@
   .console-placeholder { color: #7d8b9a; }
   .log-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #22303c; }
   .log-block:last-child { border-bottom: none; }
-  .log-block h3 { margin: 0 0 6px; font-size: 16px; color: #7ee2a8; }
+  .log-block h3 { margin: 0 0 2px; font-size: 16px; }
+  .log-block.role-main h3 { color: #79b8ff; }
+  .log-block.role-sub h3 { color: #7ee2a8; }
+  .log-block.role-final h3 { color: #d2a8ff; }
+  .log-role-tag {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 6px;
+    opacity: 0.8;
+  }
+  .log-block.role-main .log-role-tag { color: #79b8ff; }
+  .log-block.role-sub .log-role-tag { color: #7ee2a8; }
+  .log-block.role-final .log-role-tag { color: #d2a8ff; }
   .log-checklist, .log-plain { margin: 0 0 6px; padding-left: 18px; list-style: none; }
   .log-checklist li { margin: 2px 0; }
   .log-plain li { margin: 2px 0; color: #cfe0ff; }
   .log-plain li::before { content: "› "; color: #7ee2a8; }
-  pre.log-terminal, pre.log-diff {
+  pre.log-terminal {
     margin: 6px 0;
     background: #05080b;
     border: 1px solid #22303c;
@@ -173,8 +243,8 @@
     color: #eef7f0;
     white-space: pre-wrap;
   }
-  .log-note { color: #cfe0ff; margin: 6px 0; }
   .log-note-strong { color: #7ee2a8; font-weight: 700; margin: 6px 0; }
+  .log-gap-note { color: #f0c36d; font-style: italic; margin: 6px 0; }
   .log-conclusion { color: #f0c36d; font-weight: 600; margin: 8px 0 0; }
   .log-running { border-bottom: none; }
   .log-running-text {
@@ -182,16 +252,36 @@
     color: #9fb3c8;
     font-style: italic;
   }
-  .evidence-cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
-  .evidence-card {
-    flex: 1 1 200px;
-    background: #05080b;
+
+  /* ---- 派发简报（主代理 → 代码子代理）---- */
+  .log-delegate {
+    background: #0d1b2a;
     border: 1px solid #22303c;
+    border-left: 3px solid #58a6ff;
     border-radius: 6px;
     padding: 8px 12px;
+    margin: 6px 0;
   }
-  .evidence-card h4 { margin: 0 0 4px; font-size: 14px; color: #7ee2a8; }
-  .evidence-card pre { margin: 0; background: none; border: none; padding: 0; color: #eef7f0; }
+  .log-delegate-title { color: #79b8ff; font-weight: 700; margin: 0 0 4px; }
+  .log-delegate p { margin: 2px 0; color: #eef7f0; }
+
+  /* ---- 门禁面板（驳回 / 放行）---- */
+  .log-gate {
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border: 1px solid #22303c;
+    background: #05080b;
+  }
+  .log-gate-rejected { border-color: #f3a29a; }
+  .log-gate-passed { border-color: #86dba0; }
+  .log-gate-status { font-weight: 700; margin: 0 0 6px; font-size: 15px; }
+  .log-gate-rejected .log-gate-status { color: #ff9d8a; }
+  .log-gate-passed .log-gate-status { color: #7ee2a8; }
+  .log-gate-checklist { list-style: none; padding-left: 0; margin: 0 0 6px; }
+  .log-gate-checklist li.gate-ok { color: #7ee2a8; }
+  .log-gate-checklist li.gate-miss { color: #ff9d8a; }
+  .log-gate-message { color: #eef7f0; margin: 0; }
 
   /* ---- 完成报告 ---- */
   .final-report {
@@ -213,20 +303,24 @@
     white-space: pre-wrap;
     margin: 0 0 12px;
   }
-  .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px; }
-  .mapping-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; background: var(--bg-soft); }
-  .mapping-item h3 { font-size: 15px; margin: 0 0 4px; }
-  .mapping-item p { font-size: 14.5px; margin: 0; color: var(--muted); }
+  .final-checklist-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px;
+    columns: 2;
+    column-gap: 24px;
+    font-size: 14.5px;
+  }
+  .final-checklist-grid li { margin: 3px 0; break-inside: avoid; }
   .final-highlight {
     border-left: 4px solid var(--info);
     background: #eef4ff;
     padding: 10px 16px;
     margin: 0 0 12px;
   }
-  .final-highlight p { margin: 2px 0; font-size: 16px; }
-  .final-conclusion-main p, .final-conclusion-aux p { margin: 2px 0; font-size: 16px; }
-  .final-conclusion-main { font-weight: 700; margin: 0 0 8px; }
-  .final-conclusion-aux { color: var(--muted); margin: 0; }
+  .final-highlight p { margin: 3px 0; font-size: 15.5px; }
+  .final-conclusion-main p { margin: 2px 0; font-size: 16px; }
+  .final-conclusion-main { font-weight: 700; margin: 0; }
 
   /* ---- Demo 1 / Demo 2 对照 ---- */
   .comparison { margin-top: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; }
@@ -236,7 +330,7 @@
   .flow-list { margin: 0 0 8px; padding-left: 20px; font-size: 14.5px; }
   .flow-list li { margin: 2px 0; }
   .comparison-note { font-size: 14.5px; color: var(--muted); margin: 0; }
-  @media (max-width: 900px) { .comparison-grid, .mapping-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .comparison-grid, .final-checklist-grid { grid-template-columns: 1fr; columns: 1; } }
 </style>
 </head>
 <body>
@@ -250,34 +344,36 @@
   </nav>
 
   <h1>Demo 2 · 完整任务包驱动研发闭环</h1>
-  <p class="subtitle">把完整任务包一次性交给研发智能体，观察它如何沿着目标、边界和验收标准完成执行闭环。</p>
+  <p class="subtitle">同一份完整任务包，这次由主代理统筹计划与门禁、代码子代理负责执行，独立验收代理最终对照目标给出 PASS。</p>
 
   <details class="instructor-guide" id="instructor-guide" hidden>
     <summary>课堂演示说明（讲师用，点击展开 / 收起）</summary>
     <div class="guide-body">
       <section>
         <h2>本轮给AI的命令</h2>
-        <p>不是一句命令，而是左侧完整任务包原文。</p>
+        <p>不是一句命令，而是左侧完整任务包原文——由主代理读取后拆解、派发给代码子代理执行。</p>
       </section>
       <section>
         <h2>当前演示什么</h2>
-        <p>模拟Codex根据完整任务包读取工程、制定计划、实现功能、生成测试、运行验证并输出证据。</p>
+        <p>模拟主代理读取任务包并制定计划，派发代码子代理执行；子代理提交实现与验证证据后，主代理执行阶段门禁，因全量验证证据不足驳回一次；子代理补充全量验证后，主代理放行；最终由独立验收代理重新对照任务包给出 PASS。</p>
       </section>
       <section>
         <h2>固定演示步骤</h2>
         <ol>
-          <li>先展示完整任务包，强调目标、边界和验收标准。</li>
+          <li>先展示左侧完整任务包，强调目标、边界和验收标准。</li>
           <li>点击“提交任务包并开始执行”。</li>
-          <li>在“制定计划”阶段停顿，指出实现计划和验证计划同时产生。</li>
-          <li>在测试通过时指出：没有经历Demo 1的两次需求遗漏。</li>
-          <li>在浏览器验收阶段强调：测试通过后仍需证明原始目标。</li>
-          <li>展示最终验收标准与证据映射。</li>
-          <li>切换到Demo 1与Demo 2对比。</li>
+          <li>在“02·主代理制定执行计划”阶段停顿，指出主代理拥有计划权和调度权。</li>
+          <li>在“03·主代理拉起代码子代理”阶段强调：完整任务包被拆解为边界清楚的子任务。</li>
+          <li>在“05·主代理执行阶段门禁并驳回”重点停顿，强调驳回的是证据、不是代码错误。</li>
+          <li>在“06·代码子代理补充验证”展示全量测试 25 passed 的结果。</li>
+          <li>在“07·主代理门禁放行”强调门禁通过所依据的判断项。</li>
+          <li>在“08·独立验收代理最终验收”展示 PASS 结论与验收项证据。</li>
+          <li>收尾时展示四条观点钉子与主结论，并切换到 Demo 1 与 Demo 2 对照。</li>
         </ol>
       </section>
       <section>
         <h2>本轮结论</h2>
-        <p>完整任务包不会让AI变成永不出错的机器，但能显著减少因目标和边界缺失造成的无效返工。</p>
+        <p>丝滑不是一路不停，而是任务定义清楚、分工明确、门禁有效，只在必要位置做一次低成本驳回。</p>
       </section>
     </div>
   </details>
@@ -285,7 +381,7 @@
   <section class="workspace">
     <div class="task-col">
       <details class="task-package" id="task-package" open>
-        <summary>提交给 Codex 的完整任务包</summary>
+        <summary>提交给主代理的完整任务包</summary>
         <div class="task-body">
           <h2>任务：为用户列表增加 Excel 导出功能</h2>
           <pre class="task-text">【任务目标】
@@ -335,17 +431,42 @@
         </div>
       </details>
       <p class="task-hint">这次交给AI的，不再只是一句话，而是一份包含目标、边界、约束和验收标准的工作定义。</p>
+
+      <div class="role-flow" aria-label="角色协作流程">
+        <p class="role-flow-title">角色协作流程</p>
+        <div class="flow-node role-main">主代理</div>
+        <div class="flow-arrow">↓ 派发任务</div>
+        <div class="flow-node role-sub">代码子代理</div>
+        <div class="flow-arrow">↓ 返回实现与证据</div>
+        <div class="flow-node role-main">主代理门禁</div>
+        <div class="flow-arrow">↓ 驳回 / 放行</div>
+        <div class="flow-node role-sub">代码子代理补充验证</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node role-main">主代理放行</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node role-final">独立验收代理</div>
+      </div>
     </div>
 
     <div class="console-col">
+      <div class="console-header-row">
+        <div class="role-legend">
+          <span class="role-chip role-main">🧭 主代理</span>
+          <span class="role-chip role-sub">🛠 代码子代理</span>
+          <span class="role-chip role-final">✅ 独立验收代理</span>
+        </div>
+        <div class="flow-status-wrap">当前状态：<span id="flow-status" class="flow-status status-neutral">—</span></div>
+      </div>
+
       <div class="stage-track" id="stage-track" role="list" aria-label="执行阶段">
-        <div class="stage-dot pending" data-stage="1"><span class="dot-no">01</span><span class="dot-label">读取任务与项目</span></div>
-        <div class="stage-dot pending" data-stage="2"><span class="dot-no">02</span><span class="dot-label">制定计划</span></div>
-        <div class="stage-dot pending" data-stage="3"><span class="dot-no">03</span><span class="dot-label">实现功能</span></div>
-        <div class="stage-dot pending" data-stage="4"><span class="dot-no">04</span><span class="dot-label">建立验证证据</span></div>
-        <div class="stage-dot pending" data-stage="5"><span class="dot-no">05</span><span class="dot-label">运行自动化测试</span></div>
-        <div class="stage-dot pending" data-stage="6"><span class="dot-no">06</span><span class="dot-label">真实场景验证</span></div>
-        <div class="stage-dot pending" data-stage="7"><span class="dot-no">07</span><span class="dot-label">完成与证据映射</span></div>
+        <div class="stage-dot pending role-main" data-stage="1"><span class="dot-role">主</span><span class="dot-no">01</span><span class="dot-label">读取任务包</span></div>
+        <div class="stage-dot pending role-main" data-stage="2"><span class="dot-role">主</span><span class="dot-no">02</span><span class="dot-label">制定计划</span></div>
+        <div class="stage-dot pending role-main" data-stage="3"><span class="dot-role">主</span><span class="dot-no">03</span><span class="dot-label">拉起子代理</span></div>
+        <div class="stage-dot pending role-sub" data-stage="4"><span class="dot-role">子</span><span class="dot-no">04</span><span class="dot-label">完成实现</span></div>
+        <div class="stage-dot pending role-main" data-stage="5"><span class="dot-role">主</span><span class="dot-no">05</span><span class="dot-label">门禁驳回</span></div>
+        <div class="stage-dot pending role-sub" data-stage="6"><span class="dot-role">子</span><span class="dot-no">06</span><span class="dot-label">补充验证</span></div>
+        <div class="stage-dot pending role-main" data-stage="7"><span class="dot-role">主</span><span class="dot-no">07</span><span class="dot-label">门禁放行</span></div>
+        <div class="stage-dot pending role-final" data-stage="8"><span class="dot-role">验</span><span class="dot-no">08</span><span class="dot-label">最终验收</span></div>
       </div>
 
       <div class="console-controls">
@@ -364,50 +485,38 @@
   </section>
 
   <section class="final-report" id="final-report" hidden>
-    <h2>07 · 完成与证据映射</h2>
+    <h2>08 · 独立验收代理最终验收</h2>
     <pre class="report-summary">任务状态：PASS
 
-代码实现：PASS
-自动化测试：18/18 PASS
-浏览器 smoke：PASS
-xlsx内容验证：PASS
-原功能回归：PASS
-验收标准：10/10 已覆盖
-残余风险：未发现阻断性风险</pre>
+主代理：完成读取、计划、派发与门禁判断（1 次驳回 + 1 次放行）
+代码子代理：完成实现，提交两次验证（首次仅新增测试，二次全量测试 25 passed）
+独立验收代理：重新对照任务包，最终 PASS
 
-    <div class="mapping-grid">
-      <div class="mapping-item">
-        <h3>目标：导出全部筛选结果</h3>
-        <p>证据：默认23条、筛选数量一致、请求无分页参数</p>
-      </div>
-      <div class="mapping-item">
-        <h3>边界：空姓名与空结果</h3>
-        <p>证据：bob导出成功、空结果工作簿可读取</p>
-      </div>
-      <div class="mapping-item">
-        <h3>质量：真实有效的xlsx</h3>
-        <p>证据：程序读取成功、响应头正确</p>
-      </div>
-      <div class="mapping-item">
-        <h3>回归：列表功能不受影响</h3>
-        <p>证据：列表、筛选、分页 smoke PASS</p>
-      </div>
-    </div>
+门禁历史：GATE REJECTED（验证证据不足）→ GATE PASSED
+验收项：9/9 已覆盖</pre>
+
+    <ul class="final-checklist-grid">
+      <li>✓ 导出全部筛选结果</li>
+      <li>✓ 中文列名正确</li>
+      <li>✓ 空列表正常</li>
+      <li>✓ display_name 为空正常</li>
+      <li>✓ 超过 10000 行返回 422</li>
+      <li>✓ 复用已有筛选逻辑</li>
+      <li>✓ 未改变原接口语义</li>
+      <li>✓ 全量测试通过</li>
+      <li>✓ 无越界修改</li>
+    </ul>
 
     <div class="final-highlight">
-      <p>如果这个导出功能从一开始收到的就是完整任务包，</p>
-      <p>AI就不需要先经历“空值失败”和“只导出当前页”两轮弯路。</p>
-      <p>它可以从一开始就围绕同一组目标、边界和验收标准，</p>
-      <p>完成读取、计划、实现、测试、验证和交付。</p>
+      <p>1. 主代理不必亲自执行每一步，但必须掌握计划、门禁和推进权。</p>
+      <p>2. 门禁不是让 AI 变慢，而是用低成本检查阻止高成本返工。</p>
+      <p>3. 执行完成不等于阶段通过；证据满足门禁，流程才能继续。</p>
+      <p>4. 最终验收仍然要回到原始目标，不能只接受执行者的完成声明。</p>
     </div>
 
     <div class="final-conclusion-main">
-      <p>完整任务包的价值，不是让AI绝不犯错，</p>
-      <p>而是让实现、测试和验收从一开始对准同一个目标。</p>
-    </div>
-    <div class="final-conclusion-aux">
-      <p>AI写出代码不是闭环；</p>
-      <p>目标、实现、反馈和证据形成一致链条，才是研发闭环。</p>
+      <p>丝滑不是一路不停，</p>
+      <p>而是任务定义清楚、分工明确、门禁有效，只在必要位置做一次低成本驳回。</p>
     </div>
   </section>
 
@@ -430,17 +539,19 @@ xlsx内容验证：PASS
         <p class="comparison-note">问题不是AI不会写，而是工作没有被完整定义。</p>
       </div>
       <div class="comparison-col">
-        <h3>完整任务包驱动</h3>
+        <h3>完整任务包驱动（多智能体协作）</h3>
         <ol class="flow-list">
           <li>目标与边界明确</li>
-          <li>读取工程</li>
-          <li>同时规划实现与验证</li>
-          <li>完成功能</li>
-          <li>自动化测试</li>
-          <li>浏览器验收</li>
-          <li>一次形成证据闭环</li>
+          <li>主代理读取工程</li>
+          <li>主代理制定计划</li>
+          <li>派发代码子代理</li>
+          <li>子代理提交实现与证据</li>
+          <li>门禁驳回（证据不足）</li>
+          <li>子代理补充验证</li>
+          <li>门禁放行</li>
+          <li>独立验收 PASS</li>
         </ol>
-        <p class="comparison-note">不是省掉验证，而是避免验证到最后才发现目标定义不完整。</p>
+        <p class="comparison-note">丝滑不是一路不停，而是任务定义清楚、分工明确、门禁有效。</p>
       </div>
     </div>
   </section>
@@ -478,129 +589,183 @@ $("btn-toggle-guide").addEventListener("click", function () {
 applyGuidePref();
 
 // ============================================================
-// Codex 执行闭环模拟：固定顺序、固定内容、固定短延迟，
-// 不调用任何模型接口，不发出网络请求，不修改项目文件。
+// 主代理调度 + 子代理执行 + 轻量驳回 + 门禁放行 模拟：
+// 固定顺序、固定内容、固定延迟，不调用任何模型接口，
+// 不发出网络请求，不修改项目文件。
 // ============================================================
-// 每个阶段的固定执行时长（毫秒）：01..07 依次对应，单步 10~60 秒，总计 300000ms（约 5 分钟）。
-// 时长按各阶段的真实工作量估算（实现功能/真实场景验证最长，运行测试/输出报告最短），
+// 每个节点的固定执行时长（毫秒）：01..08 依次对应，单步 10~60 秒，总计约 4 分 40 秒。
+// 时长按各节点的真实工作量估算（代码子代理完成实现/补充验证最长，派发/门禁判断最短），
 // 不使用随机值，暂停/继续会保留剩余时间，保证课堂复现稳定可预期。
-var STAGE_DELAYS_MS = [40000, 35000, 60000, 55000, 25000, 60000, 25000];
+var STAGE_DELAYS_MS = [35000, 30000, 15000, 60000, 20000, 55000, 15000, 50000];
 
 var STAGES = [
   {
     id: 1,
-    title: "01 · 读取任务与项目",
-    kind: "checklist",
+    role: "main",
+    roleLabel: "主代理",
+    title: "01 · 主代理读取任务包",
+    status: "READING",
     lines: [
-      "已读取任务目标、功能要求、技术约束与10项验收标准",
-      "已识别项目为 FastAPI + 静态 HTML/CSS/原生 JavaScript",
-      "已定位用户列表页面、查询接口、数据模型和测试目录",
+      "已读取完整任务包（目标、功能要求、技术约束、验收标准、验证要求）",
+      "已读取项目结构：FastAPI 后端 + 静态 HTML/CSS/原生 JavaScript",
+      "已定位现有用户列表接口、筛选逻辑与测试目录",
       "已确认现有筛选参数：username、status",
-      "已确认现有分页参数：page、page_size",
-      "已确认不得引入前端框架或外部依赖"
+      "已确认约束：不引入新依赖、不改变已有列表接口语义"
     ],
-    conclusion: "先建立工程上下文，再决定如何修改。"
+    conclusion: "已读取任务包和相关项目文件。任务目标、约束和验收条件明确，可以进入计划阶段。"
   },
   {
     id: 2,
-    title: "02 · 制定计划",
-    kind: "plain",
-    lines: [
-      "计划1：复用现有用户筛选逻辑，新增正式导出接口",
-      "计划2：前端导出只传 username 和 status，不传分页参数",
-      "计划3：统一处理空值和空结果",
-      "计划4：生成真实 xlsx 并设置下载响应头",
-      "计划5：补充接口测试、文件内容测试和浏览器 smoke",
-      "计划6：最后运行完整回归并逐项映射验收标准"
+    role: "main",
+    roleLabel: "主代理",
+    title: "02 · 主代理制定执行计划",
+    status: "PLANNING",
+    plainLines: [
+      "计划1：检查现有用户列表接口和筛选逻辑",
+      "计划2：新增独立 Excel 导出接口",
+      "计划3：复用当前筛选逻辑",
+      "计划4：处理空列表、空值和 10000 行上限",
+      "计划5：补充对应测试",
+      "计划6：运行新增测试和全量回归测试",
+      "计划7：输出变更说明",
+      "计划8：进入最终独立验收"
     ],
-    conclusion: "实现计划与验证计划同时形成，而不是写完代码再考虑怎么证明。"
+    conclusion: "计划覆盖任务目标、工程约束和验收要求，可以派发代码任务。"
   },
   {
     id: 3,
-    title: "03 · 实现功能",
-    kind: "checklist",
-    lines: [
-      "新增 GET /api/users/export",
-      "复用 username/status 筛选逻辑",
-      "导出查询不应用 page/page_size",
-      "空姓名统一转换为空字符串",
-      "空结果保留表头并生成合法工作簿",
-      "页面增加“导出 Excel”按钮",
-      "前端导出参数与列表分页参数解耦"
+    role: "main",
+    roleLabel: "主代理",
+    title: "03 · 主代理拉起代码子代理",
+    status: "DELEGATED",
+    delegateLines: [
+      "请完成用户列表 Excel 导出功能。",
+      "新增独立导出接口，复用现有筛选逻辑，不引入新依赖，不改变已有列表接口语义。",
+      "处理空列表、display_name 为空、超过 10000 行返回 422。",
+      "补充对应测试，并返回修改文件、实现说明和测试结果。",
+      "不得修改原始验收标准。"
     ],
-    diff: [
-      "M app/main.py",
-      "M app/services/users.py",
-      "M app/static/users.html",
-      "M app/static/users.js",
-      "A tests/test_user_export.py",
-      "A tests/browser_smoke.py"
-    ]
+    conclusion: "完整任务包经过主代理拆解后，变成边界清楚的代码子任务。"
   },
   {
     id: 4,
-    title: "04 · 建立验证证据",
-    kind: "checklist",
+    role: "sub",
+    roleLabel: "代码子代理",
+    title: "04 · 代码子代理完成实现",
+    status: "SUBMITTED",
     lines: [
-      "默认导出全部23条",
-      "username 筛选",
-      "status 筛选",
-      "组合筛选",
-      "bob空姓名",
-      "空结果工作簿",
-      "xlsx文件可读取",
-      "响应头与文件名",
-      "导出请求不携带分页参数",
-      "原有列表、筛选和分页回归"
+      "已新增独立导出接口 GET /api/users/export",
+      "已复用现有 username/status 筛选逻辑",
+      "已处理空列表、display_name 为空与超过 10000 行返回 422",
+      "已新增 5 个对应测试"
     ],
-    conclusion: "测试不是为了增加数量，而是覆盖任务包中承诺的边界。"
+    terminal: "$ pytest tests/test_user_export_api.py -q\n\n5 passed in 0.31s",
+    summaryNote: "新增导出功能及 5 个对应测试。导出成功、筛选复用、空列表、空值和超限测试均通过。新增测试：5 passed。",
+    gapNote: "尚未运行全量回归测试。"
   },
   {
     id: 5,
-    title: "05 · 运行自动化测试",
-    kind: "terminal",
-    terminal: "$ pytest -q\n\n18 passed in 1.84s\n\n✓ API测试通过\n✓ xlsx结构与内容检查通过\n✓ 原有功能回归测试通过",
-    note1: "因为目标、边界和验收标准在编码前已经明确，实现和测试从一开始就围绕同一目标展开。",
-    note2: "这次没有因为需求遗漏而走前两轮弯路。"
+    role: "main",
+    roleLabel: "主代理",
+    title: "05 · 主代理执行阶段门禁并驳回",
+    status: "GATE REJECTED",
+    gate: {
+      status: "REJECTED",
+      checklist: [
+        { ok: true, text: "实现范围符合要求" },
+        { ok: true, text: "新增测试已经通过" },
+        { ok: false, text: "未运行全量测试" },
+        { ok: false, text: "现有证据不足以证明原有用户列表功能未受影响" }
+      ],
+      message: "阶段门禁未通过。当前结果只能证明新增导出测试通过，不能证明原有用户列表分页、筛选和接口行为未受影响。请运行全量测试并返回完整结果。不要修改实现目标、测试标准或验收条件。"
+    },
+    conclusion: "代码可能已经写对，但证据不够，主代理就不能放行。"
   },
   {
     id: 6,
-    title: "06 · 真实场景验证",
-    kind: "checklist",
+    role: "sub",
+    roleLabel: "代码子代理",
+    title: "06 · 代码子代理补充验证",
+    status: "FIXING / VERIFYING",
     lines: [
-      "打开用户列表：共23条，每页8条",
-      "默认导出：请求不含 page/page_size",
-      "读取文件：23条数据",
-      "筛选 bob：导出成功，姓名为空但文件有效",
-      "status=active：导出数量与页面筛选结果一致",
-      "无匹配筛选：生成只有表头的合法 xlsx",
-      "返回页面：列表、筛选和分页仍然正常"
+      "已重新运行全量 pytest",
+      "已检查原有用户列表分页、筛选和接口行为",
+      "已确认新增导出相关测试全部通过"
     ],
-    evidence: {
-      request: ["username=bob", "status=", "无 page", "无 page_size"],
-      file: ["格式：XLSX", "数据行：1", "空姓名：正常", "读取结果：PASS"]
-    },
-    conclusion: "自动化测试给出证据，真实浏览器验证最终目标。"
+    terminal: "$ pytest -q\n......................... 25 passed in 0.42s",
+    summaryNote: "25 项测试全部通过。原有用户列表分页、筛选和接口测试未受影响。新增导出相关测试全部通过。"
   },
   {
     id: 7,
-    title: "07 · 完成与证据映射",
-    kind: "report"
+    role: "main",
+    roleLabel: "主代理",
+    title: "07 · 主代理门禁放行",
+    status: "GATE PASSED",
+    gate: {
+      status: "PASSED",
+      checklist: [
+        { ok: true, text: "任务目标已覆盖" },
+        { ok: true, text: "约束未违反" },
+        { ok: true, text: "新增测试通过" },
+        { ok: true, text: "全量测试通过" },
+        { ok: true, text: "改动范围可控" },
+        { ok: true, text: "验证证据完整" }
+      ],
+      message: "阶段门禁通过。当前实现具备进入最终独立验收的条件。"
+    },
+    conclusion: "门禁不是阻止 AI 工作，而是决定证据够不够支撑下一步。"
+  },
+  {
+    id: 8,
+    role: "final",
+    roleLabel: "独立验收代理",
+    title: "08 · 独立验收代理最终验收",
+    status: "FINAL PASS",
+    lines: [
+      "已重新读取原始任务包",
+      "已核对代码变更",
+      "已核对测试结果",
+      "已核对导出接口实际返回与文件内容"
+    ],
+    finalChecklist: [
+      "导出全部筛选结果",
+      "中文列名正确",
+      "空列表正常",
+      "display_name 为空正常",
+      "超过 10000 行返回 422",
+      "复用已有筛选逻辑",
+      "未改变原接口语义",
+      "全量测试通过",
+      "无越界修改"
+    ],
+    passStatement: "PASS。原始目标、约束和验收项均有对应证据。可以交付。"
   }
 ];
 
-var currentStage = 0; // 完成的阶段数：0 = 尚无阶段渲染完成
+var ROLE_ICON = { main: "🧭", sub: "🛠", final: "✅" };
+var STATUS_CLASS = {
+  "READING": "status-neutral",
+  "PLANNING": "status-neutral",
+  "DELEGATED": "status-neutral",
+  "SUBMITTED": "status-neutral",
+  "GATE REJECTED": "status-rejected",
+  "FIXING / VERIFYING": "status-fixing",
+  "GATE PASSED": "status-passed",
+  "FINAL PASS": "status-final"
+};
+
+var currentStage = 0; // 完成的节点数：0 = 尚无节点渲染完成
 var started = false;  // 执行是否已经开始（从点击“开始执行”/“单步执行”到“重新演示”前恒为 true）
 var playing = false;
-var timer = null;          // setTimeout：本阶段等待结束后触发 advanceStage
+var timer = null;          // setTimeout：本节点等待结束后触发 advanceStage
 var displayTimer = null;   // setInterval：更新“执行中”已用时文案（正向计时，仅展示，不驱动进度）
 var remainingMs = null;    // 暂停时保留的剩余等待时间；null 表示按 STAGE_DELAYS_MS 从头等待
 var waitStartedAt = null;  // 本次等待开始的时间戳，用于暂停时计算已消耗时间
 
 function stageDot(index) { return document.querySelector('.stage-dot[data-stage="' + index + '"]'); }
 
-// 注意：第一阶段完成前 currentStage 仍为 0，因此“是否已开始”不能用 currentStage>0 判断，
-// 必须用独立的 started 标志——否则暂停/继续在第一阶段等待期间会失效（继续按钮判断不出已开始）。
+// 注意：第一节点完成前 currentStage 仍为 0，因此“是否已开始”不能用 currentStage>0 判断，
+// 必须用独立的 started 标志——否则暂停/继续在第一节点等待期间会失效。
 function updateTracker() {
   for (var i = 1; i <= STAGES.length; i++) {
     var el = stageDot(i);
@@ -609,6 +774,18 @@ function updateTracker() {
     else if (i === currentStage + 1 && started) el.classList.add("active");
     else el.classList.add("pending");
   }
+}
+
+function updateFlowStatus() {
+  var badge = $("flow-status");
+  if (currentStage === 0) {
+    badge.textContent = "—";
+    badge.className = "flow-status status-neutral";
+    return;
+  }
+  var status = STAGES[currentStage - 1].status;
+  badge.textContent = status;
+  badge.className = "flow-status " + (STATUS_CLASS[status] || "status-neutral");
 }
 
 function updateControls() {
@@ -620,30 +797,22 @@ function updateControls() {
   $("btn-jump-end").disabled = finished;
 }
 
-function evidenceCard(title, lines) {
-  var card = document.createElement("div");
-  card.className = "evidence-card";
-  var h4 = document.createElement("h4");
-  h4.textContent = title;
-  card.appendChild(h4);
-  var pre = document.createElement("pre");
-  pre.textContent = lines.join("\n");
-  card.appendChild(pre);
-  return card;
-}
-
 function renderStage(stage) {
   var log = $("console-log");
   var placeholder = $("console-placeholder");
   if (placeholder) placeholder.remove();
 
   var block = document.createElement("div");
-  block.className = "log-block";
+  block.className = "log-block role-" + stage.role;
   var h3 = document.createElement("h3");
-  h3.textContent = stage.title;
+  h3.textContent = ROLE_ICON[stage.role] + " " + stage.title;
   block.appendChild(h3);
+  var roleTag = document.createElement("p");
+  roleTag.className = "log-role-tag";
+  roleTag.textContent = stage.roleLabel;
+  block.appendChild(roleTag);
 
-  if (stage.kind === "checklist") {
+  if (stage.lines) {
     var ul = document.createElement("ul");
     ul.className = "log-checklist";
     stage.lines.forEach(function (line) {
@@ -652,46 +821,95 @@ function renderStage(stage) {
       ul.appendChild(li);
     });
     block.appendChild(ul);
-    if (stage.diff) {
-      var diffBox = document.createElement("pre");
-      diffBox.className = "log-diff";
-      diffBox.textContent = stage.diff.join("\n");
-      block.appendChild(diffBox);
-    }
-    if (stage.evidence) {
-      var cardsWrap = document.createElement("div");
-      cardsWrap.className = "evidence-cards";
-      cardsWrap.appendChild(evidenceCard("请求参数", stage.evidence.request));
-      cardsWrap.appendChild(evidenceCard("文件检查", stage.evidence.file));
-      block.appendChild(cardsWrap);
-    }
-  } else if (stage.kind === "plain") {
-    var ol = document.createElement("ul");
-    ol.className = "log-plain";
-    stage.lines.forEach(function (line) {
+  }
+
+  if (stage.plainLines) {
+    var pl = document.createElement("ul");
+    pl.className = "log-plain";
+    stage.plainLines.forEach(function (line) {
       var li = document.createElement("li");
       li.textContent = line;
-      ol.appendChild(li);
+      pl.appendChild(li);
     });
-    block.appendChild(ol);
-  } else if (stage.kind === "terminal") {
+    block.appendChild(pl);
+  }
+
+  if (stage.delegateLines) {
+    var delegateBox = document.createElement("div");
+    delegateBox.className = "log-delegate";
+    var delegateTitle = document.createElement("p");
+    delegateTitle.className = "log-delegate-title";
+    delegateTitle.textContent = "▸ 派发给代码子代理：";
+    delegateBox.appendChild(delegateTitle);
+    stage.delegateLines.forEach(function (line) {
+      var p = document.createElement("p");
+      p.textContent = line;
+      delegateBox.appendChild(p);
+    });
+    block.appendChild(delegateBox);
+  }
+
+  if (stage.terminal) {
     var pre = document.createElement("pre");
     pre.className = "log-terminal";
     pre.textContent = stage.terminal;
     block.appendChild(pre);
-    var note1 = document.createElement("p");
-    note1.className = "log-note";
-    note1.textContent = stage.note1;
-    block.appendChild(note1);
-    var note2 = document.createElement("p");
-    note2.className = "log-note-strong";
-    note2.textContent = stage.note2;
-    block.appendChild(note2);
-  } else if (stage.kind === "report") {
-    var p = document.createElement("p");
-    p.className = "log-note";
-    p.textContent = "已生成完成报告与验收映射，见下方“完成与证据映射”。";
-    block.appendChild(p);
+  }
+
+  if (stage.summaryNote) {
+    var summary = document.createElement("p");
+    summary.className = "log-note-strong";
+    summary.textContent = stage.summaryNote;
+    block.appendChild(summary);
+  }
+
+  if (stage.gapNote) {
+    var gap = document.createElement("p");
+    gap.className = "log-gap-note";
+    gap.textContent = "△ " + stage.gapNote;
+    block.appendChild(gap);
+  }
+
+  if (stage.gate) {
+    var gateBox = document.createElement("div");
+    gateBox.className = "log-gate log-gate-" + stage.gate.status.toLowerCase();
+    var gateHeader = document.createElement("p");
+    gateHeader.className = "log-gate-status";
+    gateHeader.textContent = "门禁状态：" + stage.gate.status
+      + (stage.gate.status === "REJECTED" ? "（验证证据不足）" : "");
+    gateBox.appendChild(gateHeader);
+    var gateList = document.createElement("ul");
+    gateList.className = "log-gate-checklist";
+    stage.gate.checklist.forEach(function (item) {
+      var li = document.createElement("li");
+      li.className = item.ok ? "gate-ok" : "gate-miss";
+      li.textContent = (item.ok ? "✓ " : "✗ ") + item.text;
+      gateList.appendChild(li);
+    });
+    gateBox.appendChild(gateList);
+    var gateMessage = document.createElement("p");
+    gateMessage.className = "log-gate-message";
+    gateMessage.textContent = stage.gate.message;
+    gateBox.appendChild(gateMessage);
+    block.appendChild(gateBox);
+  }
+
+  if (stage.finalChecklist) {
+    var finalUl = document.createElement("ul");
+    finalUl.className = "log-checklist";
+    stage.finalChecklist.forEach(function (item) {
+      var li = document.createElement("li");
+      li.textContent = "✓ " + item;
+      finalUl.appendChild(li);
+    });
+    block.appendChild(finalUl);
+  }
+
+  if (stage.passStatement) {
+    var passP = document.createElement("p");
+    passP.className = "log-note-strong";
+    passP.textContent = stage.passStatement;
+    block.appendChild(passP);
   }
 
   if (stage.conclusion) {
@@ -711,7 +929,7 @@ function revealFinalReport() {
 
 // ---- “执行中”计时提示：正向计时（已用时），不参与推进逻辑 ----
 // 真实研发执行不会预先知道某一步要跑多久，所以这里只展示已经过去的时间，
-// 不展示或暗示总时长/剩余时间；内部仍用 STAGE_DELAYS_MS 驱动何时推进到下一阶段。
+// 不展示或暗示总时长/剩余时间；内部仍用 STAGE_DELAYS_MS 驱动何时推进到下一节点。
 function showRunningIndicator(stageIndex) {
   clearRunningIndicator();
   var placeholder = $("console-placeholder");
@@ -751,6 +969,7 @@ function advanceStage() {
   currentStage += 1;
   renderStage(STAGES[currentStage - 1]);
   updateTracker();
+  updateFlowStatus();
   updateControls();
   if (currentStage === STAGES.length) {
     playing = false;
@@ -808,7 +1027,7 @@ function continueAutoPlay() {
 function stepOnce() {
   started = true;
   pauseAutoPlay();
-  remainingMs = null; // 手动单步：跳过等待，立即推进，下一阶段仍从完整时长开始
+  remainingMs = null; // 手动单步：跳过等待，立即推进，下一节点仍从完整时长开始
   advanceStage();
 }
 
@@ -825,9 +1044,10 @@ function resetDemo() {
   remainingMs = null;
   waitStartedAt = null;
   currentStage = 0;
-  $("console-log").innerHTML = '<p class="console-placeholder" id="console-placeholder">点击“提交任务包并开始执行”，或使用“单步执行”查看第一阶段。</p>';
+  $("console-log").innerHTML = '<p class="console-placeholder" id="console-placeholder">点击“提交任务包并开始执行”，或使用“单步执行”查看第一节点。</p>';
   $("final-report").hidden = true;
   updateTracker();
+  updateFlowStatus();
   updateControls();
 }
 
@@ -840,6 +1060,7 @@ $("btn-reset").addEventListener("click", resetDemo);
 $("btn-reset-top").addEventListener("click", resetDemo);
 
 updateTracker();
+updateFlowStatus();
 updateControls();
 </script>
 </body>

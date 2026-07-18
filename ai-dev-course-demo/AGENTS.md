@@ -35,8 +35,14 @@
 ## Demo 2（/demo/codex-loop）
 
 - `app/static/demo_codex_loop.html`（`/demo/codex-loop`）是纯前端模拟页面：不调用任何模型
-  接口，不发出网络请求，不修改项目文件；七个阶段的文案、顺序和固定延迟（`STAGE_DELAY_MS`）
-  都写在页面内的 `STAGES` 配置里，新增/调整阶段时只改这份配置，不要引入随机延迟或随机失败。
+  接口，不发出网络请求，不修改项目文件；八个节点的文案、角色、顺序和固定延迟
+  （`STAGE_DELAYS_MS`，逐项 10~60 秒）都写在页面内的 `STAGES` 配置里，新增/调整节点时只改这份
+  配置，不要引入随机延迟或随机失败。
+- 流程建模为"主代理调度 + 代码子代理执行 + 轻量驳回 + 门禁放行"：`STAGES` 每项标注
+  `role`（`main`/`sub`/`final`）与 `status`（READING/PLANNING/DELEGATED/SUBMITTED/
+  GATE REJECTED/FIXING · VERIFYING/GATE PASSED/FINAL PASS），驱动角色着色和页面右上角
+  的"当前状态"徽标。节点05 的门禁驳回是**唯一**一次轻量驳回，原因固定为"验证证据不足"，
+  不是代码错误——新增内容时不要再引入空值 Bug、多轮驳回或人工确认弹窗。
 - 该页面与 Demo 1 完全独立（不复用 `DEMO_STATES`/`demo_users.html`），但共用同一个讲师说明
   显示偏好（`sessionStorage["ai-demo.instructorNotes"]`）和导航页 `app/static/demo_nav.html`。
 - `demo_nav.html` 中 Demo 1 的四张状态卡片使用 `.card`/`.card-enter` 类名，Demo 2 的入口卡使用
