@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>演示一 · 企业知识回答对比</title>
+</head>
+<body>
+<main class="page knowledge-page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">企业 AI 大模型与智能体 · 财务演示套件</p>
+      <h1 class="scenario-title">演示一 / 5 · 答得有依据，但事情没有推进</h1>
+      <p class="scenario-subtitle">企业知识接入前后回答同一笔流水的差异</p>
+    </div>
+    <div class="header-actions">
+      <a href="/demo">返回总览</a>
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open>
+      <summary>讲师说明</summary>
+      <div class="guide-body" id="guide-body"></div>
+    </details>
+  </section>
+
+  <nav class="controller" aria-label="演示控制器">
+    <button type="button" id="btn-prev">上一步</button>
+    <button type="button" id="btn-next" class="primary">下一步</button>
+    <button type="button" id="btn-auto">自动播放</button>
+    <button type="button" id="btn-pause">暂停</button>
+    <button type="button" id="btn-continue">继续</button>
+    <label>跳到 <select id="step-select" aria-label="跳到指定步骤">
+      <option value="1">01 流水</option><option value="2">02 通用回答</option><option value="3">03 企业检索</option><option value="4">04 企业回答</option><option value="5">05 状态判断</option>
+    </select></label>
+    <button type="button" id="btn-final">直接最终结果</button>
+    <button type="button" id="btn-reset">重新开始</button>
+    <span class="step-count" id="step-count"></span>
+    <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+  </nav>
+
+  <div class="stepper" aria-label="演示步骤">
+    <span class="step-dot" data-step-dot="1">01 流水</span>
+    <span class="step-dot" data-step-dot="2">02 通用回答</span>
+    <span class="step-dot" data-step-dot="3">03 企业检索</span>
+    <span class="step-dot" data-step-dot="4">04 企业回答</span>
+    <span class="step-dot" data-step-dot="5">05 状态判断</span>
+  </div>
+  <div id="key-judgment" class="callout">当前判断：模型看到的是问题，企业面对的是业务。</div>
+
+  <div class="knowledge-sections">
+  <section class="panel knowledge-current-task">
+    <h2>当前业务任务</h2>
+    <div class="metric-grid">
+      <div class="metric"><span class="metric-label">付款方</span><strong class="metric-value" style="font-size:18px">华远商贸有限公司</strong></div>
+      <div class="metric"><span class="metric-label">金额</span><strong class="metric-value">¥58,600</strong></div>
+      <div class="metric"><span class="metric-label">摘要</span><strong class="metric-value" style="font-size:18px">货款</strong></div>
+      <div class="metric"><span class="metric-label">日期</span><strong class="metric-value" style="font-size:18px">2026-07-28</strong></div>
+    </div>
+  </section>
+
+  <section class="answer-columns knowledge-answer-columns">
+    <article class="panel answer-card generic">
+      <h2>通用大模型 <span id="generic-status" class="status pending">待处理</span></h2>
+      <p class="muted small">看到的是一句问题，不知道企业实际科目、客户情况和内部规则。</p>
+      <p class="answer-text" id="generic-answer"></p>
+      <div id="generic-note" class="callout warning"></div>
+    </article>
+    <article class="panel answer-card enterprise">
+      <h2>企业知识应用 <span id="enterprise-status" class="status pending">待处理</span></h2>
+      <p class="muted small">读取企业资料，以结构化依据卡片呈现，不展示向量或 embedding 技术细节。</p>
+      <div id="knowledge-sources" class="source-list"></div>
+      <p class="answer-text" id="enterprise-answer"></p>
+      <div id="enterprise-note" class="callout success"></div>
+    </article>
+  </section>
+
+  <section class="panel knowledge-task-state">
+    <h2>任务状态对比</h2>
+    <div class="two-column">
+      <div class="evidence-card"><strong>通用大模型</strong><p>凭证：<span id="generic-voucher">未生成</span></p><p>核销：<span id="generic-writeoff">未执行</span></p><p>任务状态：<span id="generic-task">待处理</span></p></div>
+      <div class="evidence-card selected"><strong>企业知识应用</strong><p>凭证：<span id="enterprise-voucher">未生成</span></p><p>核销：<span id="enterprise-writeoff">未执行</span></p><p>任务状态：<span id="enterprise-task">待处理</span></p></div>
+    </div>
+    <div id="final-callout" class="callout">先看清楚这是一笔业务，再讨论回答是否更准确。</div>
+  </section>
+  </div>
+</main>
+<script src="/static/shared/scenario-data.js"></script>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+(function () {
+  "use strict";
+  var guide = {
+    1: ["这一屏要讲什么：", "模型看到的是一条文字问题，企业面对的是一笔需要处理的业务。", "建议停顿：", "先让学员说出还缺什么资料。", "转场句：", "先看看通用模型会怎么回答。"],
+    2: ["这一屏要讲什么：", "通用回答看起来合理，但没有企业科目、客户和内部规则。", "应落下的判断：", "通用性不是企业可执行性。", "转场句：", "现在让企业知识应用读取本地资料。"],
+    3: ["这一屏要讲什么：", "企业知识应用检索科目表、客户档案、内部规则、历史凭证和未核销应收。", "建议停顿：", "不要讲向量和 embedding，先讲依据来自哪里。", "转场句：", "有依据之后，回答会更具体，但仍不等于自动处理。"],
+    4: ["这一屏要讲什么：", "应用识别付款方，发现同金额候选，并明确金额一致不足以自动核销。", "应落下的判断：", "知识让回答更准确，但没有给模型过账权。", "转场句：", "最后对比两边的任务状态。"],
+    5: ["这一屏要讲什么：", "两边都没有生成凭证，也没有执行核销，任务仍然待处理。", "核心落句：", "RAG 给 AI 增加了企业依据，但没有自动给它任务推进权。", "转场句：", "路径明确时，下一步应考虑固定工作流。"]
+  };
+  var genericAnswers = [
+    "等待提问。",
+    "这可能属于销售回款，可根据合同、发票和客户往来情况确认后，借记银行存款、贷记应收账款。",
+    "这可能属于销售回款，可根据合同、发票和客户往来情况确认后，借记银行存款、贷记应收账款。",
+    "这可能属于销售回款，可根据合同、发票和客户往来情况确认后，借记银行存款、贷记应收账款。",
+    "这可能属于销售回款，可根据合同、发票和客户往来情况确认后，借记银行存款、贷记应收账款。"
+  ];
+  var enterpriseAnswers = [
+    "等待企业资料检索。",
+    "尚未读取企业资料。",
+    "已读取资料，正在形成企业口径。",
+    "付款方为华远商贸有限公司，存在一笔同金额未核销应收 XS-0725-011；但按企业规则，金额一致不能单独作为核销依据。建议补充付款通知或业务确认，由会计复核。",
+    "企业知识应用给出了更有依据的建议，但仍未形成可以自动核销的唯一结论。"
+  ];
+  function set(id, value) { document.getElementById(id).textContent = value; }
+  function renderGuide(step) {
+    var body = document.getElementById("guide-body");
+    body.innerHTML = "";
+    guide[step].forEach(function (text, index) {
+      var element = document.createElement(index % 2 === 0 ? "h3" : "p");
+      element.textContent = text;
+      body.appendChild(element);
+    });
+  }
+  function renderSources(step) {
+    var container = document.getElementById("knowledge-sources");
+    container.innerHTML = "";
+    if (step < 3) return;
+    window.FINANCE_DATA.knowledgeSources.forEach(function (item) {
+      var card = document.createElement("div");
+      card.className = "source-item";
+      card.innerHTML = "<strong></strong><span></span>";
+      card.firstChild.textContent = item[0];
+      card.lastChild.textContent = item[1];
+      container.appendChild(card);
+    });
+  }
+  function render(step) {
+    renderGuide(step);
+    document.querySelector(".knowledge-sections").classList.toggle("focus-task-state", step >= 5);
+    set("generic-answer", genericAnswers[step - 1]);
+    set("enterprise-answer", enterpriseAnswers[step - 1]);
+    renderSources(step);
+    var genericReady = step >= 2;
+    var enterpriseReady = step >= 3;
+    var genericStatus = document.getElementById("generic-status");
+    var enterpriseStatus = document.getElementById("enterprise-status");
+    genericStatus.textContent = genericReady ? "已回答" : "待处理";
+    genericStatus.className = "status " + (genericReady ? "analysis" : "pending");
+    enterpriseStatus.textContent = enterpriseReady ? "已找到依据" : "待处理";
+    enterpriseStatus.className = "status " + (enterpriseReady ? "evidence" : "pending");
+    set("generic-note", genericReady ? "通用回答合理，但不知道企业实际口径。" : "先展示原始业务问题。注意：尚未产生凭证。 ");
+    set("enterprise-note", enterpriseReady ? "回答更具体，但仍需会计确认，不自动核销。" : "企业知识应用尚未检索。 ");
+    set("generic-task", "仍待处理");
+    set("enterprise-task", "仍待处理");
+    set("generic-voucher", "未生成");
+    set("enterprise-voucher", "未生成");
+    set("generic-writeoff", "未执行");
+    set("enterprise-writeoff", "未执行");
+    set("final-callout", step >= 5 ? "回答更准确了，但事情还没有往前推进。任务仍待处理。" : "继续推进，观察回答的依据如何变化。");
+    set("key-judgment", step >= 5 ? "核心判断：回答更准确了，但事情还没有往前推进。任务仍待处理。" : step >= 3 ? "当前判断：企业知识提供了依据，但还没有产生处理权限。" : "当前判断：模型看到的是问题，企业面对的是业务。");
+  }
+  initInstructorGuide();
+  new DemoController({ totalSteps: 5, delays: [1600, 1600, 1800, 1900, 1700], onStep: render });
+}());
+</script>
+</body>
+</html>

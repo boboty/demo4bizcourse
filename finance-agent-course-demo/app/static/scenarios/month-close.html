@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>演示五 · 自动结转损益与结账</title>
+</head>
+<body>
+<main class="page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">企业 AI 大模型与智能体 · 财务演示套件</p>
+      <h1 class="scenario-title">演示五 / 5 · 不是所有自动化都需要智能体</h1>
+      <p class="scenario-subtitle">系统按确定性规则完成结转损益与结账，人工确认启动，不由模型自由生成</p>
+    </div>
+    <div class="header-actions">
+      <a href="/demo">返回总览</a>
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open><summary>讲师说明</summary><div class="guide-body" id="guide-body"></div></details>
+  </section>
+
+  <nav class="controller" aria-label="演示控制器">
+    <button type="button" id="btn-prev">上一步</button>
+    <button type="button" id="btn-next" class="primary">下一步</button>
+    <button type="button" id="btn-auto">自动播放</button>
+    <button type="button" id="btn-pause">暂停</button>
+    <button type="button" id="btn-continue">继续</button>
+    <label>跳到 <select id="step-select" aria-label="跳到指定步骤">
+      <option value="1">01 结账前检查</option><option value="2">02 人工确认</option><option value="3">03 生成结转</option><option value="4">04 完成结账</option><option value="5">05 机制总结</option>
+    </select></label>
+    <button type="button" id="btn-final">直接最终结果</button>
+    <button type="button" id="btn-reset">重新开始</button>
+    <span class="step-count" id="step-count"></span>
+    <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+  </nav>
+
+  <div class="stepper" aria-label="结账步骤">
+    <span class="step-dot" data-step-dot="1">01 检查</span><span class="step-dot" data-step-dot="2">02 确认</span><span class="step-dot" data-step-dot="3">03 结转</span><span class="step-dot" data-step-dot="4">04 结账</span><span class="step-dot" data-step-dot="5">05 总结</span>
+  </div>
+  <div id="key-judgment" class="callout">当前判断：确定性流程也要有前置检查和人工门槛。</div>
+
+  <section class="panel">
+    <h2>华启制造有限公司 · 2026年7月月结</h2>
+    <div id="close-workspace"></div>
+  </section>
+</main>
+<script src="/static/shared/scenario-data.js"></script>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+(function () {
+  "use strict";
+  var confirmed = false;
+  var controller;
+  var guide = {
+    1: ["这一屏要讲什么：", "结账前先检查凭证、异常流水、科目余额和当前期间状态。", "应落下的判断：", "确定性流程也要有前置条件和人工门槛。", "转场句：", "检查通过后，由人工确认启动结账。"],
+    2: ["这一屏要讲什么：", "系统不能自行启动不可逆的结账动作，需要人工确认。", "建议停顿：", "这是权限边界，不是模型能力问题。", "转场句：", "确认后，系统按固定规则生成结转损益。"],
+    3: ["这一屏要讲什么：", "结转损益按照确定性会计规则执行，不是模型自由生成。", "应落下的判断：", "稳定、可审计的规则不需要智能体自主决策。", "转场句：", "生成后记录日志并完成结账。"],
+    4: ["这一屏要讲什么：", "结转损益凭证已生成，本期已结账，操作日志已记录。", "建议停顿：", "系统完成的是明确动作，不是开放式推理。", "转场句：", "最后把几种机制放在一张图里。"],
+    5: ["这一屏要讲什么：", "大模型、知识库、工作流、智能体和传统系统各自承担合适的环节。", "核心落句：", "成熟的 AI 项目，不是让智能体承担一切，而是让每个环节使用最合适的机制。", "转场句：", "财务演示套件完成。"]
+  };
+  function renderGuide(step) {
+    var body = document.getElementById("guide-body"); body.innerHTML = "";
+    guide[step].forEach(function (text, index) { var el = document.createElement(index % 2 === 0 ? "h3" : "p"); el.textContent = text; body.appendChild(el); });
+  }
+  function attachConfirm() {
+    var button = document.getElementById("confirm-close");
+    if (!button) return;
+    button.addEventListener("click", function () {
+      if (confirmed) return;
+      confirmed = true;
+      button.textContent = "已确认开始结账";
+      button.disabled = true;
+      document.getElementById("confirm-status").textContent = "已完成人工确认";
+      document.getElementById("confirm-status").className = "status done";
+    });
+  }
+  function render(step) {
+    renderGuide(step);
+    var workspace = document.getElementById("close-workspace");
+    if (step === 1) workspace.innerHTML = "<div class=\"two-column\"><div class=\"evidence-card selected\"><h3>结账前检查</h3><p>✓ 本期凭证已复核</p><p>✓ 异常流水已处理或挂起</p><p>✓ 必要科目余额正常</p><p>✓ 当前可以进入结账</p></div><div class=\"callout\"><strong>检查结果：可以进入结账</strong><br>下一步需要人工确认启动。</div></div>";
+    if (step === 2) workspace.innerHTML = confirmed ? "<div class=\"confirmation-card\"><h2>人工确认启动结账</h2><p>结账是有明确影响范围的操作，系统不会替代人工确认。</p><p>当前状态：<span id=\"confirm-status\" class=\"status done\">已完成人工确认</span></p><button type=\"button\" id=\"confirm-close\" class=\"primary\" disabled>已确认开始结账</button></div>" : "<div class=\"confirmation-card\"><h2>人工确认启动结账</h2><p>结账是有明确影响范围的操作，系统不会替代人工确认。</p><p>当前状态：<span id=\"confirm-status\" class=\"status confirm\">待人工确认</span></p><button type=\"button\" id=\"confirm-close\" class=\"primary\">确认开始结账</button></div>";
+    if (step === 3) workspace.innerHTML = confirmed ? "<div class=\"evidence-card selected\"><h3>系统生成结转损益</h3><p>按确定性会计规则执行。</p><p>不是模型自由生成，不需要智能体自主决策。</p><p>结转损益凭证：<span class=\"status draft\">已生成草稿</span></p></div><div class=\"callout success\">人工确认已记录，系统正在执行固定规则。</div>" : "<div class=\"callout warning\">尚未完成人工确认，系统不能开始结账。</div>";
+    if (step === 4) workspace.innerHTML = confirmed ? "<div class=\"metric-grid\"><div class=\"metric\"><span class=\"metric-label\">结转损益凭证</span><strong class=\"metric-value\" style=\"font-size:18px\">已生成</strong></div><div class=\"metric\"><span class=\"metric-label\">本期状态</span><strong class=\"metric-value\" style=\"font-size:18px\">已结账</strong></div><div class=\"metric\"><span class=\"metric-label\">操作日志</span><strong class=\"metric-value\" style=\"font-size:18px\">已记录</strong></div><div class=\"metric\"><span class=\"metric-label\">系统过账</span><strong class=\"metric-value\" style=\"font-size:18px\">按确定性规则执行（非AI决策）</strong></div></div><div class=\"callout success\">结账完成：系统完成确定性动作，人工确认和操作日志均保留。</div>" : "<div class=\"callout warning\">未完成人工确认，结账尚未完成。</div>";
+    if (step === 5) workspace.innerHTML = "<div class=\"mechanism-grid\"><div class=\"mechanism-item\"><strong>大模型</strong>理解和生成</div><div class=\"mechanism-item\"><strong>知识库</strong>提供企业依据</div><div class=\"mechanism-item\"><strong>工作流</strong>执行确定步骤</div><div class=\"mechanism-item\"><strong>智能体</strong>处理变化和异常</div><div class=\"mechanism-item\"><strong>传统系统</strong>执行严格确定规则</div></div><div class=\"callout\">成熟的 AI 项目，不是让智能体承担一切，而是让每个环节使用最合适的机制。</div>";
+    document.getElementById("key-judgment").textContent = step >= 5 ? "核心判断：成熟的 AI 项目，不是让智能体承担一切，而是让每个环节使用最合适的机制。" : step >= 4 ? "结账完成：确定性规则执行，操作日志已记录。" : step >= 2 ? (confirmed ? "人工确认已记录，可以按固定规则继续。" : "当前判断：结账必须先经过人工确认。") : "当前判断：确定性流程也要有前置检查和人工门槛。";
+    attachConfirm();
+  }
+  initInstructorGuide();
+  controller = new DemoController({ totalSteps: 5, delays: [1300, 1700, 1400, 1400, 1600], onStep: render, onReset: function () { confirmed = false; } });
+}());
+</script>
+</body>
+</html>

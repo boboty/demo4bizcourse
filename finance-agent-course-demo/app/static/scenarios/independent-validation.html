@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>演示四 · 独立验收发现业务错误</title>
+</head>
+<body>
+<main class="page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">企业 AI 大模型与智能体 · 财务演示套件</p>
+      <h1 class="scenario-title">演示四 / 5 · 实现全绿、测试全绿，业务仍然错误</h1>
+      <p class="scenario-subtitle">独立验收重新对照业务规则，发现执行者与测试共享了同一个错误理解</p>
+    </div>
+    <div class="header-actions">
+      <a href="/demo">返回总览</a>
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open><summary>讲师说明</summary><div class="guide-body" id="guide-body"></div></details>
+  </section>
+
+  <nav class="controller" aria-label="演示控制器">
+    <button type="button" id="btn-prev">上一步</button>
+    <button type="button" id="btn-next" class="primary">下一步</button>
+    <button type="button" id="btn-auto">自动播放</button>
+    <button type="button" id="btn-pause">暂停</button>
+    <button type="button" id="btn-continue">继续</button>
+    <label>跳到 <select id="step-select" aria-label="跳到指定步骤">
+      <option value="1">01 原始规则</option><option value="2">02 错误理解</option><option value="3">03 实现结果</option><option value="4">04 测试结果</option><option value="5">05 课堂判断</option><option value="6">06 独立验收</option><option value="7">07 最终判断</option>
+    </select></label>
+    <button type="button" id="btn-final">直接最终结果</button>
+    <button type="button" id="btn-reset">重新开始</button>
+    <span class="step-count" id="step-count"></span>
+    <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+  </nav>
+
+  <div class="stepper" aria-label="验收步骤">
+    <span class="step-dot" data-step-dot="1">01 规则</span><span class="step-dot" data-step-dot="2">02 错误理解</span><span class="step-dot" data-step-dot="3">03 实现</span><span class="step-dot" data-step-dot="4">04 测试</span><span class="step-dot" data-step-dot="5">05 判断</span><span class="step-dot" data-step-dot="6">06 验收</span><span class="step-dot" data-step-dot="7">07 结论</span>
+  </div>
+  <div id="key-judgment" class="callout">当前判断：先把原始业务规则说清楚。</div>
+
+  <section class="panel">
+    <h2>业务背景</h2>
+    <p>一个任务存在 A 和 B 两个候选路径。正确规则是：必须先正常评估 A；只有 A 因业务规则被排除，才允许回退到 B。</p>
+    <p class="muted">A：汇损＋退税　｜　B：只有退税</p>
+  </section>
+
+  <section class="rule-compare" style="margin-top:12px">
+    <article class="rule-card correct">
+      <h3>原始业务规则</h3>
+      <ol><li>先评估 A：汇损＋退税。</li><li>A 成立：选择 A。</li><li>A 被规则排除：才能选择 B。</li></ol>
+    </article>
+    <article class="rule-card wrong">
+      <h3>错误理解</h3>
+      <p id="wrong-rule">尚未展示。</p>
+      <p class="muted small">两条规则必须同时可见，才能看清偏差出在哪一层。</p>
+    </article>
+  </section>
+
+  <section class="panel" style="margin-top:12px">
+    <h2>执行与验收证据</h2>
+    <div id="validation-workspace"></div>
+  </section>
+</main>
+<script src="/static/shared/scenario-data.js"></script>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+(function () {
+  "use strict";
+  var choiceAnswered = false;
+  var guide = {
+    1: ["这一屏要讲什么：", "先把原始业务规则说清楚，不要求学员理解退税专业细节。", "应落下的判断：", "验收必须回到业务规则，而不是只看代码和测试。", "转场句：", "现在看执行者把规则理解成了什么。"],
+    2: ["这一屏要讲什么：", "错误理解是同时发现 A 和 B 时直接优先选择 B。", "建议停顿：", "把正确规则和错误理解并排读一遍。", "转场句：", "接下来实现和测试都会看起来很完整。"],
+    3: ["这一屏要讲什么：", "业务处理已实现，相关分支已覆盖，功能运行成功。", "应落下的判断：", "实现完成不等于业务规则理解正确。", "转场句：", "再看测试结果。"],
+    4: ["这一屏要讲什么：", "Implementation、Unit、Integration、Regression 全部 PASS。", "建议停顿：", "测试把错误理解也一起固化了。", "转场句：", "问题到底出在哪一层？"],
+    5: ["这一屏要讲什么：", "让讲师点击揭示正确答案：对原始业务规则理解错误。", "应落下的判断：", "不能把失败简单归因于模型能力、代码语法或测试未执行。", "转场句：", "现在让独立验收者重新对照。"],
+    6: ["这一屏要讲什么：", "独立验收重新对照原始需求、任务包、实现逻辑和测试预期。", "核心落句：", "实现和测试使用了同一个错误理解，因此验收未通过。", "转场句：", "最后回到‘谁判断结果成立’。"],
+    7: ["这一屏要讲什么：", "给出三句话作为课程收束。", "核心落句：", "测试通过是证据，不是结论；验收者不能共享执行者的错误视角。", "转场句：", "回到任务承接四问，结束本组演示。"]
+  };
+  function renderGuide(step) {
+    var body = document.getElementById("guide-body"); body.innerHTML = "";
+    guide[step].forEach(function (text, index) { var el = document.createElement(index % 2 === 0 ? "h3" : "p"); el.textContent = text; body.appendChild(el); });
+  }
+  function renderTests() {
+    return "<div class=\"test-list\">" + window.FINANCE_DATA.validation.tests.map(function (name) { return "<div class=\"test-row\"><span>" + name + "</span><span class=\"test-pass\">PASS</span></div>"; }).join("") + "</div><div class=\"callout success\">全部测试通过</div>";
+  }
+  function attachChoices() {
+    document.querySelectorAll("[data-choice]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        choiceAnswered = true;
+        document.querySelectorAll("[data-choice]").forEach(function (item) { item.disabled = true; });
+        var correct = button.dataset.choice === "rule";
+        button.classList.add(correct ? "correct-choice" : "wrong-choice");
+        document.getElementById("choice-feedback").textContent = correct ? "正确：问题出在对原始业务规则的理解。" : "再看一次规则顺序：代码和测试都可能建立在错误理解上。";
+      });
+    });
+  }
+  function renderWorkspace(step) {
+    var workspace = document.getElementById("validation-workspace");
+    if (step === 1) workspace.innerHTML = "<div class=\"callout\">先评估 A → A 成立选 A → A 被规则排除后才允许选 B。</div>";
+    if (step === 2) { document.getElementById("wrong-rule").textContent = "如果同时发现 A 和 B → 直接优先选择 B。"; workspace.innerHTML = "<div class=\"callout stop\">规则已经发生偏移：B 被提前选中，A 没有先经过正常评估。</div>"; }
+    if (step === 3) workspace.innerHTML = "<div class=\"two-column\"><div class=\"evidence-card selected\"><h3>业务处理</h3><p>已实现</p><p>相关分支已覆盖</p><p>功能运行成功</p></div><div class=\"evidence-card\"><h3>当前仍未回答</h3><p>实现是否遵循了原始业务规则？</p><p>错误理解是否被带入测试？</p></div></div>";
+    if (step === 4) workspace.innerHTML = renderTests();
+    if (step === 5) { choiceAnswered = false; workspace.innerHTML = "<div class=\"question\"><h3>问题到底出在哪一层？</h3><div class=\"choice-grid\"><button type=\"button\" data-choice=\"model\">模型能力不足</button><button type=\"button\" data-choice=\"code\">代码实现错误</button><button type=\"button\" data-choice=\"test\">测试没有执行</button><button type=\"button\" data-choice=\"rule\">对原始业务规则理解错误</button></div><p id=\"choice-feedback\" class=\"callout\">请选择一个判断，再由讲师揭示。</p></div>"; attachChoices(); }
+    if (step === 6) workspace.innerHTML = "<div class=\"callout stop\"><strong>验收未通过</strong><br>独立验收者重新对照原始需求、任务包、实现逻辑和测试预期。原因：实现和测试使用了同一个错误理解。</div><div class=\"two-column\"><div><h3>执行者给出的证据</h3><p>实现 PASS；测试 PASS；功能运行成功。</p></div><div><h3>独立验收发现</h3><p>规则顺序被改变，B 被提前选择。</p></div></div>";
+    if (step === 7) workspace.innerHTML = "<div class=\"callout stop\"><strong>验收未通过</strong><br>AI 理解错了，测试可能陪着它一起错。</div><div class=\"two-column\"><div class=\"evidence-card\"><strong>测试通过</strong><p>是证据，不是结论。</p></div><div class=\"evidence-card\"><strong>独立验收</strong><p>不能与执行者共享同一个错误视角。</p></div></div><div class=\"callout\">谁判断结果成立？回到原始规则、任务包和独立验收。</div>";
+  }
+  function render(step) {
+    renderGuide(step); renderWorkspace(step);
+    document.getElementById("wrong-rule").textContent = step >= 2 ? "如果同时发现 A 和 B → 直接优先选择 B。" : "尚未展示。";
+    document.getElementById("key-judgment").textContent = step >= 6 ? "核心判断：验收未通过；实现和测试使用了同一个错误理解。" : step >= 5 ? "当前判断：问题出在对原始业务规则的理解。" : step >= 3 ? "当前判断：实现和测试可以全绿，但还没有证明业务规则正确。" : "当前判断：先把原始业务规则说清楚。";
+  }
+  initInstructorGuide();
+  new DemoController({ totalSteps: 7, delays: [1400, 1500, 1300, 1500, 1700, 1600, 1700], onStep: render, onReset: function () { choiceAnswered = false; } });
+}());
+</script>
+</body>
+</html>
