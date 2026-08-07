@@ -1,0 +1,129 @@
+.overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.overview-card { display: flex; flex-direction: column; min-height: 190px; }
+.overview-card.core { border-color: #8fb5f0; }
+.overview-card.optional { border-color: #c8a8eb; }
+.overview-card h2 { margin-bottom: 4px; }
+.overview-card .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.overview-card .card-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 9px; }
+.tag { border-radius: 999px; padding: 3px 8px; font-size: 13px; font-weight: 700; background: var(--surface-soft); border: 1px solid var(--line); }
+.tag.core { background: var(--blue-soft); border-color: #a9c5f5; color: var(--blue); }
+.tag.optional { background: var(--purple-soft); border-color: #c8a8eb; color: var(--purple); }
+
+.answer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.answer-card { min-height: 280px; }
+.answer-card.generic { border-top: 4px solid var(--line-strong); }
+.answer-card.enterprise { border-top: 4px solid var(--green); }
+.answer-card h2 { display: flex; justify-content: space-between; gap: 8px; }
+.answer-text { font-size: 18px; line-height: 1.55; margin: 12px 0; }
+.source-list { display: grid; gap: 5px; margin-top: 8px; }
+.source-item { display: grid; grid-template-columns: 108px 1fr; gap: 8px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-soft); font-size: 14px; }
+.source-item strong { color: var(--green); }
+
+.flow-list { display: grid; gap: 5px; }
+.flow-node { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--surface-soft); color: var(--muted); font-size: 14px; }
+.flow-node.active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+.flow-node.done { border-color: #9ad5aa; background: var(--green-soft); color: var(--green); }
+.flow-arrow { text-align: center; color: var(--muted); font-size: 13px; }
+
+.batch-layout { display: grid; grid-template-columns: 215px minmax(0, 1fr) 230px; gap: 12px; align-items: start; }
+.batch-result { position: sticky; top: 10px; }
+.batch-result .metric-grid { grid-template-columns: 1fr 1fr; }
+.batch-table td.status-cell { white-space: nowrap; }
+
+.evidence-stack { display: grid; gap: 8px; }
+.evidence-card { border: 1px solid var(--line); border-radius: 7px; background: var(--surface-soft); padding: 9px 10px; }
+.evidence-card.selected { border-color: var(--blue); background: var(--blue-soft); }
+.evidence-card h3 { margin: 0 0 4px; font-size: 15px; }
+.evidence-card p { margin: 2px 0; font-size: 14px; }
+.evidence-card .evidence-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+.candidate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.candidate-card { border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; background: var(--surface-soft); }
+.candidate-card h3 { margin: 0 0 4px; font-size: 15px; }
+.candidate-card ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
+.candidate-card.supported { border-color: #9ad5aa; }
+.candidate-card.insufficient { border-color: #efc56c; }
+
+.stop-card { border: 2px solid var(--red); border-radius: 8px; background: var(--red-soft); padding: 11px; margin: 6px 0; }
+.stop-card .stop-title { color: var(--red); font-size: 21px; font-weight: 800; margin: 0 0 4px; }
+.stop-card .stop-reason { font-weight: 700; margin: 0; }
+.boundary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
+.boundary-item { border: 1px solid #f1aaa2; border-radius: 6px; background: #fff; padding: 7px; color: var(--red); font-size: 13px; font-weight: 700; text-align: center; }
+
+.rule-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rule-card { border: 1px solid var(--line); border-radius: 8px; padding: 11px; background: var(--surface-soft); }
+.rule-card.correct { border-color: #9ad5aa; background: var(--green-soft); }
+.rule-card.wrong { border-color: #f1aaa2; background: var(--red-soft); }
+.rule-card h3 { margin: 0 0 6px; }
+.rule-card ol { margin: 0; padding-left: 20px; }
+.test-list { display: grid; gap: 5px; margin: 8px 0; }
+.test-row { display: flex; justify-content: space-between; gap: 10px; border: 1px solid #9ad5aa; border-radius: 6px; background: var(--green-soft); padding: 6px 9px; font-size: 14px; }
+.test-pass { color: var(--green); font-weight: 800; }
+.choice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
+.choice-grid button { min-height: 54px; font-size: 14px; }
+.choice-grid button.correct-choice { border-color: var(--green); background: var(--green-soft); color: var(--green); font-weight: 700; }
+.choice-grid button.wrong-choice { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+
+.confirmation-card { border: 2px solid #efc56c; border-radius: 8px; background: var(--amber-soft); padding: 13px; }
+.confirmation-card h2 { color: var(--amber); }
+.close-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mechanism-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+.mechanism-item { border: 1px solid var(--line); border-radius: 7px; padding: 8px; background: var(--surface-soft); font-size: 14px; text-align: center; }
+.mechanism-item strong { display: block; color: var(--blue); margin-bottom: 3px; }
+
+@media (max-width: 1000px) {
+  .batch-layout { grid-template-columns: 1fr; }
+  .batch-result { position: static; }
+  .mechanism-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .overview-grid, .answer-columns, .rule-compare, .candidate-grid { grid-template-columns: 1fr; }
+  .choice-grid { grid-template-columns: 1fr 1fr; }
+  .boundary-grid { grid-template-columns: 1fr; }
+}
+
+/* 课堂首屏优先：只收敛本套件中信息密度最高的几个页面。 */
+.overview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.overview-card { min-height: 0; padding: 10px 12px; }
+.overview-card h2 { font-size: 18px; line-height: 1.25; }
+.overview-card p { font-size: 15px; line-height: 1.35; margin: 3px 0; }
+.overview-card .card-meta { gap: 4px; margin: 4px 0; }
+.overview-card .card-footer { padding-top: 6px; }
+
+.knowledge-sections { display: flex; flex-direction: column; gap: 12px; }
+.knowledge-sections > .knowledge-current-task { order: 1; }
+.knowledge-sections > .knowledge-answer-columns { order: 2; margin-top: 0 !important; }
+.knowledge-sections > .knowledge-task-state { order: 3; margin-top: 0 !important; }
+.knowledge-sections.focus-task-state > .knowledge-task-state { order: 2; }
+.knowledge-sections.focus-task-state > .knowledge-answer-columns { order: 3; }
+.knowledge-page .knowledge-current-task,
+.knowledge-page .knowledge-task-state { padding: 10px 12px; }
+.knowledge-page .answer-card { min-height: 0; padding: 9px 11px; }
+.knowledge-page .answer-card > .muted { margin: 3px 0; }
+.knowledge-page .answer-text { font-size: 16px; line-height: 1.4; margin: 7px 0; }
+.knowledge-page .answer-card .source-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 5px; }
+.knowledge-page .answer-card .source-item { grid-template-columns: 1fr; gap: 2px; padding: 5px 6px; font-size: 12px; line-height: 1.3; }
+.knowledge-page .answer-card .callout,
+.knowledge-page .knowledge-task-state .callout { padding: 7px 10px; margin-top: 6px; }
+.knowledge-page .knowledge-task-state .evidence-card { padding: 7px 9px; }
+
+.batch-table th, .batch-table td { padding: 5px 7px; }
+.batch-layout .flow-panel { padding: 8px 10px; }
+.batch-layout .flow-panel h2 { margin-bottom: 4px; }
+.batch-layout .flow-panel .flow-list { gap: 2px; }
+.batch-layout .flow-panel .flow-node { padding: 5px 7px; line-height: 1.25; }
+.batch-layout .flow-panel .flow-arrow { font-size: 12px; line-height: 1; }
+
+.exception-page .exception-summary { padding: 8px 12px; margin-bottom: 6px !important; }
+.exception-page .evidence-panel { padding: 8px 12px; }
+.exception-page .timeline { gap: 4px; }
+.exception-page .timeline-item { padding: 5px 6px; }
+.timeline-item.optional { border-style: dashed; }
+.exception-page #evidence-workspace > .evidence-card { padding: 7px 9px; }
+.exception-page #evidence-workspace > .callout { padding: 8px 10px; margin-top: 6px; }
+
+@media (max-width: 720px) {
+  .overview-grid { grid-template-columns: 1fr; }
+  .knowledge-page .answer-card .source-list { grid-template-columns: 1fr; }
+}

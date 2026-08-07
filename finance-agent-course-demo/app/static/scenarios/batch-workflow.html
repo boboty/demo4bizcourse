@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>演示二 · 批量流水固定工作流</title>
+</head>
+<body>
+<main class="page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">企业 AI 大模型与智能体 · 财务演示套件</p>
+      <h1 class="scenario-title">演示二 / 5 · 一批流水，一次跑完</h1>
+      <p class="scenario-subtitle">固定工作流处理明确路径，异常流水交给下一层调查</p>
+    </div>
+    <div class="header-actions">
+      <a href="/demo">返回总览</a>
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open><summary>讲师说明</summary><div class="guide-body" id="guide-body"></div></details>
+  </section>
+
+  <nav class="controller" aria-label="演示控制器">
+    <button type="button" id="btn-prev">上一步</button>
+    <button type="button" id="btn-next" class="primary">下一步</button>
+    <button type="button" id="btn-auto">自动播放</button>
+    <button type="button" id="btn-pause">暂停</button>
+    <button type="button" id="btn-continue">继续</button>
+    <label>跳到 <select id="step-select" aria-label="跳到指定步骤">
+      <option value="1">01 显示批次</option><option value="2">02 启动工作流</option><option value="3">03 成功样本</option><option value="4">04 出现异常</option><option value="5">05 批次完成</option><option value="6">06 认知转折</option>
+    </select></label>
+    <button type="button" id="btn-final">直接最终结果</button>
+    <button type="button" id="btn-reset">重新开始</button>
+    <span class="step-count" id="step-count"></span>
+    <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+  </nav>
+
+  <div class="stepper" aria-label="演示步骤">
+    <span class="step-dot" data-step-dot="1">01 批次</span><span class="step-dot" data-step-dot="2">02 工作流</span><span class="step-dot" data-step-dot="3">03 成功样本</span><span class="step-dot" data-step-dot="4">04 异常</span><span class="step-dot" data-step-dot="5">05 完成</span><span class="step-dot" data-step-dot="6">06 转折</span>
+  </div>
+  <div id="key-judgment" class="callout">当前判断：路径明确时，先交给固定工作流。</div>
+
+  <section class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><h2 style="margin-bottom:2px">批次 BW-202607-04</h2><p class="muted">华启制造有限公司 · 2026年7月银行流水</p></div>
+      <span id="batch-status" class="status pending">待处理</span>
+    </div>
+    <div class="metric-grid" style="margin-top:8px">
+      <div class="metric"><span class="metric-label">流水总数</span><strong class="metric-value">40</strong></div>
+      <div class="metric"><span class="metric-label">已生成草稿</span><strong class="metric-value" id="draft-count">0</strong></div>
+      <div class="metric"><span class="metric-label">待调查</span><strong class="metric-value" id="investigate-count">0</strong></div>
+      <div class="metric"><span class="metric-label">自动过账</span><strong class="metric-value" id="posted-count">0</strong></div>
+    </div>
+  </section>
+
+  <section class="batch-layout" style="margin-top:12px">
+    <aside class="panel flow-panel">
+      <h2>固定流程</h2>
+      <div class="flow-list">
+        <div class="flow-node" data-flow="1">1. 读取流水</div><div class="flow-arrow">↓</div>
+        <div class="flow-node" data-flow="2">2. 识别往来单位</div><div class="flow-arrow">↓</div>
+        <div class="flow-node" data-flow="3">3. 查询相关资料</div><div class="flow-arrow">↓</div>
+        <div class="flow-node" data-flow="4">4. 匹配业务规则</div><div class="flow-arrow">↓</div>
+        <div class="flow-node" data-flow="5">5. 生成凭证草稿</div><div class="flow-arrow">↓</div>
+        <div class="flow-node" data-flow="6">6. 提交人工复核</div>
+      </div>
+    </aside>
+
+    <section class="panel">
+      <h2>流水处理表格 <span class="muted small">（展示 6 条代表数据，其余 34 条汇总）</span></h2>
+      <div class="table-wrap">
+        <table class="batch-table"><thead><tr><th>流水</th><th>往来单位</th><th>金额</th><th>状态</th><th>处理结果</th></tr></thead><tbody id="batch-table-body"></tbody></table>
+      </div>
+    </section>
+
+    <aside class="panel batch-result">
+      <h2>批次结果</h2>
+      <div class="metric-grid">
+        <div class="metric"><span class="metric-label">总数</span><strong class="metric-value">40</strong></div>
+        <div class="metric"><span class="metric-label">草稿</span><strong class="metric-value" id="result-draft">0</strong></div>
+        <div class="metric"><span class="metric-label">调查</span><strong class="metric-value" id="result-investigate">0</strong></div>
+        <div class="metric"><span class="metric-label">过账</span><strong class="metric-value" id="result-posted">0</strong></div>
+      </div>
+      <button type="button" id="btn-exception" class="primary" style="width:100%;margin-top:10px" disabled>查看异常流水如何处理</button>
+    </aside>
+  </section>
+</main>
+<script src="/static/shared/scenario-data.js"></script>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+(function () {
+  "use strict";
+  var guide = {
+    1: ["这一屏要讲什么：", "批次包含 40 笔流水，不需要把 40 笔全部铺开。", "应落下的判断：", "先把任务规模和目标说清楚。", "转场句：", "路径明确的流水，交给固定工作流。"],
+    2: ["这一屏要讲什么：", "固定流程按统一顺序执行，不让每一笔都临时发明处理方式。", "建议停顿：", "强调节点是业务步骤，不是技术黑盒。", "转场句：", "先看处理顺利的样本。"],
+    3: ["这一屏要讲什么：", "37 笔可以按确定规则生成凭证草稿并等待人工复核。", "应落下的判断：", "生成草稿不等于自动过账。", "转场句：", "但批次里总会留下无法唯一判断的流水。"],
+    4: ["这一屏要讲什么：", "3 笔进入待调查，核心异常是 58,600 元收款。", "建议停顿：", "不要把异常理解成工作流失败，而是识别出需要不同机制的任务。", "转场句：", "现在看批次的最终统计。"],
+    5: ["这一屏要讲什么：", "40 笔中 37 笔生成草稿，3 笔待调查，0 笔自动过账。", "应落下的判断：", "稳定路径已经被工作流承接，异常路径被保留下来。", "转场句：", "剩下 3 笔不能只靠再增加几条规则。"],
+    6: ["这一屏要讲什么：", "37 笔顺利跑完，不代表剩下 3 笔只需要再加几条规则。", "核心落句：", "路径明确时，工作流就是更稳定、更便宜的正确方案。", "转场句：", "把核心异常交给智能体调查。"]
+  };
+  function set(id, value) { document.getElementById(id).textContent = value; }
+  function renderGuide(step) {
+    var body = document.getElementById("guide-body"); body.innerHTML = "";
+    guide[step].forEach(function (text, index) { var el = document.createElement(index % 2 === 0 ? "h3" : "p"); el.textContent = text; body.appendChild(el); });
+  }
+  function statusClass(status) { return status === "待调查" ? "status insufficient" : "status draft"; }
+  function renderTable(step) {
+    var body = document.getElementById("batch-table-body"); body.innerHTML = "";
+    window.FINANCE_DATA.batchRows.slice(0, 6).forEach(function (row, index) {
+      var tr = document.createElement("tr");
+      if (index === 0 && step >= 4) tr.className = "highlight";
+      var status = step < 3 ? "待处理" : (index === 0 && step >= 4 ? "待调查" : "已生成草稿");
+      var result = step < 3 ? "—" : (index === 0 && step >= 4 ? "未找到唯一匹配" : row[4]);
+      tr.innerHTML = "<td></td><td></td><td></td><td class=\"status-cell\"></td><td></td>";
+      tr.children[0].textContent = row[0]; tr.children[1].textContent = row[1]; tr.children[2].textContent = row[2]; tr.children[3].innerHTML = "<span class=\"status " + (status === "待调查" ? "insufficient" : status === "已生成草稿" ? "draft" : "pending") + "\">" + status + "</span>"; tr.children[4].textContent = result;
+      body.appendChild(tr);
+    });
+  }
+  function render(step) {
+    renderGuide(step); renderTable(step);
+    document.querySelectorAll("[data-flow]").forEach(function (node) { var flow = Number(node.dataset.flow); node.classList.toggle("done", flow < step); node.classList.toggle("active", flow === step); });
+    var drafted = step >= 5 ? 37 : step >= 3 ? 12 : 0;
+    var investigating = step >= 4 ? 3 : 0;
+    set("draft-count", drafted); set("investigate-count", investigating); set("posted-count", 0); set("result-draft", drafted); set("result-investigate", investigating); set("result-posted", 0);
+    var batchStatus = document.getElementById("batch-status");
+    batchStatus.textContent = step >= 5 ? "待复核" : step >= 2 ? "分析中" : "待处理"; batchStatus.className = "status " + (step >= 5 ? "review" : step >= 2 ? "analysis" : "pending");
+    set("key-judgment", step >= 6 ? "核心判断：37 笔顺利跑完，不代表剩下 3 笔只需要再增加几条规则。" : step >= 5 ? "批次结果：40 笔｜37 笔已生成草稿｜3 笔待调查｜0 笔自动过账。" : step >= 4 ? "核心判断：异常被识别出来，进入调查路径。" : "当前判断：路径明确时，先交给固定工作流。");
+    document.getElementById("btn-exception").disabled = step < 5;
+  }
+  document.getElementById("btn-exception").addEventListener("click", function () { window.location.assign("/demo/exception-agent?source=BW-202607-04"); });
+  initInstructorGuide();
+  new DemoController({ totalSteps: 6, delays: [1400, 1400, 1500, 1600, 1500, 1700], onStep: render });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>企业 AI 大模型与智能体 · 财务演示套件</title>
+</head>
+<body>
+<main class="page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">《企业AI大模型与智能体：选型、落地与产研赋能》</p>
+      <h1 class="scenario-title">财务演示套件 V1.0</h1>
+      <p class="scenario-subtitle">从企业知识、固定工作流到异常智能体与独立验收的课堂演示入口</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open>
+      <summary>总览讲师说明</summary>
+      <div class="guide-body">
+        <p><strong>建议顺序：</strong>先看知识接入的边界，再看确定性工作流，最后进入异常调查、独立验收和月结自动化。</p>
+        <p><strong>课堂主线：</strong>回答更有依据，不等于任务已经推进；路径明确时用工作流；证据不足时智能体必须停下；最终结论由独立验收确认。</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <h2>五个演示入口</h2>
+    <p class="muted">所有数据均为构造数据；页面不调用真实模型，不用于真实财务处理。</p>
+    <div class="overview-grid">
+      <article class="panel overview-card">
+        <div><span class="tag core">演示一 · 约 8 分钟</span></div>
+        <h2>答得有依据，但事情没有推进</h2>
+        <p>对比通用模型与企业知识应用回答同一笔 58,600 元收款，展示 RAG 增加依据但不自动取得任务推进权。</p>
+        <div class="card-meta"><span class="tag">课程第一段</span><span class="tag">知识应用</span><span class="tag">5 步</span></div>
+        <div class="card-footer"><a class="primary-link" href="/demo/knowledge-answer">独立打开 →</a><span class="muted small">静态对照页面</span></div>
+      </article>
+
+      <article class="panel overview-card">
+        <div><span class="tag core">演示二 · 约 8 分钟</span></div>
+        <h2>一批流水，一次跑完</h2>
+        <p>固定工作流处理 40 笔流水，37 笔生成凭证草稿，3 笔进入调查，0 笔自动过账。</p>
+        <div class="card-meta"><span class="tag">课程第二段</span><span class="tag">固定工作流</span><span class="tag">6 步</span></div>
+        <div class="card-footer"><a class="primary-link" href="/demo/batch-workflow">独立打开 →</a><span class="muted small">可跳转异常调查</span></div>
+      </article>
+
+      <article class="panel overview-card core">
+        <div><span class="tag core">演示三 · 核心 · 约 15 分钟</span></div>
+        <h2>剩下这一笔：它继续查，然后停下</h2>
+        <p>异常流水智能体读取边界、查询依据、更新计划，在证据不足时停止自动处理并创建待确认任务。</p>
+        <div class="card-meta"><span class="tag">课程第二段</span><span class="tag">异常智能体</span><span class="tag">8 步 + 尾声</span></div>
+        <div class="card-footer"><a class="primary-link" href="/demo/exception-agent">独立打开 →</a><span class="muted small">三区布局</span></div>
+      </article>
+
+      <article class="panel overview-card">
+        <div><span class="tag core">演示四 · 约 10 分钟</span></div>
+        <h2>实现全绿、测试全绿，业务仍然错误</h2>
+        <p>把原始业务规则和错误理解并排展示，最终由独立验收发现：实现和测试使用了同一个错误理解。</p>
+        <div class="card-meta"><span class="tag">课程第三段</span><span class="tag">独立验收</span><span class="tag">7 步</span></div>
+        <div class="card-footer"><a class="primary-link" href="/demo/independent-validation">独立打开 →</a><span class="muted small">测试全绿但验收失败</span></div>
+      </article>
+
+      <article class="panel overview-card optional">
+        <div><span class="tag optional">演示五 · 可选 · 约 5 分钟</span></div>
+        <h2>不是所有自动化都需要智能体</h2>
+        <p>系统按照确定性规则生成结转损益并完成结账，强调不同环节应使用最合适的机制。</p>
+        <div class="card-meta"><span class="tag">课程第三段</span><span class="tag">传统系统</span><span class="tag">5 步</span></div>
+        <div class="card-footer"><a class="primary-link" href="/demo/month-close">独立打开 →</a><span class="muted small">含人工确认</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:12px">
+    <h2>统一业务背景</h2>
+    <dl class="info-list">
+      <dt>企业</dt><dd>华启制造有限公司｜制造企业｜2026年7月</dd>
+      <dt>核心客户</dt><dd>华远商贸有限公司</dd>
+      <dt>核心异常</dt><dd>2026-07-28 收款 ¥58,600.00，摘要“货款”，未找到唯一匹配</dd>
+      <dt>关键边界</dt><dd>金额相同不是充分证据；AI不能自动核销、过账或替代会计确认</dd>
+    </dl>
+  </section>
+</main>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+  initInstructorGuide();
+</script>
+</body>
+</html>
+

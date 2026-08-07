@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/shared/theme.css">
+  <link rel="stylesheet" href="/static/shared/components.css">
+  <title>演示三 · 异常流水智能体</title>
+</head>
+<body>
+<main class="page exception-page">
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="course-title">企业 AI 大模型与智能体 · 财务演示套件</p>
+      <h1 class="scenario-title">演示三 / 5 · 剩下这一笔：它继续查，然后停下</h1>
+      <p class="scenario-subtitle">异常流水智能体调查与人工介入 <span id="source-badge" class="tag">独立打开</span></p>
+    </div>
+    <div class="header-actions">
+      <a href="/demo">返回总览</a>
+      <button type="button" data-fullscreen>全屏</button>
+      <button type="button" id="btn-guide" aria-expanded="true">隐藏讲师说明</button>
+    </div>
+  </header>
+
+  <section class="guide" id="instructor-guide">
+    <details open><summary>讲师说明</summary><div class="guide-body" id="guide-body"></div></details>
+  </section>
+
+  <nav class="controller" aria-label="演示控制器">
+    <button type="button" id="btn-prev">上一步</button>
+    <button type="button" id="btn-next" class="primary">下一步</button>
+    <button type="button" id="btn-auto">自动播放</button>
+    <button type="button" id="btn-pause">暂停</button>
+    <button type="button" id="btn-continue">继续</button>
+    <label>跳到 <select id="step-select" aria-label="跳到指定步骤">
+      <option value="1">01 留下异常</option><option value="2">02 读取边界</option><option value="3">03 信息缺口</option><option value="4">04 查应收</option><option value="5">05 查历史</option><option value="6">06 查附件</option><option value="7">07 停止处理</option><option value="8">08 待确认任务</option><option value="9">09 可选尾声</option>
+    </select></label>
+    <button type="button" id="btn-final">直接最终结果</button>
+    <button type="button" id="btn-reset">重新开始</button>
+    <span class="step-count" id="step-count"></span>
+    <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+  </nav>
+
+  <div class="stepper" aria-label="调查步骤">
+    <span class="step-dot" data-step-dot="1">01 异常</span><span class="step-dot" data-step-dot="2">02 边界</span><span class="step-dot" data-step-dot="3">03 缺口</span><span class="step-dot" data-step-dot="4">04 应收</span><span class="step-dot" data-step-dot="5">05 历史</span><span class="step-dot" data-step-dot="6">06 附件</span><span class="step-dot" data-step-dot="7">07 停止</span><span class="step-dot" data-step-dot="8">08 待确认</span><span class="step-dot optional" data-step-dot="9">09 尾声</span>
+  </div>
+  <div id="key-judgment" class="callout">当前判断：异常不是失败，而是进入另一条处理路径。</div>
+
+  <section class="panel exception-summary" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><h2 style="margin-bottom:2px">异常任务：调查华远商贸有限公司收款归属</h2><p class="muted">收款 · ¥58,600.00 · 2026-07-28 · 摘要：货款</p></div>
+      <span id="agent-status" class="status pending">待处理</span>
+    </div>
+  </section>
+
+  <section class="workspace-grid">
+    <aside class="panel">
+      <h2>任务推进时间线</h2>
+      <div class="timeline">
+        <div class="timeline-item" data-timeline="1"><span class="timeline-no">1</span><span>读取任务</span></div>
+        <div class="timeline-item" data-timeline="2"><span class="timeline-no">2</span><span>判断信息缺口</span></div>
+        <div class="timeline-item" data-timeline="3"><span class="timeline-no">3</span><span>查询未核销应收</span></div>
+        <div class="timeline-item" data-timeline="4"><span class="timeline-no">4</span><span>查询历史回款</span></div>
+        <div class="timeline-item" data-timeline="5"><span class="timeline-no">5</span><span>检查已有附件</span></div>
+        <div class="timeline-item" data-timeline="6"><span class="timeline-no">6</span><span>评估证据</span></div>
+        <div class="timeline-item" data-timeline="7"><span class="timeline-no">7</span><span>停止自动处理</span></div>
+        <div class="timeline-item" data-timeline="8"><span class="timeline-no">8</span><span>创建待确认任务</span></div>
+        <div class="timeline-item optional" data-timeline="9"><span class="timeline-no">+</span><span>资料补充后的可选尾声</span></div>
+      </div>
+    </aside>
+
+    <section class="panel evidence-panel">
+      <h2>证据工作台</h2>
+      <div id="evidence-workspace"></div>
+    </section>
+
+    <aside class="panel permission-card">
+      <h2>权限与边界</h2>
+      <div class="permission-group allowed"><strong>允许</strong><ul id="allowed-list"></ul></div>
+      <div class="permission-group forbidden"><strong>禁止</strong><ul id="forbidden-list"></ul></div>
+    </aside>
+  </section>
+</main>
+<script src="/static/shared/scenario-data.js"></script>
+<script src="/static/shared/instructor-guide.js"></script>
+<script src="/static/shared/demo-controller.js"></script>
+<script>
+(function () {
+  "use strict";
+  var data = window.FINANCE_DATA;
+  var controller;
+  var guide = {
+    1: ["这一屏要讲什么：", "批量工作流留下 3 笔待调查，选中 58,600 元收款。", "应落下的判断：", "异常不是失败，而是进入另一条处理路径。", "转场句：", "先把调查目标和停止条件交给智能体。"],
+    2: ["这一屏要讲什么：", "任务接管卡明确目标、完成条件和强制停止条件。", "建议停顿：", "智能体拥有推进权，但不是无限授权。", "转场句：", "现在判断还缺什么信息。"],
+    3: ["这一屏要讲什么：", "已知付款方、金额、日期和摘要，但不知道对应单据、合并付款和调整信息。", "应落下的判断：", "智能体根据缺口选择下一步查询。", "转场句：", "先查客户全部未核销应收。"],
+    4: ["这一屏要讲什么：", "找到同金额候选，但金额一致不足以形成业务结论。", "建议停顿：", "同金额只是一条支持证据，不是充分证据。", "转场句：", "继续查历史，看看同金额是否总是同一业务。"],
+    5: ["这一屏要讲什么：", "历史上相同金额对应过不同业务，也存在合并付款。", "应落下的判断：", "历史记录改变了后续计划，不能只看当前候选。", "转场句：", "最后检查决定性附件。"],
+    6: ["这一屏要讲什么：", "付款通知、客户对账单、合同关联和业务备注都不存在。", "建议停顿：", "证据缺口已经具体化，不是泛泛地说‘模型不确定’。", "转场句：", "证据不足时，正确动作是停止。"],
+    7: ["这一屏要讲什么：", "智能体停止自动处理，展示两个候选及各自不足。", "核心落句：", "停止是任务控制能力，不是能力失败。", "转场句：", "把下一步变成人工可承接的任务。"],
+    8: ["这一屏要讲什么：", "创建待确认任务，人工补资料或确认业务归属。", "应落下的判断：", "AI 已经完成调查，不需要人工从头重新检查。", "转场句：", "如果补充资料，任务可以从中断点继续。"],
+    9: ["这一屏要讲什么：", "模拟上传付款通知后生成凭证草稿并提交会计复核。", "核心落句：", "仍然待复核，不自动过账。", "转场句：", "记忆和任务状态让任务可以从中断点继续。"]
+  };
+  function set(id, value) { document.getElementById(id).textContent = value; }
+  function renderGuide(step) {
+    var body = document.getElementById("guide-body"); body.innerHTML = "";
+    guide[step].forEach(function (text, index) { var el = document.createElement(index % 2 === 0 ? "h3" : "p"); el.textContent = text; body.appendChild(el); });
+  }
+  function listItems(id, items) {
+    var list = document.getElementById(id); list.innerHTML = "";
+    items.forEach(function (item) { var li = document.createElement("li"); li.textContent = item; list.appendChild(li); });
+  }
+  function sourceTable(title, headers, rows, highlightIndex) {
+    var html = "<div class=\"evidence-card\"><h3>" + title + "</h3><div class=\"table-wrap\"><table><thead><tr>";
+    headers.forEach(function (header) { html += "<th>" + header + "</th>"; });
+    html += "</tr></thead><tbody>";
+    rows.forEach(function (row, index) { html += "<tr" + (index === highlightIndex ? " class=\"highlight\"" : "") + ">" + row.map(function (cell) { return "<td>" + cell + "</td>"; }).join("") + "</tr>"; });
+    return html + "</tbody></table></div></div>";
+  }
+  function taskBoundary() {
+    return "<div class=\"evidence-card selected\"><h3>任务接管卡</h3><p><strong>任务目标：</strong>调查收款业务归属，并形成可复核处理建议。</p><p><strong>完成条件：</strong>找到充分证据，生成草稿并提交复核；或证据不足，说明缺口并创建待确认任务。</p><p><strong>强制停止：</strong>多个候选、缺少决定性资料、需要人工分配回款、修改原始单据或即将核销/过账。</p></div>";
+  }
+  function renderEvidence(step) {
+    var html = "";
+    if (step === 1) {
+      html = "<div class=\"evidence-card selected\"><h3>批次留下的异常</h3><p>总数 40 笔｜已生成草稿 37 笔｜待调查 3 笔｜自动过账 0 笔</p><p><strong>选中：</strong>华远商贸有限公司 · ¥58,600.00 · 摘要“货款”</p><p class=\"muted small\">按钮动作：交给智能体调查</p></div>";
+    } else if (step === 2) {
+      html = taskBoundary();
+    } else if (step === 3) {
+      html = taskBoundary() + "<div class=\"evidence-card\"><h3>信息缺口</h3><p>已知：付款方、金额、日期、摘要。</p><p><strong>缺少：</strong>对应单据、合并付款情况、扣款/折扣/其他调整。</p><div class=\"callout\">下一步：查询该客户全部未核销应收。</div></div>";
+    } else if (step === 4) {
+      html = sourceTable("未核销应收", ["单据号", "日期", "金额"], data.receivables, 2) + "<div class=\"callout warning\">发现同金额候选，但金额一致不足以形成业务结论。下一步：查询近 90 天历史回款。</div>";
+    } else if (step === 5) {
+      html = sourceTable("历史回款", ["日期", "金额", "结果", "依据"], data.history, -1) + "<div class=\"callout warning\">相同金额曾对应不同业务，也存在合并付款。不能仅凭付款方和金额确定本次归属。</div>";
+    } else if (step === 6) {
+      html = "<div class=\"evidence-card\"><h3>附件检查结果</h3><div class=\"source-list\"><div class=\"source-item\"><strong>付款通知</strong><span>未上传</span></div><div class=\"source-item\"><strong>客户对账单</strong><span>未上传</span></div><div class=\"source-item\"><strong>合同关联</strong><span>未发现</span></div><div class=\"source-item\"><strong>业务备注</strong><span>无</span></div></div></div><div class=\"callout stop\">当前证据不足以形成唯一业务结论。</div>";
+    } else if (step === 7) {
+      html = "<div class=\"stop-card\"><p class=\"stop-title\">自动处理已停止</p><p class=\"stop-reason\">当前存在多个合理处理可能，且缺少决定性业务资料。</p><div class=\"boundary-grid\"><div class=\"boundary-item\">未生成正式凭证</div><div class=\"boundary-item\">未核销应收</div><div class=\"boundary-item\">未自动过账</div><div class=\"boundary-item\">未修改原始单据</div></div></div><div class=\"candidate-grid\"><div class=\"candidate-card supported\"><h3>候选一：核销同金额单据</h3><ul><li>支持：金额一致</li><li>不足：无付款通知；历史上相同金额对应过不同业务</li></ul></div><div class=\"candidate-card insufficient\"><h3>候选二：作为合并付款分配</h3><ul><li>支持：客户历史上存在合并付款</li><li>不足：无客户对账单，无法确定分配方式</li></ul></div></div>";
+    } else if (step === 8) {
+      html = "<div class=\"evidence-card selected\"><h3>待确认任务已创建</h3><p>人工可选择：上传付款通知、上传客户对账单、由业务人员确认、标记为暂不明款项。</p><p><strong>任务状态：</strong><span class=\"status confirm\">待人工确认</span></p></div><div class=\"callout success\">AI 已经完成调查，不需要人工从头重新检查。</div><div class=\"two-column\"><div><h3>谁推进下一步？</h3><p>正常批量：工作流；异常调查：智能体；最终确认：人工。</p></div><div><h3>依据什么推进？</h3><p>流水、应收、历史记录、企业规则、人工补充资料。</p></div><div><h3>什么时候停？</h3><p>多候选、缺少决定性证据、需要人工判断、不可逆操作前。</p></div><div><h3>谁判断成立？</h3><p>会计确认业务归属；系统校验结构；复核后进入后续处理。</p></div></div><button type=\"button\" id=\"btn-tail\" class=\"primary\">模拟补充付款通知并继续</button>";
+    } else {
+      html = "<div class=\"evidence-card selected\"><h3>资料已补充：付款通知</h3><p>智能体验证资料，确认业务关联，生成凭证草稿并标记依据来源。</p><p><strong>凭证：</strong><span class=\"status draft\">已生成草稿</span></p><p><strong>任务状态：</strong><span class=\"status review\">待复核</span></p></div><div class=\"callout warning\">已提交会计复核，仍未自动过账。</div>";
+    }
+    document.getElementById("evidence-workspace").innerHTML = html;
+    var tail = document.getElementById("btn-tail");
+    if (tail) tail.addEventListener("click", function () { controller.goTo(9); });
+  }
+  function render(step) {
+    renderGuide(step); renderEvidence(step);
+    document.querySelectorAll("[data-timeline]").forEach(function (item) { var no = Number(item.dataset.timeline); item.classList.toggle("done", no < step); item.classList.toggle("active", no === step); });
+    var status = document.getElementById("agent-status");
+    var labels = { 1: ["待处理", "pending"], 2: ["分析中", "analysis"], 3: ["分析中", "analysis"], 4: ["已找到依据", "evidence"], 5: ["已找到依据", "evidence"], 6: ["证据不足", "insufficient"], 7: ["证据不足", "insufficient"], 8: ["待人工确认", "confirm"], 9: ["待复核", "review"] };
+    status.textContent = labels[step][0]; status.className = "status " + labels[step][1];
+    set("key-judgment", step >= 9 ? "核心判断：资料补充后生成草稿并提交复核，仍不自动过账。" : step >= 8 ? "核心判断：AI 已完成调查，创建待人工确认任务。" : step >= 7 ? "核心判断：证据不足，自动处理已停止。" : step >= 6 ? "当前判断：决定性资料缺失，证据不足。" : "当前判断：异常不是失败，而是进入另一条处理路径。");
+  }
+  listItems("allowed-list", data.permissions.allowed); listItems("forbidden-list", data.permissions.forbidden);
+  var source = new URLSearchParams(window.location.search).get("source");
+  if (source) { document.getElementById("source-badge").textContent = "来自批次 " + source; document.getElementById("source-badge").className = "tag core"; }
+  initInstructorGuide();
+  controller = new DemoController({ totalSteps: 9, delays: [1300, 1400, 1400, 1500, 1500, 1500, 1600, 1500, 1700], onStep: render });
+}());
+</script>
+</body>
+</html>
