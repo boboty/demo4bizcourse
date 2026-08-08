@@ -1,12 +1,13 @@
 # Demo
 
-AI 研发课程演示合集（monorepo）。每个 demo 一个自包含子目录，自带 `.venv`、`requirements.txt` 与 `scripts/`，可独立安装、运行与测试；所有 demo 共用本仓库的 git 历史。
+独立可执行代码 Demo 合集（monorepo）。本仓库只维护能够独立安装、运行和测试的代码 Demo；课堂业务规则、任务说明和 Mock 数据等通用课程资产由独立数据仓库维护。
 
 ## Demo 索引
 
 | 目录 | 说明 |
 | --- | --- |
 | `ai-dev-course-demo/` | 用户列表/筛选/Excel 导出 API 与课堂演示页面（FastAPI） |
+| `finance-agent-course-demo/` | 离线财务业务智能体课堂演示套件（FastAPI） |
 
 ## 课堂演示检查点
 
@@ -21,5 +22,5 @@ git switch main                     # 回到最新
 
 ## 新增 demo
 
-1. 在根目录新建子目录，按 `ai-dev-course-demo/` 的结构自包含（独立虚拟环境、依赖与脚本）；
+1. 在根目录新建子目录，确保 Demo 可独立安装、运行和测试；
 2. 直接在本仓库提交，无需为单个 demo 新建仓库。
