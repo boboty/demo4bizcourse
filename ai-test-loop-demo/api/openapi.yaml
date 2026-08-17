@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info:
+  title: AI Test Loop - Discount Preview
+  version: 1.0.0
+paths:
+  /api/orders/discount-preview:
+    post:
+      summary: Preview order discount eligibility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscountPreviewRequest'
+      responses:
+        '200':
+          description: Deterministic discount preview with decision evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscountPreviewResponse'
+components:
+  schemas:
+    DiscountPreviewRequest:
+      type: object
+      required: [customerLevel, amount]
+      properties:
+        customerLevel: {type: string, enum: [GOLD, SILVER, STANDARD]}
+        amount: {type: integer, minimum: 0}
+        coupon: {type: [string, 'null'], enum: [VIP100, VIP100-NO-STACK, null]}
+    DiscountPreviewResponse:
+      type: object
+      required: [eligible, discount, finalAmount, membershipDiscount, couponDiscount, discountSources, reason, decisionTrace]
+      properties:
+        eligible: {type: boolean}
+        discount: {type: integer}
+        finalAmount: {type: integer}
+        membershipDiscount: {type: integer}
+        couponDiscount: {type: integer}
+        discountSources: {type: array, items: {type: string}}
+        reason: {type: string}
+        decisionTrace: {type: array, items: {type: string}}
+

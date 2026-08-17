@@ -8,6 +8,7 @@
 | --- | --- |
 | `ai-dev-course-demo/` | 用户列表/筛选/Excel 导出 API 与课堂演示页面（FastAPI） |
 | `finance-agent-course-demo/` | 离线财务业务智能体课堂演示套件（FastAPI） |
+| `ai-test-loop-demo/` | AI 测试闭环：生成测试全绿、独立验收拒绝、修复后沉淀测试能力（FastAPI） |
 
 ## 课堂演示检查点
 

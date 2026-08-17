@@ -1,0 +1,31 @@
+$ python -m pytest tests/verified -v   # 运行时 app/service.py 已被替换为错误实现
+
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /workspace/ai-test-loop-demo
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 4 items
+
+tests/verified/test_orders.py F...                                       [100%]
+
+=================================== FAILURES ===================================
+_____________ test_gold_vip100_stacks_only_after_gold_is_evaluated _____________
+
+    def test_gold_vip100_stacks_only_after_gold_is_evaluated() -> None:
+        """covers: AC-004"""
+        with TestClient(create_app()) as client:
+            response = client.post(
+                "/api/orders/discount-preview",
+                json={"customerLevel": "GOLD", "amount": 1200, "coupon": "VIP100"},
+            )
+    
+        assert response.status_code == 200
+        payload = response.json()
+>       assert payload["membershipDiscount"] == 100
+E       assert 0 == 100
+
+tests/verified/test_orders.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED tests/verified/test_orders.py::test_gold_vip100_stacks_only_after_gold_is_evaluated
+========================= 1 failed, 3 passed in 0.13s ==========================

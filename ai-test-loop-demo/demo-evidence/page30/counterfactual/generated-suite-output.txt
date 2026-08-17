@@ -1,0 +1,12 @@
+$ python -m pytest tests/generated -v   # 运行时 app/service.py 已被替换为错误实现
+
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /workspace/ai-test-loop-demo
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 4 items
+
+tests/generated/test_orders.py ....                                      [100%]
+
+============================== 4 passed in 0.17s ===============================

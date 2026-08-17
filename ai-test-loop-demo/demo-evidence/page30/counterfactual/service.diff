@@ -1,0 +1,23 @@
+--- app/service.py (real)
++++ experiments/counterfactual/service_buggy.py (injected bug)
+@@ -8,6 +8,20 @@
+ 
+ def preview_discount(order: DiscountPreviewRequest) -> DiscountPreviewResponse:
+     """以固定规则计算订单优惠，并保留课堂所需的决策证据。"""
++
++    if order.coupon == "VIP100" and order.customerLevel == "GOLD" and order.amount >= GOLD_THRESHOLD:
++        # BUG（反证实验注入）：检测到优惠券就跳过 GOLD 判断，直接按券给 200。
++        discount = GOLD_DISCOUNT + VIP_DISCOUNT
++        return DiscountPreviewResponse(
++            eligible=True,
++            discount=discount,
++            finalAmount=order.amount - discount,
++            membershipDiscount=0,
++            couponDiscount=discount,
++            discountSources=["VIP_COUPON"],
++            reason="VIP_COUPON_DISCOUNT",
++            decisionTrace=["CHECK_VIP_COUPON", "APPLY_VIP_COUPON"],
++        )
+ 
+     trace: list[str] = ["CHECK_GOLD_LEVEL"]
+     membership_discount = 0
