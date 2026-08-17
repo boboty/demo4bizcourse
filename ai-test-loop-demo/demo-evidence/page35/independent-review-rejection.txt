@@ -1,0 +1,14 @@
+$ python scripts/run_independent_review.py
+
+INDEPENDENT BUSINESS REVIEW
+TEST EXECUTION : PASS
+INDEPENDENT REVIEW : REJECTED
+Missing:
+AC-004 - 关键业务规则缺少有效测试证据
+Evidence: evidence/independent-review-report.md
+
+# 判据来自 business/acceptance.md 的 AC-004 定义：
+| AC-004 | GOLD 满门槛且使用 `VIP100` 时，会员判断不得被跳过，并允许两项优惠叠加。 | 同时断言 `membershipDiscount == 100`、`couponDiscount == 100`、`discount == 200`，以及 `CHECK_GOLD_LEVEL` 和 `APPLY_GOLD_DISCOUNT` 出现在 `decisionTrace`。 |
+
+# 该脚本判定依据（evidence/independent-review-report.md 原文最后一行）：
+独立验收检查覆盖声明和必要的业务断言；它没有重新运行 pytest。

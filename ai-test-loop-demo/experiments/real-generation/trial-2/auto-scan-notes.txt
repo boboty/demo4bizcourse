@@ -1,0 +1,92 @@
+# 启发式扫描：experiments/real-generation/trial-2/generated_test_orders.py
+共 25 个 test_* 函数
+
+## test_ac1_gold_amount_1200_no_coupon
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_ac2_gold_amount_1000_boundary_no_coupon
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_ac3_gold_amount_999_below_threshold_no_coupon
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_ac4_standard_amount_600_with_vip100
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_ac5_gold_amount_1200_with_vip100_stacks
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): True
+  - 函数体内出现 membershipDiscount: True
+  - 函数体内出现 couponDiscount: True
+  - 函数体内出现 discount 与 200 同现: True
+  - >>> 同一函数内 membershipDiscount 与 couponDiscount 同时出现: True
+
+## test_ac6_gold_amount_1200_with_vip100_no_stack
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_ac7_invalid_customer_level_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_response_contains_all_required_fields_with_correct_types
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_response_content_type_is_json
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_discount_equals_sum_of_membership_and_coupon_discount
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): True
+  - 函数体内出现 membershipDiscount: True
+  - 函数体内出现 couponDiscount: True
+  - 函数体内出现 discount 与 200 同现: True
+  - >>> 同一函数内 membershipDiscount 与 couponDiscount 同时出现: True
+
+## test_silver_level_never_gets_membership_discount
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_standard_level_never_gets_membership_discount
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_gold_amount_zero_no_membership_discount
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_no_discount_when_nothing_applies
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_vip100_applies_alone_when_membership_not_eligible
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_vip100_no_stack_applies_alone_when_membership_not_eligible
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_no_coupon_field_omitted_behaves_like_no_coupon
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_discount_matrix
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_invalid_customer_level_values_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_missing_customer_level_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_missing_amount_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_negative_amount_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_non_integer_amount_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_invalid_coupon_value_rejected
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): False
+
+## test_response_is_deterministic_across_repeated_calls
+- 疑似命中组合场景(GOLD+VIP100+金额>=1000字样同时出现): True
+  - 函数体内出现 membershipDiscount: False
+  - 函数体内出现 couponDiscount: False
+  - 函数体内出现 discount 与 200 同现: False
+  - >>> 同一函数内 membershipDiscount 与 couponDiscount 同时出现: False
+
+启发式初判（未经人工确认）：可能覆盖了组合场景断言
+这是字符串层面的启发式扫描，不是语义分析；最终判断请人工读函数源码后写入 review-notes.md。
