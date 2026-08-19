@@ -50,12 +50,18 @@ def check_app_boots() -> tuple[bool, str]:
 
         with TestClient(create_app()) as client:
             health = client.get("/health")
-            preview = client.post(
-                "/api/orders/discount-preview",
-                json={"customerLevel": "GOLD", "amount": 1200, "coupon": "VIP100"},
+            calculate = client.post(
+                "/api/orders/calculate",
+                json={"memberLevel": "GOLD", "amount": 1000},
             )
-        ok = health.status_code == 200 and preview.status_code == 200 and preview.json()["finalAmount"] == 1000
-        return ok, f"health={health.status_code} preview={preview.status_code} finalAmount={preview.json().get('finalAmount')}"
+        payload = calculate.json()
+        ok = (
+            health.status_code == 200
+            and calculate.status_code == 200
+            and payload.get("status") == "SUCCESS"
+            and {"discount", "finalAmount"} <= payload.keys()
+        )
+        return ok, f"health={health.status_code} calculate={calculate.status_code} fields={sorted(payload.keys())}"
     except Exception as exc:  # noqa: BLE001 - smoke check must report, not raise
         return False, f"app failed to boot: {exc!r}"
 

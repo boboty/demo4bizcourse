@@ -1,43 +1,36 @@
 openapi: 3.1.0
 info:
-  title: AI Test Loop - Discount Preview
+  title: AgentAI Test Demo - Order Calculate
   version: 1.0.0
 paths:
-  /api/orders/discount-preview:
+  /api/orders/calculate:
     post:
-      summary: Preview order discount eligibility
+      summary: Calculate order discount and final amount
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DiscountPreviewRequest'
+              $ref: '#/components/schemas/OrderCalculateRequest'
       responses:
         '200':
-          description: Deterministic discount preview with decision evidence
+          description: Discount and final amount for the order
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DiscountPreviewResponse'
+                $ref: '#/components/schemas/OrderCalculateResponse'
 components:
   schemas:
-    DiscountPreviewRequest:
+    OrderCalculateRequest:
       type: object
-      required: [customerLevel, amount]
+      required: [memberLevel, amount]
       properties:
-        customerLevel: {type: string, enum: [GOLD, SILVER, STANDARD]}
+        memberLevel: {type: string, enum: [GOLD, SILVER, STANDARD]}
         amount: {type: integer, minimum: 0}
-        coupon: {type: [string, 'null'], enum: [VIP100, VIP100-NO-STACK, null]}
-    DiscountPreviewResponse:
+    OrderCalculateResponse:
       type: object
-      required: [eligible, discount, finalAmount, membershipDiscount, couponDiscount, discountSources, reason, decisionTrace]
+      required: [status, discount, finalAmount]
       properties:
-        eligible: {type: boolean}
+        status: {type: string, enum: [SUCCESS]}
         discount: {type: integer}
         finalAmount: {type: integer}
-        membershipDiscount: {type: integer}
-        couponDiscount: {type: integer}
-        discountSources: {type: array, items: {type: string}}
-        reason: {type: string}
-        decisionTrace: {type: array, items: {type: string}}
-
