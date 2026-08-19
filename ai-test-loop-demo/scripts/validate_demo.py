@@ -1,6 +1,9 @@
-"""对课堂故事和本地可重复性进行统一验收。"""
+"""课前自检：确认 Demo 处于可开课状态。
 
-import subprocess
+只读检查，不修复任何代码。逐项输出检查结果；全部通过时最终输出 DEMO READY，
+否则输出 DEMO NOT READY 并列出不通过项。
+"""
+
 import sys
 from pathlib import Path
 
@@ -13,100 +16,128 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.main import create_app  # noqa: E402
 
 
-REQUIRED_ASSETS = (
-    "business/requirement.md",
-    "business/acceptance.md",
-    "business/api-rules.md",
-    "api/openapi.yaml",
-    "tasks/task-package.md",
-    "skills/api-test-skill.md",
-    "docs/classroom-script.md",
+BUSINESS_RULES = PROJECT_ROOT / "docs" / "business-rules.md"
+WORKSPACE = PROJECT_ROOT / "agent_workspace"
+WORKSPACE_ALLOWED = {"README.md", ".gitkeep", ".DS_Store"}
+
+REQUIRED_CASES = (
+    {"memberLevel": "GOLD", "amount": 999},
+    {"memberLevel": "GOLD", "amount": 1000},
+    {"memberLevel": "GOLD", "amount": 1001},
+    {"memberLevel": "SILVER", "amount": 1000},
+    {"memberLevel": "STANDARD", "amount": 1000},
 )
 
 
-def run_script(name: str, *args: str) -> tuple[bool, str]:
-    result = subprocess.run(
-        [sys.executable, f"scripts/{name}", *args],
-        cwd=PROJECT_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    return result.returncode == 0, result.stdout + result.stderr
-
-
-def application_and_openapi_are_consistent() -> bool:
+def gold_1000_payload() -> dict:
     with TestClient(create_app()) as client:
-        health = client.get("/health")
-        schema = client.get("/openapi.json")
-        preview = client.post(
-            "/api/orders/discount-preview",
-            json={"customerLevel": "GOLD", "amount": 1200, "coupon": "VIP100"},
+        response = client.post(
+            "/api/orders/calculate",
+            json={"memberLevel": "GOLD", "amount": 1000},
         )
-    if health.json() != {"status": "ok"} or schema.status_code != 200 or preview.status_code != 200:
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def check_app_loads() -> bool:
+    with TestClient(create_app()) as client:
+        return client.get("/health").status_code == 200
+
+
+def check_endpoint_declared() -> bool:
+    with TestClient(create_app()) as client:
+        schema = client.get("/openapi.json")
+    if schema.status_code != 200:
         return False
-    generated_schema = schema.json()
-    route = generated_schema.get("paths", {}).get("/api/orders/discount-preview", {}).get("post")
-    response_properties = generated_schema.get("components", {}).get("schemas", {}).get(
-        "DiscountPreviewResponse", {}
-    ).get("properties", {})
-    declared = (PROJECT_ROOT / "api" / "openapi.yaml").read_text(encoding="utf-8")
-    expected_fields = ("membershipDiscount", "couponDiscount", "discountSources", "decisionTrace")
-    return bool(route) and all(field in response_properties and field in declared for field in expected_fields)
+    post = schema.json().get("paths", {}).get("/api/orders/calculate", {}).get("post")
+    return post is not None
 
 
-def has_no_online_dependency() -> bool:
-    requirements = (PROJECT_ROOT / "requirements.txt").read_text(encoding="utf-8").lower()
-    code = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in (PROJECT_ROOT / "app").glob("*.py")
-    ).lower()
-    return not any(marker in requirements or marker in code for marker in ("openai", "requests", "urllib"))
+def check_gold_1000_http_ok() -> bool:
+    try:
+        return gold_1000_payload().get("status") == "SUCCESS"
+    except Exception:
+        return False
+
+
+def check_discount_is_200() -> bool:
+    try:
+        return gold_1000_payload().get("discount") == 200
+    except Exception:
+        return False
+
+
+def check_bug_still_present() -> bool:
+    try:
+        payload = gold_1000_payload()
+        return payload.get("discount") == 200 and payload.get("finalAmount") == 1000
+    except Exception:
+        return False
+
+
+def check_business_rules_document() -> bool:
+    if not BUSINESS_RULES.is_file():
+        return False
+    text = BUSINESS_RULES.read_text(encoding="utf-8")
+    required_fragments = (
+        "finalAmount = amount - discount",
+        "GOLD",
+        "SILVER",
+        "STANDARD",
+        "200",
+        "100",
+        "800",
+    )
+    return all(fragment in text for fragment in required_fragments)
+
+
+def check_required_cases_http_ok() -> bool:
+    with TestClient(create_app()) as client:
+        for case in REQUIRED_CASES:
+            response = client.post("/api/orders/calculate", json=case)
+            if response.status_code != 200 or response.json().get("status") != "SUCCESS":
+                return False
+    return True
+
+
+def check_workspace_clean() -> bool:
+    if not WORKSPACE.is_dir():
+        return False
+    for child in WORKSPACE.iterdir():
+        if child.name in WORKSPACE_ALLOWED:
+            continue
+        return False
+    return True
 
 
 def main() -> int:
-    checks: list[tuple[str, bool]] = []
-    reset_first, _ = run_script("reset_demo.py")
-    reset_second, _ = run_script("reset_demo.py")
-    checks.append(("Reset (idempotent)", reset_first and reset_second))
-    checks.append(("Application", application_and_openapi_are_consistent()))
-    checks.append(("OpenAPI / implementation", application_and_openapi_are_consistent()))
-    checks.append(("Required assets", all((PROJECT_ROOT / asset).is_file() for asset in REQUIRED_ASSETS)))
-    checks.append(("No online dependency", has_no_online_dependency()))
+    checks = [
+        ("服务可正常加载 (/health)", check_app_loads),
+        ("订单接口存在 (POST /api/orders/calculate)", check_endpoint_declared),
+        ("GOLD + 1000 返回 HTTP 200 + status=SUCCESS", check_gold_1000_http_ok),
+        ("GOLD + 1000 discount = 200", check_discount_is_200),
+        ("当前故意 Bug 仍存在：finalAmount = 1000", check_bug_still_present),
+        ("docs/business-rules.md 规定正确值 800 (amount - discount)", check_business_rules_document),
+        ("五组必测用例均 HTTP 200 + status=SUCCESS", check_required_cases_http_ok),
+        ("agent_workspace 已清空或已 Reset", check_workspace_clean),
+    ]
 
-    generated_ok, generated_output = run_script("run_generated_tests.py")
-    checks.append(("Generated tests", generated_ok and "ALL TESTS PASSED" in generated_output))
-    generated_review_ok, generated_review_output = run_script("run_independent_review.py")
-    checks.append(("Independent review", generated_review_ok and "INDEPENDENT REVIEW : REJECTED" in generated_review_output))
+    print("DEMO PRE-FLIGHT CHECK\n")
+    failed: list[str] = []
+    for label, fn in checks:
+        ok = bool(fn())
+        print(f"[{'PASS' if ok else 'FAILED'}] {label}")
+        if not ok:
+            failed.append(label)
 
-    verified_ok, verified_output = run_script("run_verified_tests.py")
-    checks.append(("Verified tests", verified_ok and "ALL VERIFIED TESTS PASSED" in verified_output))
-    final_review_ok, final_review_output = run_script("run_independent_review.py", "--target", "verified")
-    checks.append(("Final independent review", final_review_ok and "INDEPENDENT REVIEW : PASS" in final_review_output))
-
-    evidence_files = (
-        PROJECT_ROOT / "evidence" / "generated-test-report.md",
-        PROJECT_ROOT / "evidence" / "independent-review-report.md",
-        PROJECT_ROOT / "evidence" / "final-test-report.md",
-    )
-    evidence_ok = all(path.is_file() for path in evidence_files)
-    if evidence_ok:
-        evidence_ok = (
-            "pytest: PASS" in evidence_files[0].read_text(encoding="utf-8")
-            and "RESULT: REJECTED" in evidence_files[1].read_text(encoding="utf-8")
-            and "RESULT: PASS" in evidence_files[2].read_text(encoding="utf-8")
-        )
-    checks.append(("Evidence", evidence_ok))
-
-    print("AI TEST LOOP DEMO VALIDATION\n")
-    for name, passed in checks:
-        suffix = "PASS" if passed else "FAILED"
-        if name == "Independent review" and passed:
-            suffix = "REJECTED (EXPECTED)"
-        print(f"{name:.<28} {suffix}")
-    ready = all(passed for _, passed in checks)
-    print(f"\nDEMO STATUS: {'READY' if ready else 'NOT READY'}")
-    return 0 if ready else 1
+    print()
+    if not failed:
+        print("DEMO READY")
+        return 0
+    print("DEMO NOT READY - 以下项目未通过：")
+    for label in failed:
+        print(f"  - {label}")
+    return 1
 
 
 if __name__ == "__main__":
