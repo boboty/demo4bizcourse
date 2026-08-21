@@ -17,3 +17,8 @@ evidence/**/quicktime-manual-confirmation.md
 
 # Round 0.5 的原始执行输出仅保留在本机。
 evidence/round05-*/
+!evidence/round05-pass-summary.md
+
+# Round 1 真机运行的原始截图、Appium 与设备日志只保留在本机。
+evidence/round1-*/
+!evidence/round1-pass-summary.md

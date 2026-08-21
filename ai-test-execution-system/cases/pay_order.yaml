@@ -1,0 +1,62 @@
+version: 1
+case_id: pay_order
+title: iPhone Safari 支付待付款订单
+
+device:
+  physical: true
+  platform: iOS
+  browser: Safari
+  udid_environment: IOS_UDID
+  signing_team_environment: IOS_TEAM_ID
+  wda_bundle_environment: IOS_WDA_BUNDLE_ID
+
+configuration:
+  ui_version: v1
+  payment_mode: normal
+  product_bug_mode: "off"
+
+test_data:
+  reset_endpoint: /api/reset
+  prepare_pending_order_endpoint: /api/test-data/prepare-pending-order
+  order_id_response_field: order_id
+
+ui:
+  url: /
+  steps:
+    - id: login
+      action: input
+      locator: {using: css selector, value: "#username"}
+      text: course-demo
+    - id: submit_login
+      action: click
+      locator: {using: css selector, value: "[data-testid='login-button']"}
+    - id: open_pending_order
+      action: click
+      locator: {using: css selector, value: "[data-testid='pending-order']"}
+    - id: pay_order
+      action: click
+      locator: {using: css selector, value: "#pay-now"}
+
+assertions:
+  ui:
+    locator: {using: css selector, value: "[data-testid='payment-result']"}
+    expected_text: 支付成功
+  api_facts:
+    endpoint: /api/orders/{order_id}/facts
+    equals:
+      order_status: PAID
+      payment_count: 1
+      payment_record.status: SUCCEEDED
+      inventory.available_quantity: 9
+
+evidence:
+  screenshot: after-payment.png
+  appium_log: appium.log
+  failure_context: run.json
+
+cleanup:
+  endpoint: /api/reset
+  expected_facts:
+    order_status: PENDING_PAY
+    payment_count: 0
+    inventory.available_quantity: 10

@@ -31,6 +31,24 @@ def test_prepare_pending_order_and_normal_payment_updates_independent_facts(tmp_
     assert facts["inventory"]["available_quantity"] == 9
 
 
+def test_prepare_pending_order_rebuilds_business_data_but_preserves_settings(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    configure(client, ui_version="v2", payment_mode="timeout_after_commit", product_bug_mode="on")
+    assert client.post("/api/orders/order-001/pay").status_code == 504
+
+    prepared = client.post("/api/test-data/prepare-pending-order")
+    assert prepared.status_code == 200
+    assert client.get("/api/config").json() == {
+        "ui_version": "v2",
+        "payment_mode": "timeout_after_commit",
+        "product_bug_mode": "on",
+    }
+    facts = client.get("/api/orders/{0}/facts".format(prepared.json()["order_id"])).json()
+    assert facts["order_status"] == "PENDING_PAY"
+    assert facts["payment_count"] == 0
+    assert facts["inventory"]["available_quantity"] == 10
+
+
 def test_timeout_before_commit_keeps_all_business_facts_unchanged(tmp_path: Path) -> None:
     client = make_client(tmp_path)
     configure(client, payment_mode="timeout_before_commit")

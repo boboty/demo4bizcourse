@@ -115,8 +115,16 @@ class RuntimeStore:
             return None
 
     def prepare_pending_order(self) -> Dict[str, Any]:
-        """准备 API/UI 共用的确定性待付款世界，并返回固定 order_id。"""
-        return self.reset()
+        """仅重建业务数据，保留当前课堂配置。"""
+        with self._lock:
+            settings = self._read()["settings"]
+            state = self._baseline(
+                ui_version=settings["ui_version"],
+                payment_mode=settings["payment_mode"],
+                product_bug_mode=settings["product_bug_mode"],
+            )
+            self._write(state)
+            return state
 
     def list_orders(self, user_id: str, status: Optional[str] = None) -> list[Dict[str, Any]]:
         with self._lock:
