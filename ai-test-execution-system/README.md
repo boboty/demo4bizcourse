@@ -13,6 +13,6 @@
 IOS_UDID='<udid>' IOS_TEAM_ID='<team id>' python3 scripts/run_round0_ios.py
 ```
 
-执行脚本会真实启动 Mac 静态页、以 XCUITest 创建 iPhone Safari session、点击按钮、断言页面状态变化并保存截图。QuickTime 的 iPhone 画面是否稳定显示需要人工视觉确认，具体步骤见课前文档。所有命令输出和实际结果保存到 `evidence/ios-<时间戳>/`。
+执行脚本会真实启动 Mac 静态页、以 XCUITest 创建 iPhone Safari session、点击按钮、断言页面状态变化并保存截图。QuickTime 的 iPhone 画面是否稳定显示需要人工视觉确认，具体步骤见课前文档。原始运行产物写入本机 `evidence/ios-<时间戳>/`，默认不提交；仓库只保留脱敏后的 Round 0 摘要。
 
 `site/index.html` 还提供一个可选定位权限按钮，用于课堂证明 Safari 的系统权限弹窗不是 Web DOM；它不属于 Round 0 基础门禁。

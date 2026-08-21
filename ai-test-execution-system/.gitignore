@@ -1,1 +1,8 @@
 __pycache__/
+
+# 真实设备执行证据仅保留在本机，禁止提交。
+evidence/ios-*/
+evidence/**/appium.log
+evidence/**/run.json
+evidence/**/after-click.png
+evidence/**/quicktime-manual-confirmation.md

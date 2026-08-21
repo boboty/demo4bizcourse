@@ -50,12 +50,14 @@ def lan_ip():
         probe.close()
 
 appium = None
+appium_log = None
 session_id = None
 server = None
 try:
     EVIDENCE.mkdir(parents=True)
     udid = os.environ.get("IOS_UDID")
     team_id = os.environ.get("IOS_TEAM_ID")
+    wda_bundle_id = os.environ.get("IOS_WDA_BUNDLE_ID")
     if not udid:
         raise RuntimeError("请设置 IOS_UDID 为 Xcode 发现的 iPhone UDID。")
     if not team_id:
@@ -83,7 +85,8 @@ try:
     record["test_page"] = test_url
     with urllib.request.urlopen("http://127.0.0.1:8000/index.html", timeout=5) as response:
         record["mac_test_page_http_status"] = response.status
-    appium = subprocess.Popen(["appium", "--address", "127.0.0.1", "--port", "4723"], stdout=subprocess.PIPE,
+    appium_log = (EVIDENCE / "appium.log").open("w")
+    appium = subprocess.Popen(["appium", "--address", "127.0.0.1", "--port", "4723"], stdout=appium_log,
                               stderr=subprocess.STDOUT, text=True)
     for _ in range(20):
         try:
@@ -96,7 +99,10 @@ try:
     caps = {"capabilities": {"alwaysMatch": {"platformName": "iOS", "browserName": "Safari",
             "appium:automationName": "XCUITest", "appium:udid": udid,
             "appium:xcodeOrgId": team_id, "appium:xcodeSigningId": "Apple Development",
-            "appium:newCommandTimeout": 120}, "firstMatch": [{}]}}
+            "appium:newCommandTimeout": 120, "appium:webviewConnectTimeout": 30000,
+            "appium:showXcodeLog": True}, "firstMatch": [{}]}}
+    if wda_bundle_id:
+        caps["capabilities"]["alwaysMatch"]["appium:updatedWDABundleId"] = wda_bundle_id
     created = webdriver("POST", "/session", caps)
     session_id = created["sessionId"]
     record["appium_session"] = session_id
@@ -107,6 +113,7 @@ try:
     text = webdriver("GET", f"/session/{session_id}/element/{status[ELEMENT_KEY]}/text")
     if text != "已由 Appium 点击验证":
         raise RuntimeError(f"页面状态未变化，实际值: {text!r}")
+    time.sleep(1)
     (EVIDENCE / "after-click.png").write_bytes(base64.b64decode(webdriver("GET", f"/session/{session_id}/screenshot")))
     record["page_change"] = text
     record["quicktime"] = "需人工按 docs/ios-personal-team-setup.md 验证 USB 画面稳定显示"
@@ -125,6 +132,8 @@ finally:
             appium.wait(timeout=5)
         except subprocess.TimeoutExpired:
             appium.kill()
+    if appium_log:
+        appium_log.close()
     if server:
         server.shutdown()
         server.server_close()
