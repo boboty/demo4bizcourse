@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -87,8 +88,12 @@ def create_app(store: Optional[RuntimeStore] = None) -> FastAPI:
         return settings
 
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-    def mobile_web() -> str:
-        return render_mobile_page(app.state.store.get_settings()["ui_version"])
+    def mobile_web() -> HTMLResponse:
+        # UI V1/V2 是课堂中运行时切换的受控变量；Safari 不得复用旧页面缓存。
+        return HTMLResponse(
+            render_mobile_page(app.state.store.get_settings()["ui_version"]),
+            headers={"Cache-Control": "no-store"},
+        )
 
     return app
 
@@ -96,10 +101,10 @@ def create_app(store: Optional[RuntimeStore] = None) -> FastAPI:
 def render_mobile_page(ui_version: str) -> str:
     if ui_version == "v1":
         pay_button = '<button id="pay-now" data-testid="pay-button" type="button">立即支付</button>'
-        pay_selector = "#pay-now"
+        pay_selector = json.dumps("#pay-now")
     else:
         pay_button = '<button data-testid="confirm-payment" type="button">确认支付</button>'
-        pay_selector = "[data-testid='confirm-payment']"
+        pay_selector = json.dumps("[data-testid='confirm-payment']")
 
     return """<!doctype html>
 <html lang="zh-CN">
@@ -178,7 +183,7 @@ def render_mobile_page(ui_version: str) -> str:
         setMessage('payment-result', '支付请求失败；请先查询业务状态，不能直接重试。', 'failure');
       }
     }
-    document.querySelector('""" + pay_selector + """').addEventListener('click', pay);
+    document.querySelector(""" + pay_selector + """).addEventListener('click', pay);
   </script>
 </body>
 </html>"""

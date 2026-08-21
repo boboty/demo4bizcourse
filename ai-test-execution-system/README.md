@@ -1,6 +1,6 @@
 # AI Test Execution System
 
-当前完成的范围：Round 0（iPhone 真机环境与投屏门禁）、Round 0.5（本地可控被测业务系统）及 Round 1（Demo 0 资产与单条真机确定性用例）。不包含 Round 2 的自愈、Agent、Skill、Suite、调度、Retry 或报告功能。
+当前工程包含：Round 0（iPhone 真机环境与投屏门禁）、Round 0.5（本地可控被测业务系统）、Round 1（Demo 0 资产与单条真机确定性用例）及 Round 2（受控 locator Self-Heal）实现。不包含 Skill、Suite、调度、Retry 或报告功能。
 
 链路为：Mac → USB iPhone → Xcode / WebDriverAgent → Appium + XCUITest → Mobile Safari → 最小静态页 → QuickTime 投屏 → 会议软件共享。
 
@@ -80,3 +80,41 @@ python3 scripts/write_round1_pass_summary.py evidence/round1-<timestamp>/batch.j
 ```
 
 每次执行均按 `reset → prepare → 真机 UI → API facts → cleanup` 完成。失败时保存截图、Appium/设备日志、当前步骤及可获得的 API facts；原始产物默认位于被忽略的 `evidence/round1-*`。只有五次都通过时，摘要脚本才会生成可提交且不含设备、账号、路径信息的 `evidence/round1-pass-summary.md`。
+
+## Round 2：受控 UI locator Self-Heal
+
+Round 2 只演示这一条边界：UI V2 令正式资产中的 `#pay-now` 真实失败，模型只给出 Candidate；确定性 Review、临时真机验证和 Write Back 负责控制风险。模型不会直接改动 `cases/pay_order.yaml`，运行时没有双 locator / fallback。
+
+完整真实执行（系统在另一终端运行，iPhone 已解锁并满足 Round 1 真机前置条件）：
+
+```bash
+DEMO_BASE_URL='http://<Mac-LAN-IP>:8000' \
+IOS_UDID='<iPhone-UDID>' IOS_TEAM_ID='<Personal-Team-ID>' \
+IOS_WDA_BUNDLE_ID='<personal-WDA-bundle-id>' \
+OPENAI_API_KEY='<only-in-local-shell>' \
+python3 scripts/run_round2_self_heal.py
+```
+
+没有 API Key 时，不允许伪造本地候选。先在真实 failure 后停住（此命令仍会先跑 V1 baseline）：
+
+```bash
+python3 scripts/run_round2_self_heal.py --stop-after-failure
+```
+
+命令会打印本次 bundle 路径。用该路径运行 `scripts/render_round2_candidate_prompt.py`，把它输出的 failure context 和同目录截图交给交互式 Codex，并把其**真实输出**保存为仅含 `target`、`old_locator`、`candidate`、`evidence` 的 JSON；然后显式导入继续：
+
+```bash
+python3 scripts/run_round2_self_heal.py \
+  --failure-dir evidence/round2-<timestamp>/v2-old-locator-failure \
+  --interactive-candidate /path/to/real-interactive-candidate.json
+```
+
+导入产物会标记为 `interactive_codex_export`，不会伪装成 API 实时调用。两种来源都会经过相同的唯一匹配、固定 API facts、三次真机临时验证和单行 Write Back。通过后，脚本会用写回后的正式资产在 V2 再跑一次（不调用 AI），最后恢复 baseline 并再次制造旧 locator failure。
+
+课堂恢复命令：
+
+```bash
+./scripts/restore_self_heal_baseline.sh
+```
+
+它只恢复正式 `pay_order` locator 为 `#pay-now`，并恢复 V1 / normal / Product Bug off、删除导入 Candidate；脱敏摘要和被 Git 忽略的运行 evidence 会保留供课后核验。`reset_demo.sh` 也会恢复此 locator，防止上一轮 Write Back 污染下次演示。

@@ -147,6 +147,9 @@ class WebDriver:
         encoded = self.command("GET", "/session/{0}/screenshot".format(self.session_id))
         return base64.b64decode(encoded)
 
+    def page_source(self) -> str:
+        return self.command("GET", "/session/{0}/source".format(self.session_id))
+
     def wait_for_text(self, locator: Dict[str, str], expected_text: str, timeout_seconds: int = 25) -> str:
         deadline = time.monotonic() + timeout_seconds
         actual_text = ""
@@ -294,10 +297,16 @@ def execute_ui(driver: WebDriver, case: Dict[str, Any], base_url: str, record: D
     record["ui_assertion"] = "PASS"
 
 
-def run_once(case: Dict[str, Any], base_url: str, evidence_dir: Path) -> Dict[str, Any]:
+def run_once(
+    case: Dict[str, Any],
+    base_url: str,
+    evidence_dir: Path,
+    configuration_override: Optional[Dict[str, str]] = None,
+    round_name: str = "Round 1",
+) -> Dict[str, Any]:
     evidence_dir.mkdir(parents=True, exist_ok=False)
     record: Dict[str, Any] = {
-        "round": "Round 1",
+        "round": round_name,
         "case_id": case["case_id"],
         "started_at": utc_now(),
         "current_step": "start",
@@ -310,8 +319,11 @@ def run_once(case: Dict[str, Any], base_url: str, evidence_dir: Path) -> Dict[st
         require_ok(base_url + "/health", timeout=10)
         record["current_step"] = "reset"
         require_ok(base_url + case["test_data"]["reset_endpoint"], "POST")
+        expected_configuration = configuration_override or case["configuration"]
+        if configuration_override:
+            require_ok(base_url + "/api/config", "PUT", configuration_override)
         config = require_ok(base_url + "/api/config")
-        assert_equals(config, case["configuration"], "运行配置")
+        assert_equals(config, expected_configuration, "运行配置")
 
         record["current_step"] = "prepare_pending_order"
         prepared = require_ok(base_url + case["test_data"]["prepare_pending_order_endpoint"], "POST")

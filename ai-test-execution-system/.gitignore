@@ -22,3 +22,8 @@ evidence/round05-*/
 # Round 1 真机运行的原始截图、Appium 与设备日志只保留在本机。
 evidence/round1-*/
 !evidence/round1-pass-summary.md
+
+# Round 2 的真实设备、模型输入输出和临时验证结果均为本机证据。
+evidence/round2-*/
+!evidence/round2-pass-summary.md
+self_heal/candidates/*.json
