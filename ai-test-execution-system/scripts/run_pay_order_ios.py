@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Round 1 only: 用 cases/pay_order.yaml 驱动一次真实 iPhone Safari 支付闭环。"""
+"""Round 3 runner：用 cases/pay_order.yaml 驱动确定性的支付 Workflow。"""
 
 from __future__ import annotations
 
@@ -11,17 +11,22 @@ import socket
 import subprocess
 import sys
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from tools.api import HttpToolError, http_request, require_success
+from tools import ui
+from workflows.pay_order_and_verify import pay_order_and_verify
+from skills.contracts import ExecutionContext
+
+
 ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 APPIUM_URL = "http://127.0.0.1:4723"
 
@@ -42,40 +47,33 @@ def lan_ip() -> str:
 def request_json(
     url: str, method: str = "GET", payload: Any = None, timeout: int = 90
 ) -> Tuple[int, Any]:
-    data = json.dumps(payload).encode("utf-8") if payload is not None else None
-    request = urllib.request.Request(
-        url, data=data, method=method, headers={"Content-Type": "application/json"}
-    )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            body = response.read().decode("utf-8")
-            return response.status, json.loads(body) if body else None
-    except urllib.error.HTTPError as error:
-        body = error.read().decode("utf-8")
-        try:
-            parsed = json.loads(body) if body else None
-        except json.JSONDecodeError:
-            parsed = {"raw_body": body}
-        return error.code, parsed
-    except urllib.error.URLError as error:
-        return 0, {"connection_error": str(error.reason)}
+        response = http_request(url, method=method, payload=payload, timeout=timeout)
+    except HttpToolError as error:
+        return 0, {"connection_error": str(error)}
+    return response.status_code, response.body
 
 
 def require_ok(url: str, method: str = "GET", payload: Any = None, timeout: int = 90) -> Any:
-    status, body = request_json(url, method, payload, timeout)
-    if not 200 <= status < 300:
-        raise RuntimeError("{0} {1} 失败（HTTP {2}）：{3}".format(method, url, status, body))
-    return body
+    return require_success(url, method=method, payload=payload, timeout=timeout)
 
 
 def read_case(case_path: Path) -> Dict[str, Any]:
     with case_path.open("r", encoding="utf-8") as case_file:
         case = yaml.safe_load(case_file)
     required_paths = (
+        "version",
         "case_id",
+        "title",
         "device.physical",
+        "device.platform",
+        "device.browser",
+        "preconditions.health_endpoint",
+        "workflow.name",
+        "workflow.steps",
         "configuration.ui_version",
         "test_data.prepare_pending_order_endpoint",
+        "test_data.order_facts_endpoint",
         "ui.steps",
         "assertions.ui",
         "assertions.api_facts",
@@ -89,6 +87,20 @@ def read_case(case_path: Path) -> Dict[str, Any]:
         raise ValueError("Round 1 只能执行 physical: true 的真机用例。")
     if case["configuration"]["ui_version"] != "v1":
         raise ValueError("Round 1 正式执行只能使用 UI V1。")
+    if case["version"] != 1:
+        raise ValueError("只支持 version: 1 的可执行任务。")
+    if case["workflow"] != {
+        "name": "pay_order_and_verify",
+        "steps": [
+            "prepare_pending_order",
+            "login",
+            "open_pending_order",
+            "pay_order",
+            "assert_business_state",
+            "reset_test_state",
+        ],
+    }:
+        raise ValueError("Round 3 只允许冻结的 pay_order_and_verify Workflow。")
     return case
 
 
@@ -118,6 +130,34 @@ class WebDriver:
     def command(self, method: str, path: str, payload: Any = None, timeout: int = 90) -> Any:
         body = require_ok(APPIUM_URL + path, method, payload, timeout)
         return body["value"]
+
+    def find_element(self, locator: Dict[str, str]) -> Dict[str, str]:
+        return self.command("POST", "/session/{0}/element".format(self.session_id), locator, timeout=10)
+
+    def open_url(self, url: str) -> None:
+        self.command("POST", "/session/{0}/url".format(self.session_id), {"url": url})
+
+    def input_text(self, element: Dict[str, str], text: str) -> None:
+        element_id = element[ELEMENT_KEY]
+        self.command("POST", "/session/{0}/element/{1}/clear".format(self.session_id, element_id), {})
+        self.command(
+            "POST",
+            "/session/{0}/element/{1}/value".format(self.session_id, element_id),
+            {"text": text, "value": list(text)},
+        )
+
+    def click(self, element: Dict[str, str]) -> None:
+        self.command(
+            "POST",
+            "/session/{0}/element/{1}/click".format(self.session_id, element[ELEMENT_KEY]),
+            {},
+        )
+
+    def get_text(self, element: Dict[str, str]) -> str:
+        return self.command(
+            "GET",
+            "/session/{0}/element/{1}/text".format(self.session_id, element[ELEMENT_KEY]),
+        )
 
     def create_session(self, capabilities: Dict[str, Any]) -> None:
         body = require_ok(APPIUM_URL + "/session", "POST", capabilities, timeout=120)
@@ -276,17 +316,10 @@ def execute_ui(driver: WebDriver, case: Dict[str, Any], base_url: str, record: D
     for step in case["ui"]["steps"]:
         record["current_step"] = step["id"]
         element = driver.wait_for_element(step["locator"])
-        element_id = element[ELEMENT_KEY]
         if step["action"] == "input":
-            driver.command("POST", "/session/{0}/element/{1}/clear".format(driver.session_id, element_id), {})
-            text = step["text"]
-            driver.command(
-                "POST",
-                "/session/{0}/element/{1}/value".format(driver.session_id, element_id),
-                {"text": text, "value": list(text)},
-            )
+            ui.input_text(driver, element, step["text"])
         elif step["action"] == "click":
-            driver.command("POST", "/session/{0}/element/{1}/click".format(driver.session_id, element_id), {})
+            ui.click(driver, element)
         else:
             raise ValueError("不支持的 UI action：{0}".format(step["action"]))
 
@@ -314,9 +347,16 @@ def run_once(
     }
     driver = WebDriver()
     appium: Optional[subprocess.Popen[str]] = None
-    order_id: Optional[str] = None
+    workflow_started = False
+    context = ExecutionContext(
+        base_url=base_url,
+        case=case,
+        driver=driver,
+        evidence_dir=evidence_dir,
+        record=record,
+    )
     try:
-        require_ok(base_url + "/health", timeout=10)
+        require_ok(base_url + case["preconditions"]["health_endpoint"], timeout=10)
         record["current_step"] = "reset"
         require_ok(base_url + case["test_data"]["reset_endpoint"], "POST")
         expected_configuration = configuration_override or case["configuration"]
@@ -324,59 +364,32 @@ def run_once(
             require_ok(base_url + "/api/config", "PUT", configuration_override)
         config = require_ok(base_url + "/api/config")
         assert_equals(config, expected_configuration, "运行配置")
-
-        record["current_step"] = "prepare_pending_order"
-        prepared = require_ok(base_url + case["test_data"]["prepare_pending_order_endpoint"], "POST")
-        order_id = prepared[case["test_data"]["order_id_response_field"]]
-        if not order_id:
-            raise AssertionError("prepare API 未返回 order_id。")
-        if prepared.get("order_status") != "PENDING_PAY":
-            raise AssertionError("prepare API 未准备 PENDING_PAY 订单。")
-        record["prepared_order"] = True
-
-        check_prerequisites(case)
         appium = start_appium(evidence_dir / case["evidence"]["appium_log"])
-        execute_ui(driver, case, base_url, record)
-        (evidence_dir / case["evidence"]["screenshot"]).write_bytes(driver.screenshot())
-
-        record["current_step"] = "assert_api_facts"
-        facts_endpoint = case["assertions"]["api_facts"]["endpoint"].format(order_id=order_id)
-        facts = require_ok(base_url + facts_endpoint)
-        record["api_facts"] = facts
-        assert_equals(facts, case["assertions"]["api_facts"]["equals"], "API 业务事实")
-        record["api_assertion"] = "PASS"
-        record["result"] = "PASS"
+        workflow_started = True
+        pay_order_and_verify(
+            context,
+            create_capabilities=appium_capabilities,
+            device_health_check=check_prerequisites,
+            screenshot_name=case["evidence"]["screenshot"],
+        )
     except Exception as error:
         record["error"] = str(error)
-        if driver.session_id:
-            try:
-                (evidence_dir / "failure-screenshot.png").write_bytes(driver.screenshot())
-                record["failure_screenshot"] = "saved"
-            except Exception as screenshot_error:
-                record["failure_screenshot_error"] = str(screenshot_error)
-        if order_id:
-            try:
-                facts_endpoint = case["assertions"]["api_facts"]["endpoint"].format(order_id=order_id)
-                record["api_facts"] = require_ok(base_url + facts_endpoint)
-            except Exception as facts_error:
-                record["api_facts_error"] = str(facts_error)
+        record["result"] = "FAIL"
     finally:
-        try:
-            driver.quit()
-        except Exception as quit_error:
-            record["session_cleanup_error"] = str(quit_error)
         stop_appium(appium)
-        try:
-            record["current_step"] = "cleanup"
-            cleaned = require_ok(base_url + case["cleanup"]["endpoint"], "POST")
-            cleanup_order_id = cleaned["order_id"]
-            cleanup_facts = require_ok(base_url + "/api/orders/{0}/facts".format(cleanup_order_id))
-            assert_equals(cleanup_facts, case["cleanup"]["expected_facts"], "cleanup")
-            record["cleanup"] = "PASS"
-        except Exception as cleanup_error:
-            record["cleanup"] = "FAIL"
-            record["cleanup_error"] = str(cleanup_error)
-            record["result"] = "FAIL"
+        if not workflow_started:
+            try:
+                record["current_step"] = "reset_test_state"
+                cleaned = require_ok(base_url + case["cleanup"]["endpoint"], "POST")
+                cleanup_facts = require_ok(
+                    base_url + case["test_data"]["order_facts_endpoint"].format(order_id=cleaned["order_id"])
+                )
+                assert_equals(cleanup_facts, case["cleanup"]["expected_facts"], "cleanup")
+                record["cleanup"] = "PASS"
+            except Exception as cleanup_error:
+                record["cleanup"] = "FAIL"
+                record["cleanup_error"] = str(cleanup_error)
+                record["result"] = "FAIL"
         record["finished_at"] = utc_now()
         (evidence_dir / case["evidence"]["failure_context"]).write_text(
             json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

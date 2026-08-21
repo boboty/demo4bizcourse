@@ -7,6 +7,7 @@ from self_heal.analyzer import build_request, import_interactive_candidate
 from self_heal.candidate import Locator, RepairCandidate
 from self_heal.reviewer import review_candidate
 from self_heal.writeback import restore_baseline_locator, write_back
+from scripts.run_round2_self_heal import classify_locator_failure
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,3 +94,14 @@ def test_interactive_import_is_explicitly_labeled_and_bound_to_real_old_locator(
     imported = import_interactive_candidate(raw, failure, tmp_path / "imported.json")
     assert imported.provenance["kind"] == "interactive_codex_export"
     assert imported.candidate.value == "[data-testid='confirm-payment']"
+
+
+def test_locator_failure_requires_pay_step_and_zero_matches_in_captured_page_source() -> None:
+    v2_source = '<main><button data-testid="confirm-payment">确认支付</button></main>'
+    assert classify_locator_failure("pay_order", V1, v2_source) == {
+        "result": "EXPECTED_LOCATOR_FAILURE",
+        "old_locator_match_count": 0,
+    }
+    v1_source = '<main><button id="pay-now">立即支付</button></main>'
+    assert classify_locator_failure("pay_order", V1, v1_source)["result"] == "EXECUTION_FAILURE"
+    assert classify_locator_failure("login", V1, v2_source)["result"] == "EXECUTION_FAILURE"

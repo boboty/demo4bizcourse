@@ -1,6 +1,6 @@
 # AI Test Execution System
 
-当前工程包含：Round 0（iPhone 真机环境与投屏门禁）、Round 0.5（本地可控被测业务系统）、Round 1（Demo 0 资产与单条真机确定性用例）及 Round 2（受控 locator Self-Heal）实现。不包含 Skill、Suite、调度、Retry 或报告功能。
+当前工程包含：Round 0（iPhone 真机环境与投屏门禁）、Round 0.5（本地可控被测业务系统）、Round 1（Demo 0 资产与单条真机确定性用例）、Round 2（受控 locator Self-Heal）及 Round 3（Tool → Skill → Workflow）实现。不包含 Suite、调度、Retry 或报告功能。
 
 链路为：Mac → USB iPhone → Xcode / WebDriverAgent → Appium + XCUITest → Mobile Safari → 最小静态页 → QuickTime 投屏 → 会议软件共享。
 
@@ -79,7 +79,17 @@ python3 scripts/run_pay_order_ios.py --runs 5
 python3 scripts/write_round1_pass_summary.py evidence/round1-<timestamp>/batch.json
 ```
 
-每次执行均按 `reset → prepare → 真机 UI → API facts → cleanup` 完成。失败时保存截图、Appium/设备日志、当前步骤及可获得的 API facts；原始产物默认位于被忽略的 `evidence/round1-*`。只有五次都通过时，摘要脚本才会生成可提交且不含设备、账号、路径信息的 `evidence/round1-pass-summary.md`。
+每次执行均按 `reset → prepare → 真机 UI → API facts → cleanup` 完成。Round 3 中 runner 通过 `pay_order_and_verify` Workflow 调用 `skills/` 下的真实 Skill，再由 Skill 调用 `tools/` 下的原子 Tool。失败时保存截图、Appium/设备日志、当前步骤及可获得的 API facts；原始产物默认位于被忽略的 `evidence/round1-*`。
+
+## Round 3：Tool → Skill → Workflow
+
+Round 3 只整理已经验证的支付能力，不扩展业务范围：
+
+- Tool：`tools/ui.py`、`tools/api.py`、`tools/device.py`，只执行原子动作，不改 locator、不重试、不调用 Self-Heal。
+- Skill：`skills/` 下的 `prepare_pending_order`、`login`、`open_pending_order`、`pay_order`、`assert_business_state`、`reset_test_state`。
+- Workflow：`workflows/pay_order_and_verify.py`，固定组合准备、登录、打开订单、UI 支付、API 四项事实和 cleanup。
+
+冻结的任务契约见 [`docs/executable-task-schema-v1.md`](docs/executable-task-schema-v1.md)。`pay_order` 只证明 UI 交互和页面结果；`assert_business_state` 独立验证 `PAID`、Payment=1、`SUCCEEDED`、库存=9。
 
 ## Round 2：受控 UI locator Self-Heal
 

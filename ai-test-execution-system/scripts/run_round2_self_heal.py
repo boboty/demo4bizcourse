@@ -28,6 +28,7 @@ from scripts.run_pay_order_ios import (  # noqa: E402
 )
 from self_heal.analyzer import generate_candidate, import_interactive_candidate  # noqa: E402
 from self_heal.candidate import RepairCandidate  # noqa: E402
+from self_heal.dom import matching_node_count  # noqa: E402
 from self_heal.reviewer import review_candidate, save_review  # noqa: E402
 from self_heal.writeback import write_back  # noqa: E402
 
@@ -70,6 +71,15 @@ def set_v2_and_prepare(case: Dict[str, Any], base_url: str) -> str:
     return str(order_id)
 
 
+def classify_locator_failure(
+    failure_step: str, old_locator: Dict[str, str], page_source: str
+) -> Dict[str, Any]:
+    """只有 pay_order 且真实 DOM 中旧 locator 匹配 0 才允许进入 Self-Heal。"""
+    match_count = matching_node_count(page_source, old_locator)
+    result = "EXPECTED_LOCATOR_FAILURE" if failure_step == "pay_order" and match_count == 0 else "EXECUTION_FAILURE"
+    return {"result": result, "old_locator_match_count": match_count}
+
+
 def capture_old_locator_failure(case: Dict[str, Any], base_url: str, evidence_dir: Path, label: str) -> Dict[str, Any]:
     """在 V2 页面执行未改动的正式资产，并且只能接受 pay_order 元素定位失败。"""
     failure_dir = evidence_dir / label
@@ -90,17 +100,30 @@ def capture_old_locator_failure(case: Dict[str, Any], base_url: str, evidence_di
     except Exception as error:
         record["error"] = str(error)
         record["failure_step"] = record.get("current_step", "unknown")
-        if driver.session_id:
-            (failure_dir / "failure-screenshot.png").write_bytes(driver.screenshot())
-            (failure_dir / "page-source.html").write_text(driver.page_source(), encoding="utf-8")
-        else:
+        if not driver.session_id:
             raise RuntimeError("未建立真机 session，不能生成 UI locator failure evidence。") from error
+        try:
+            page_source = driver.page_source()
+            (failure_dir / "page-source.html").write_text(page_source, encoding="utf-8")
+            (failure_dir / "failure-screenshot.png").write_bytes(driver.screenshot())
+            classification = classify_locator_failure(
+                record["failure_step"], record["old_locator"], page_source
+            )
+            record.update(classification)
+        except Exception as evidence_error:
+            record["result"] = "EXECUTION_FAILURE"
+            record["evidence_error"] = str(evidence_error)
+            save_json(failure_dir / "failure-context.json", record)
+            raise RuntimeError("无法取得真实 page source 或完成旧 locator DOM 检查。") from evidence_error
         facts_endpoint = case["assertions"]["api_facts"]["endpoint"].format(order_id=order_id)
         record["api_facts"] = require_ok(base_url + facts_endpoint)
-        record["result"] = "EXPECTED_LOCATOR_FAILURE"
-        if record["failure_step"] != "pay_order":
+        if record["result"] != "EXPECTED_LOCATOR_FAILURE":
             save_json(failure_dir / "failure-context.json", record)
-            raise RuntimeError("失败不在 pay_order locator 步骤，不能作为 Self-Heal 输入：{0}".format(record["failure_step"])) from error
+            raise RuntimeError(
+                "失败不能作为 Self-Heal 输入：failure_step={0}, old_locator_match_count={1}".format(
+                    record["failure_step"], record["old_locator_match_count"]
+                )
+            ) from error
     finally:
         try:
             driver.quit()
