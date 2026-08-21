@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Round 0 iPhone 真机门禁页</title>
+  </head>
+  <body>
+    <main>
+      <h1>Round 0 iPhone 真机门禁页</h1>
+      <p id="status" aria-live="polite">待执行</p>
+      <button id="round0-action" type="button">执行页面操作</button>
+      <hr>
+      <p>可选的系统层干扰演示（不属于 Round 0 通过条件）：</p>
+      <button id="request-location" type="button">请求定位权限</button>
+      <p id="permission-status" aria-live="polite">尚未请求定位</p>
+    </main>
+    <script>
+      document.querySelector('#round0-action').addEventListener('click', () => {
+        document.querySelector('#status').textContent = '已由 Appium 点击验证';
+      });
+      document.querySelector('#request-location').addEventListener('click', () => {
+        const status = document.querySelector('#permission-status');
+        if (!navigator.geolocation) {
+          status.textContent = '此浏览器不支持定位 API';
+          return;
+        }
+        status.textContent = '已发起定位请求；如 Safari 显示系统权限弹窗，该弹窗不属于 Web DOM。';
+        navigator.geolocation.getCurrentPosition(
+          () => { status.textContent = '定位权限已允许'; },
+          (error) => { status.textContent = `定位请求结果：${error.message}`; }
+        );
+      });
+    </script>
+  </body>
+</html>
