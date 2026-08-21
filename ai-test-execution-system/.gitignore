@@ -1,4 +1,12 @@
 __pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.playwright-cli/
+.DS_Store
+
+# Round 0.5 本机运行状态；reset 脚本可随时重建。
+app/data/runtime_state.json
 
 # 真实设备执行证据仅保留在本机，禁止提交。
 evidence/ios-*/
@@ -6,3 +14,6 @@ evidence/**/appium.log
 evidence/**/run.json
 evidence/**/after-click.png
 evidence/**/quicktime-manual-confirmation.md
+
+# Round 0.5 的原始执行输出仅保留在本机。
+evidence/round05-*/

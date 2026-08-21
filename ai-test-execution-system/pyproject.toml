@@ -1,0 +1,13 @@
+[project]
+name = "ai-test-execution-system"
+version = "0.1.0"
+description = "AI 驱动 UI 与接口自动化测试实战的本地课程 Demo"
+requires-python = ">=3.9"
+dependencies = [
+  "fastapi==0.124.0",
+  "uvicorn==0.38.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
