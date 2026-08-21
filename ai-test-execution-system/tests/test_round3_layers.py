@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+import yaml
+
 from scripts.run_pay_order_ios import read_case
 from skills.assert_business_state import REQUIRED_FACTS, assert_business_state
 from skills.contracts import ExecutionContext, SkillError
@@ -64,3 +67,26 @@ def test_business_state_skill_is_independent_and_rejects_changed_fixed_facts(mon
         assert error.code == "BUSINESS_STATE_ASSERTION_FAILED"
     else:
         raise AssertionError("修改固定 API facts 后必须失败")
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        (("device", "platform"), "Android"),
+        (("device", "browser"), "Chrome"),
+        (("cleanup", "expected_facts", "inventory.available_quantity"), 11),
+    ],
+)
+def test_schema_rejects_mutations_of_frozen_execution_contract(
+    tmp_path: Path, path: tuple[str, ...], value: object
+) -> None:
+    case = yaml.safe_load((ROOT / "cases" / "pay_order.yaml").read_text(encoding="utf-8"))
+    target = case
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    mutated = tmp_path / "mutated-case.yaml"
+    mutated.write_text(yaml.safe_dump(case, allow_unicode=True), encoding="utf-8")
+
+    with pytest.raises(ValueError):
+        read_case(mutated)

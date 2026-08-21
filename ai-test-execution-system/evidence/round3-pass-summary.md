@@ -22,7 +22,7 @@
 ## 验收
 
 - Round 0.5 / Round 1 / Round 2 自动测试：PASS。
-- 自动测试总计：18 passed。
+- Round 3 基线自动测试：18 passed；后续 schema mutation hardening：3 passed；当前自动测试总计：21 passed。
 - UI V1 真机 Workflow：连续 3/3 PASS。
 - 每次均记录 UI assertion PASS、API assertion PASS、cleanup PASS。
 - API 固定 facts：`order_status=PAID`、`payment_count=1`、`payment_record.status=SUCCEEDED`、`inventory.available_quantity=9`。

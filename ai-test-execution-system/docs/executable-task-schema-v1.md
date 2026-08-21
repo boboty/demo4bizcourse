@@ -51,6 +51,8 @@ cleanup: object
 
 Round 2 Self-Heal 通过既有 Gate 和真实验证后，只允许按其原有审计流程替换 `ui.steps` 中 `pay_order` 的一个 locator；这不是 Round 3 Workflow 的自由修改能力。
 
+任务加载阶段会强校验上述冻结项：执行目标必须为 physical iOS Safari，Workflow 必须为固定六步，cleanup baseline 必须为 `PENDING_PAY`、Payment=0、库存=10；不符合时 `read_case()` 直接拒绝任务。
+
 ## 运行时输出
 
 设备标识、签名信息、Appium 日志路径和原始截图只来自本机运行环境及 `evidence` 目录，不进入任务资产或脱敏摘要。Workflow 上下文可传递 `order_id`、`user`、设备 session 和 evidence 路径，但不得改变上述契约。

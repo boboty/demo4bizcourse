@@ -29,6 +29,23 @@ from skills.contracts import ExecutionContext
 
 ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 APPIUM_URL = "http://127.0.0.1:4723"
+FIXED_DEVICE = {"physical": True, "platform": "iOS", "browser": "Safari"}
+FIXED_WORKFLOW = {
+    "name": "pay_order_and_verify",
+    "steps": [
+        "prepare_pending_order",
+        "login",
+        "open_pending_order",
+        "pay_order",
+        "assert_business_state",
+        "reset_test_state",
+    ],
+}
+FIXED_CLEANUP_FACTS = {
+    "order_status": "PENDING_PAY",
+    "payment_count": 0,
+    "inventory.available_quantity": 10,
+}
 
 
 def utc_now() -> str:
@@ -78,29 +95,22 @@ def read_case(case_path: Path) -> Dict[str, Any]:
         "assertions.ui",
         "assertions.api_facts",
         "cleanup.endpoint",
+        "cleanup.expected_facts",
     )
     for path in required_paths:
         value = nested_get(case, path)
         if value in (None, ""):
             raise ValueError("用例缺少必填字段：{0}".format(path))
-    if case["device"]["physical"] is not True:
-        raise ValueError("Round 1 只能执行 physical: true 的真机用例。")
+    if {key: case["device"].get(key) for key in FIXED_DEVICE} != FIXED_DEVICE:
+        raise ValueError("任务执行目标必须固定为 physical iOS Safari。")
     if case["configuration"]["ui_version"] != "v1":
         raise ValueError("Round 1 正式执行只能使用 UI V1。")
     if case["version"] != 1:
         raise ValueError("只支持 version: 1 的可执行任务。")
-    if case["workflow"] != {
-        "name": "pay_order_and_verify",
-        "steps": [
-            "prepare_pending_order",
-            "login",
-            "open_pending_order",
-            "pay_order",
-            "assert_business_state",
-            "reset_test_state",
-        ],
-    }:
+    if case["workflow"] != FIXED_WORKFLOW:
         raise ValueError("Round 3 只允许冻结的 pay_order_and_verify Workflow。")
+    if case["cleanup"]["expected_facts"] != FIXED_CLEANUP_FACTS:
+        raise ValueError("cleanup.expected_facts 不符合冻结的 Round 3 baseline。")
     return case
 
 
