@@ -2,8 +2,9 @@
 set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 "$repo_root/scripts/reset_demo2.sh"
-reference="$repo_root/instructor/baselines/demo2-reference"
-rsync -a --delete --exclude '.venv/' --exclude '__pycache__/' --exclude '.pytest_cache/' "$reference/" "$repo_root/workspaces/demo2-five-elements/"
-(cd "$repo_root/workspaces/demo2-five-elements" && python3 -m pytest -q)
+reference="$repo_root/instructor/baselines/demo12-reference"
+workspace="$repo_root/workspaces/demo12-financing"
+rsync -a --delete --exclude '.venv/' --exclude '__pycache__/' --exclude '.pytest_cache/' "$reference/" "$workspace/"
+(cd "$workspace" && python3 -m pytest -q)
 python3 "$repo_root/instructor/checks/task_a_acceptance.py"
-echo "restored Demo 2 reference solution"
+echo "restored Demo 2 reference solution in demo12-financing"

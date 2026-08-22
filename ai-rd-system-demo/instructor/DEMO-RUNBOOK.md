@@ -2,11 +2,35 @@
 
 ## 总原则
 
-同一个 Git 仓库只用于保存资产；Codex 的 workspace 必须是下面五个目录之一。每次切换 Demo 都先执行对应 reset，再从目标目录新开 Codex。不要从 `ai-rd-system-demo/` 根目录启动课堂会话。
+同一个 Git 仓库只用于保存资产；Demo 1 与 Demo 2 共用 `workspaces/demo12-financing/`，Demo 3、Demo 4 使用各自独立 workspace。每次演示都先执行 reset，再从指定目录新开 Luna + High。不要从 `ai-rd-system-demo/` 根目录启动课堂会话。
 
 所有命令默认从 `ai-rd-system-demo/` 根目录执行；每个代码块中的 `cd` 都是课堂操作的一部分。
 
-## Demo 1｜demo1-vague｜一句话需求｜15 min
+## Demo 1 / Demo 2 共同基准
+
+### 业务需求基准
+
+融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的融资申请 baseline 开始。
+
+### 独立质控 / 业务验收标准
+
+标准公开，验收实现独立。讲师在退出 workspace 后运行同一套独立验收；开发 Agent 只运行开发侧 `pytest -q`，不读取验收脚本实现。
+
+- 客户名称为模糊筛选，状态为精确筛选。
+- 覆盖单条件、多条件和空结果。
+- 保留既有数据权限，筛选和导出不能越权。
+- 导出走已有异步任务通道，且导出当前筛选结果。
+- 导出任务保留 `customer_name`、`status` 和当前用户权限范围。
+- 导出字段严格为 `id`、`customer_name`、`status`、`amount`。
+- 前端具备客户筛选、状态筛选和导出操作；只验收功能行为，不绑定 HTML `id`、`class` 或变量名。
+
+### 实验控制变量
+
+不变：同一个 workspace、同一个 baseline、同一个 `AGENTS.md`、同一个模型 Luna + High、同一套独立验收。
+
+唯一变化：Demo 1 使用一句话 Direct Task；Demo 2 使用完整 Spec-driven Task。
+
+## Demo 1｜demo12-financing｜一句话 Direct Task｜15 min
 
 ### 1A. CNN 可视化｜约 5 min
 
@@ -14,47 +38,100 @@
 
 收口：模型内部面对的往往不是一个答案，而是一组候选；业务系统最终必须落成一个判断。
 
-### 1B. 从独立 workspace 启动 Codex｜约 10 min
+### 1B. 从共用 workspace 启动 Codex｜约 10 min
 
 ```bash
 ./scripts/reset_demo1.sh
-cd workspaces/demo1-vague
+cd workspaces/demo12-financing
+# 从这里新开 Luna + High
 ```
 
-从这个目录新开 Codex 会话，然后只粘贴下面这一句话：
+只粘贴下面这一句话，不补充边界、约束或验收条件：
 
 > 给融资申请列表增加客户名称和融资状态筛选，并支持导出。
 
-不补充信息，观察它是直接做还是追问；如果有改动，只展示 diff、追问和完成依据，不修复、不运行后续 Demo 的材料。
+观察它是直接做还是追问；如果有改动，只展示 diff、追问和完成依据，不修复、不运行 Demo 2 的 Spec。
 
-如需保存现场差异，回到仓库根目录执行：
-
-```bash
-cd ../..
-./scripts/capture_diff.sh demo1
-```
-
-## Demo 2｜demo2-five-elements｜五要素任务｜15 min + 学员 25 min
-
-Demo 1 会话结束后，必须切换目录并新开会话：
-
-```bash
-./scripts/reset_demo2.sh
-cd workspaces/demo2-five-elements
-```
-
-在新会话中读取并粘贴 `task-a-five-elements.md` 的完整内容。五要素里的业务边界、约束、交付物和验收标准以该文件为准，不改写其业务内容。
-
-允许 Codex 修改。开发 Agent 只运行开发侧测试，不读取或运行讲师 workspace 外的独立验收脚本；会话结束后退出 Demo 2 workspace，再由讲师执行隐藏验收：
+开发 Agent 只运行开发侧测试：
 
 ```bash
 pytest -q
+```
+
+关闭会话并退出 workspace 后，由讲师从仓库根目录运行同一套独立验收，再保存 Demo 1 差异：
+
+```bash
+cd ../..
+python3 instructor/checks/task_a_acceptance.py
+./scripts/capture_diff.sh demo1
+```
+
+## Demo 2｜demo12-financing｜完整 Spec-driven Task｜15 min + 学员 25 min
+
+Demo 1 会话结束后，先恢复完全相同的 baseline；仍进入同一个 workspace，但必须新开 Luna + High 会话：
+
+```bash
+./scripts/reset_demo2.sh
+cd workspaces/demo12-financing
+# 关闭 Demo 1 会话，从这里新开 Luna + High
+```
+
+从本 Runbook 复制下面的完整 Spec，不读取 workspace 外的其他任务文件：
+
+> # 任务 A｜五要素可交办任务
+>
+> ## 01 背景｜为什么做
+>
+> - 业务方每天手工导出、肉眼筛选，对账耗时且容易出错。
+> - 本期目标是把这段人工去掉，不改现有业务流程。
+> - 已定：不新增页面，在现有列表上扩展。
+>
+> ## 02 边界｜哪些能改，哪些绝对不能碰
+>
+> - 可改：融资申请列表的查询、筛选与导出。
+> - 不可改：申请创建、审批流转、状态机逻辑。
+> - 模块隔离：不修改公共查询组件的默认行为。
+>
+> ## 03 约束｜有哪些必须遵守的既有规则
+>
+> - 客户名称使用模糊筛选，融资状态使用精确筛选。
+> - 覆盖单条件、多条件、空结果，并保留既有数据权限。
+> - 导出走已有的异步任务通道，不新增同步大查询。
+> - 导出的是当前筛选结果；导出任务必须保留 `customer_name`、`status` 和当前用户的数据权限范围。
+> - 导出字段严格为 `id`、`customer_name`、`status`、`amount`。
+> - 前端必须具备客户名称筛选、融资状态筛选和导出操作；只验收功能和行为，不约束 HTML `id`、`class` 或变量名。
+> - 不引入新的第三方依赖。
+>
+> ## 04 交付物｜最终交什么
+>
+> - 后端查询接口 + 前端筛选组件 + 导出任务。
+> - 接口文档同步更新。
+> - 一次结构清晰、可回滚的 PR。
+>
+> ## 05 验收标准｜怎样证明对
+>
+> - 开发侧只运行 `pytest -q`。
+> - 独立验收由讲师在 workspace 外执行，开发 Agent 不读取独立验收脚本实现。
+> - 筛选组合覆盖单条件、多条件、空结果，且不绕过现有数据权限。
+> - 导出是当前筛选结果，并保留筛选条件和当前用户权限范围。
+> - 导出字段严格等于 `id`、`customer_name`、`status`、`amount`。
+> - 前端具备客户名称筛选、融资状态筛选和导出操作，不绑定具体 HTML 命名。
+
+允许 Codex 修改。开发侧完成后只运行：
+
+```bash
+pytest -q
+```
+
+退出 workspace 后，由讲师运行同一套独立验收，并保存 Demo 2 差异：
+
+```bash
 cd ../..
 python3 instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo2
 ```
 
-`python3 instructor/checks/task_a_acceptance.py` 只能由讲师在 workspace 外运行。独立验收脚本只存在于 `instructor/`，不会出现在 Demo 2 workspace。落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。
+独立验收脚本只在 `instructor/`，不会出现在 `demo12-financing`。落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。
 
 ## Demo 3｜两个独立上下文｜45 min
 
@@ -146,9 +223,9 @@ cd ../..
 
 | 场景 | 起始状态 | 命令 |
 | --- | --- | --- |
-| Demo 1 | 融资申请 baseline | `./scripts/reset_demo1.sh` |
-| Demo 2 | 相同 baseline + 五要素任务包 | `./scripts/reset_demo2.sh` |
-| Demo 2 兜底 | 参考实现 | `./scripts/restore_demo2_reference.sh` |
+| Demo 1 | `demo12-financing` 融资申请 baseline | `./scripts/reset_demo1.sh` |
+| Demo 2 | 同一个 `demo12-financing` baseline | `./scripts/reset_demo2.sh` |
+| Demo 2 兜底 | `demo12-financing` 参考实现 | `./scripts/restore_demo2_reference.sh` |
 | Demo 3 developer + validator | 错误实现、开发测试全绿 | `./scripts/restore_demo3_wrong.sh` |
 | Demo 3 developer | 正确修复态 | `./scripts/restore_demo3_fixed.sh` |
 | Demo 4 | 正确修复项目、未沉淀规则 | `./scripts/reset_demo4.sh` |

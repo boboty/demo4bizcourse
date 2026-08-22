@@ -15,8 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACES = ROOT / "workspaces"
 NAMES = [
-    "demo1-vague",
-    "demo2-five-elements",
+    "demo12-financing",
     "demo3-developer",
     "demo3-validator",
     "demo4-sedimentation",
@@ -42,6 +41,15 @@ def text_files(root: Path):
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def tree_digest(root: Path) -> str:
+    entries = []
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache"}
+    for path in sorted(root.rglob("*")):
+        if path.is_file() and not ignored.intersection(path.parts):
+            entries.append((str(path.relative_to(root)), digest(path)))
+    return hashlib.sha256(json.dumps(entries, ensure_ascii=False).encode()).hexdigest()
 
 
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -98,6 +106,10 @@ def main() -> int:
                 and "不读取父目录或兄弟 workspace" in agents,
             )
 
+    financing = WORKSPACES / "demo12-financing"
+    financing_baseline = ROOT / "instructor/baselines/demo12-financing"
+    check("old Demo 1 workspace removed", not (WORKSPACES / "demo1-vague").exists())
+    check("old Demo 2 workspace removed", not (WORKSPACES / "demo2-five-elements").exists())
     common_files = [
         "app/main.py",
         "app/financing/service.py",
@@ -108,15 +120,11 @@ def main() -> int:
         "requirements.txt",
         "docs/api.md",
     ]
-    same_baseline = all(
-        digest(WORKSPACES / "demo1-vague" / rel)
-        == digest(WORKSPACES / "demo2-five-elements" / rel)
-        for rel in common_files
-    )
-    check("Demo 1 / Demo 2 identical financing baseline", same_baseline)
+    same_baseline = all(digest(financing / rel) == digest(financing_baseline / rel) for rel in common_files)
+    check("Demo 1 / Demo 2 share demo12 financing baseline", same_baseline)
 
-    demo1_text = "\n".join(text for _, text in text_files(WORKSPACES / "demo1-vague"))
-    demo1_forbidden = [
+    financing_text = "\n".join(text for _, text in text_files(financing))
+    financing_forbidden = [
         "五要素",
         "five-elements",
         "task-a-five-elements",
@@ -124,6 +132,7 @@ def main() -> int:
         "独立验收",
         "Golden",
         "golden",
+        "参考实现",
         "Demo 3",
         "Demo 4",
         "demo3",
@@ -131,36 +140,42 @@ def main() -> int:
         "task-b",
         "settlement",
         "FX_LOSS",
-        "异步导出约束",
-    ]
-    leaks = [token for token in demo1_forbidden if token in demo1_text]
-    check("Demo 1 has no future task or answer material", not leaks, ", ".join(leaks))
-
-    demo2 = WORKSPACES / "demo2-five-elements"
-    task_a = (demo2 / "task-a-five-elements.md").read_text(encoding="utf-8")
-    required_task_markers = ["背景", "边界", "约束", "交付物", "验收标准"]
-    check("Demo 2 contains complete five-elements task", all(marker in task_a for marker in required_task_markers))
-    required_contract_markers = [
-        "customer_name",
-        "status",
+        "导出字段必须严格",
         "当前用户的数据权限范围",
-        "id",
-        "amount",
-        "HTML `id`、`class` 或变量名",
-        "开发 Agent 只运行开发侧测试",
-        "独立验收由讲师在 workspace 外执行",
     ]
+    leaks = [token for token in financing_forbidden if token in financing_text]
+    check("Demo12 has no Demo1/2 task or future answer material", not leaks, ", ".join(leaks))
+    check("Demo12 has no task package or acceptance script", not (financing / "task-a-five-elements.md").exists() and not (financing / "instructor").exists())
+    all_repo_text = list(text_files(ROOT))
+    spec_marker = "业务方每天手工导出、肉眼" + "筛选"
+    spec_locations = {str(path.relative_to(ROOT)) for path, text in all_repo_text if spec_marker in text}
     check(
-        "Demo 2 contract states filtered export and behavior-only frontend acceptance",
-        all(marker in task_a for marker in required_contract_markers)
-        and "task_a_acceptance.py" not in task_a
-        and "pytest -q" in task_a,
+        "Demo2 complete Spec only lives in Runbook files",
+        spec_locations == {"instructor/DEMO-RUNBOOK.md", "instructor/DEMO-RUNBOOK.html"},
+        ", ".join(sorted(spec_locations)),
     )
-    demo2_text = "\n".join(text for _, text in text_files(demo2))
-    demo2_forbidden = ["task-b", "Demo 3", "Demo 4", "demo3", "demo4", "settlement", "FX_LOSS", "validation/cases"]
-    leaks = [token for token in demo2_forbidden if token in demo2_text]
-    check("Demo 2 has no Demo 3 / Demo 4 material", not leaks, ", ".join(leaks))
-    check("Demo 2 acceptance script is instructor-only", not (demo2 / "instructor").exists())
+    direct_task_marker = "给融资申请列表增加客户名称和融资状态" + "筛选，并支持导出。"
+    direct_task_locations = {str(path.relative_to(ROOT)) for path, text in all_repo_text if direct_task_marker in text}
+    check(
+        "Demo1 Direct Task only lives in Runbook files",
+        direct_task_locations == {"instructor/DEMO-RUNBOOK.md", "instructor/DEMO-RUNBOOK.html"},
+        ", ".join(sorted(direct_task_locations)),
+    )
+    html_runbook = (ROOT / "instructor/DEMO-RUNBOOK.html").read_text(encoding="utf-8")
+    check(
+        "HTML Runbook has copy buttons",
+        'data-copy="demo1-task"' in html_runbook
+        and 'data-copy="demo2-spec"' in html_runbook
+        and "navigator.clipboard.writeText" in html_runbook,
+    )
+
+    reset_one = run([str(ROOT / "scripts/reset_demo1.sh")], ROOT)
+    reset_one_digest = tree_digest(financing)
+    check("reset_demo1 restores demo12 baseline", reset_one.returncode == 0 and reset_one_digest == tree_digest(financing_baseline))
+    reset_two = run([str(ROOT / "scripts/reset_demo2.sh")], ROOT)
+    reset_two_digest = tree_digest(financing)
+    check("reset_demo2 restores demo12 baseline", reset_two.returncode == 0 and reset_two_digest == tree_digest(financing_baseline))
+    check("reset_demo1 and reset_demo2 produce identical files", reset_one_digest == reset_two_digest)
 
     developer = WORKSPACES / "demo3-developer"
     result = run([sys.executable, "-m", "pytest", "-q"], developer)

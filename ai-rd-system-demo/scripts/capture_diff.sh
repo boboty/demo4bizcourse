@@ -3,8 +3,7 @@ set -euo pipefail
 
 name="${1:-capture}"
 case "$name" in
-  demo1) workspace_name=demo1-vague ;;
-  demo2) workspace_name=demo2-five-elements ;;
+  demo1|demo2) workspace_name=demo12-financing ;;
   demo3-developer) workspace_name=demo3-developer ;;
   demo4) workspace_name=demo4-sedimentation ;;
   *) echo "usage: scripts/capture_diff.sh demo1|demo2|demo3-developer|demo4" >&2; exit 2 ;;

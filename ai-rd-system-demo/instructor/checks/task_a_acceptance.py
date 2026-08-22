@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE = REPO_ROOT / "workspaces" / "demo2-five-elements"
+WORKSPACE = REPO_ROOT / "workspaces" / "demo12-financing"
 sys.path.insert(0, str(WORKSPACE))
 
 from fastapi.testclient import TestClient

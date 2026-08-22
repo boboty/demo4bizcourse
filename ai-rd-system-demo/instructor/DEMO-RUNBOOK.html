@@ -5,22 +5,61 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI 研发体系建设｜课堂 Runbook</title>
 <style>
-:root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px}.nav button{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:38px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:30px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:30px}}
+:root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px}.nav button,.copy-btn{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}.copy-btn{margin:0 0 9px}.nav button:hover,.copy-btn:hover{background:var(--soft)}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:38px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:30px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:30px}}
 </style>
 </head>
 <body>
-<header><div class="top"><div class="brand">AI 研发体系建设 · Runbook</div><div class="nav"><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
+<header><div class="top"><div class="brand">AI 研发体系建设 · Runbook</div><div class="nav"><button data-go="baseline">共同基准</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
 <main>
-<section class="hero"><div><h1>4 讲 · 4 Demo</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><p>同一个 Git 仓库只保存资产；课堂每个 Demo 从自己的完整 workspace 启动 Codex。</p><div class="warn">不要从 ai-rd-system-demo/ 根目录启动课堂会话，也不要跨 Demo 继续使用旧会话。</div></div><div><b>总原则</b><ul><li>先 reset，再 cd 到目标 workspace。</li><li>每次切换 Demo 都新开 Codex。</li><li>Demo 4 是同一 workspace，新会话。</li><li>讲师独立验收在 workspace 外执行。</li></ul></div></section>
+<section class="hero" id="baseline"><div><h1>4 讲 · 4 Demo</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><p>Demo 1 与 Demo 2 共用一个完整的融资申请 workspace；课堂只改变任务交办方式。</p><div class="warn">不要从 ai-rd-system-demo/ 根目录启动 Codex 会话。每次都从 Runbook 指定目录新开 Luna + High。</div></div><div><b>共同控制变量</b><ul><li>同一个 <code>demo12-financing</code> workspace。</li><li>同一个 baseline 和 <code>AGENTS.md</code>。</li><li>同一个 Luna + High。</li><li>同一套讲师独立验收。</li><li>标准公开，验收实现独立。</li></ul></div></section>
 
-<section id="demo1" class="demo"><span class="badge">Demo 1 · demo1-vague · 15 min</span><h2>一句话需求</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
-cd workspaces/demo1-vague
-# 从这里新开 Codex</div><p>只粘贴：</p><div class="prompt">给融资申请列表增加客户名称和融资状态筛选，并支持导出。</div><p>不补充信息，观察它直接做还是追问；只展示 diff、追问和完成依据，不修复。</p></div><div class="card"><h3>1A · CNN 可视化</h3><a href="https://adamharley.com/nn_vis/cnn/3d.html" target="_blank" rel="noreferrer">打开 Adam Harley CNN 3D 可视化 ↗</a><p>只看候选强弱，不讲 CNN 数学。收口：模型面对候选分布，业务系统必须落成一个判断。</p></div></div></section>
+<section class="card"><h2>业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
 
-<section id="demo2" class="demo"><span class="badge">Demo 2 · demo2-five-elements · 15 + 25 min</span><h2>五要素重新交办</h2><div class="card"><h3>开发会话</h3><div class="code">./scripts/reset_demo2.sh
-cd workspaces/demo2-five-elements
-# 关闭/结束 Demo 1 会话，从这里新开 Codex</div><p>把当前目录中的 <code>task-a-five-elements.md</code> 完整内容交给 Codex。开发 Agent 只运行开发侧测试：</p><div class="code">pytest -q</div><p>开发 Agent 不读取、不运行独立验收脚本；完成后退出这个 workspace。</p><h3>讲师独立验收</h3><div class="code">cd ../..
-python3 instructor/checks/task_a_acceptance.py</div><div class="callout">独立验收脚本只在 instructor/，由讲师在 workspace 外运行。前端只验收筛选和导出功能行为，不绑定 HTML id、class 或变量名。</div></div></section>
+<section id="demo1" class="demo"><span class="badge">Demo 1 · demo12-financing · 15 min</span><h2>一句话 Direct Task</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
+cd workspaces/demo12-financing
+# 从这里新开 Luna + High</div><p>从下方复制唯一任务文本：</p><div class="prompt" id="demo1-task">给融资申请列表增加客户名称和融资状态筛选，并支持导出。</div><button class="copy-btn" data-copy="demo1-task">复制一句话任务</button><p>不补充边界、约束或验收条件，观察它直接做还是追问。只展示 diff、追问和完成依据，不修复。</p><div class="code">pytest -q
+cd ../..
+python3 instructor/checks/task_a_acceptance.py
+./scripts/capture_diff.sh demo1</div><p class="small">开发测试在 workspace 内运行；退出 workspace 后由讲师执行独立验收并保存差异。</p></div><div class="card"><h3>1A · CNN 可视化</h3><a href="https://adamharley.com/nn_vis/cnn/3d.html" target="_blank" rel="noreferrer">打开 Adam Harley CNN 3D 可视化 ↗</a><p>只看候选强弱，不讲 CNN 数学。收口：模型面对候选分布，业务系统必须落成一个判断。</p></div></div></section>
+
+<section id="demo2" class="demo"><span class="badge">Demo 2 · demo12-financing · 15 + 25 min</span><h2>完整 Spec-driven Task</h2><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo2.sh
+cd workspaces/demo12-financing
+# 关闭 Demo 1 会话，从这里新开 Luna + High</div><p>从下方复制完整 Spec。它与 Demo 1 使用完全相同的 workspace、baseline 和模型。</p><div class="prompt" id="demo2-spec">任务 A｜五要素可交办任务
+
+01 背景｜为什么做
+- 业务方每天手工导出、肉眼筛选，对账耗时且容易出错。
+- 本期目标是把这段人工去掉，不改现有业务流程。
+- 已定：不新增页面，在现有列表上扩展。
+
+02 边界｜哪些能改，哪些绝对不能碰
+- 可改：融资申请列表的查询、筛选与导出。
+- 不可改：申请创建、审批流转、状态机逻辑。
+- 模块隔离：不修改公共查询组件的默认行为。
+
+03 约束｜有哪些必须遵守的既有规则
+- 客户名称使用模糊筛选，融资状态使用精确筛选。
+- 覆盖单条件、多条件、空结果，并保留既有数据权限。
+- 导出走已有的异步任务通道，不新增同步大查询。
+- 导出的是当前筛选结果；导出任务必须保留 customer_name、status 和当前用户的数据权限范围。
+- 导出字段严格为 id、customer_name、status、amount。
+- 前端必须具备客户名称筛选、融资状态筛选和导出操作；只验收功能和行为，不约束 HTML id、class 或变量名。
+- 不引入新的第三方依赖。
+
+04 交付物｜最终交什么
+- 后端查询接口 + 前端筛选组件 + 导出任务。
+- 接口文档同步更新。
+- 一次结构清晰、可回滚的 PR。
+
+05 验收标准｜怎样证明对
+- 开发侧只运行 pytest -q。
+- 独立验收由讲师在 workspace 外执行，开发 Agent 不读取独立验收脚本实现。
+- 筛选组合覆盖单条件、多条件、空结果，且不绕过现有数据权限。
+- 导出是当前筛选结果，并保留筛选条件和当前用户权限范围。
+- 导出字段严格等于 id、customer_name、status、amount。
+- 前端具备客户名称筛选、融资状态筛选和导出操作，不绑定具体 HTML 命名。</div><button class="copy-btn" data-copy="demo2-spec">复制完整 Spec</button><h3>开发与独立验收</h3><div class="code">pytest -q
+cd ../..
+python3 instructor/checks/task_a_acceptance.py
+./scripts/capture_diff.sh demo2</div><div class="callout">开发 Agent 只运行开发侧测试；退出 workspace 后，讲师运行同一套独立验收。独立验收脚本不出现在 workspace。</div></div></section>
 
 <section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="grid"><div class="card"><h3>Developer 上下文</h3><div class="code">./scripts/restore_demo3_wrong.sh
 cd workspaces/demo3-developer
@@ -40,8 +79,11 @@ cd workspaces/demo3-developer
 cd workspaces/demo4-sedimentation
 # 从这里新开第一个 Codex</div><p>粘贴 <code>instructor/prompts/demo4/04-retro.md</code>，读取 <code>reports/demo3-validation.md</code>，写入 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>。</p></div><div class="card"><h3>全新会话验证沉淀</h3><p>关闭旧会话但保持当前目录不变，在<strong>同一个 demo4-sedimentation workspace</strong>新开 Codex。</p><div class="prompt">请读取 tasks/task-b-variant.md 并回答。</div><p>新会话不得读取 rules/、validation/、app/、tests/，只依赖项目级规则和任务输入。预期：<code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>。</p></div></section>
 
-<section class="card"><h3>自动验收</h3><div class="code">python3 scripts/acceptance_check.py</div><p class="small">检查结构、信息边界、Demo2 API/前端行为验收、Demo3 HTTP wrong/fixed 状态和 Demo4 规则沉淀；不执行真实课堂任务。</p></section>
+<section class="card"><h3>自动验收</h3><div class="code">python3 scripts/acceptance_check.py</div><p class="small">检查结构、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
 </main>
-<script>document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));</script>
+<script>
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const text=document.getElementById(b.dataset.copy).innerText;try{await navigator.clipboard.writeText(text);b.textContent='已复制';setTimeout(()=>b.textContent=b.dataset.copy==='demo1-task'?'复制一句话任务':'复制完整 Spec',1200)}catch(e){b.textContent='请手动选择复制';}});
+</script>
 </body>
 </html>

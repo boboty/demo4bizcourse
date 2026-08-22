@@ -10,11 +10,13 @@
 - [ ] CNN 页面提前打开并验证可用。
 - [ ] 准备 2–3 个容易产生歧义的数字写法。
 - [ ] Codex 一句话任务无论“直接做 / 追问 / 做对”都能收口。
+- [ ] 使用 `workspaces/demo12-financing/`，不在 workspace 预置一句话任务。
 
 ## Demo 2
 - [ ] 五要素文字与课件 P37–41 一致。
-- [ ] 开发 Agent 只在 `workspaces/demo2-five-elements/` 运行开发侧 `pytest -q`，不读取独立验收脚本实现。
-- [ ] 讲师退出 Demo 2 workspace 后，从仓库根目录运行 `python3 instructor/checks/task_a_acceptance.py`，验收单条件、多条件、空结果、权限、异步导出、前端行为。
+- [ ] 与 Demo 1 使用同一个 `workspaces/demo12-financing/`、同一个 baseline、同一个 `AGENTS.md` 和同一个模型。
+- [ ] 开发 Agent 只在该 workspace 运行开发侧 `pytest -q`，不读取独立验收脚本实现。
+- [ ] 讲师退出 workspace 后，从仓库根目录运行 `python3 instructor/checks/task_a_acceptance.py`，验收单条件、多条件、空结果、权限、异步导出、前端行为。
 - [ ] 前端验收不绑定固定 HTML `id`、`class` 或变量名。
 - [ ] 学员实战 25 分钟：5+12+5+3。
 
