@@ -1,0 +1,34 @@
+[
+  {
+    "id": "GC-01",
+    "fx_loss_eligible": true,
+    "fx_loss_amount": 1200,
+    "tax_refund_eligible": true,
+    "tax_refund_amount": 5000,
+    "combined_excluded": false
+  },
+  {
+    "id": "GC-02",
+    "fx_loss_eligible": true,
+    "fx_loss_amount": 1200,
+    "tax_refund_eligible": true,
+    "tax_refund_amount": 5000,
+    "combined_excluded": true
+  },
+  {
+    "id": "GC-03",
+    "fx_loss_eligible": false,
+    "fx_loss_amount": 0,
+    "tax_refund_eligible": true,
+    "tax_refund_amount": 5000,
+    "combined_excluded": false
+  },
+  {
+    "id": "GC-04",
+    "fx_loss_eligible": true,
+    "fx_loss_amount": 1200,
+    "tax_refund_eligible": false,
+    "tax_refund_amount": 0,
+    "combined_excluded": false
+  }
+]

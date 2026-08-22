@@ -8,12 +8,12 @@
 
 ```text
 $ codex exec --ephemeral --sandbox workspace-write -m gpt-5.4 \
-    -C /tmp/ai-dev-course-direct-run \
+    -C <temporary-worktree> \
     '请根据当前项目，实现用户列表导出功能。'
 
 OpenAI Codex v0.135.0
 model: gpt-5.4
-session id: 019f6be5-fa33-7f53-a83e-d6a725e2753c
+session id: <redacted-session-id>
 baseline: d58c2c8
 ```
 

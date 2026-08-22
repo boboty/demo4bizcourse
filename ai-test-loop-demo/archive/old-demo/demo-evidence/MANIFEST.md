@@ -38,9 +38,9 @@
 
 | 原始内容 | 替换为 | 出现位置 |
 |---|---|---|
-| `/Users/yanbo/Documents/bizcourse/Demo/ai-test-loop-demo`（本机真实用户路径，pytest `rootdir` 行自动带出） | `/workspace/ai-test-loop-demo` | `page30/counterfactual/generated-suite-output.{txt,png}`、`verified-suite-output.{txt,png}`；替换逻辑固化在 `experiments/counterfactual/run_counterfactual.py` 的 `desensitize()` 里，每次重跑都会自动生效，不需要手工二次处理 |
+| `<local-project-root>/ai-test-loop-demo`（本机真实用户路径，pytest `rootdir` 行自动带出） | `/workspace/ai-test-loop-demo` | `page30/counterfactual/generated-suite-output.{txt,png}`、`verified-suite-output.{txt,png}`；替换逻辑固化在 `experiments/counterfactual/run_counterfactual.py` 的 `desensitize()` 里，每次重跑都会自动生效，不需要手工二次处理 |
 
-检查范围：`demo-evidence/` 下所有 `.txt`/`.png` 对应的源文本都过了一遍 `grep -n "yanbo\|/Users/"`，确认只有上表这一处命中；接口地址、字段名、token、内网域名在本仓库场景下不适用（本地 FastAPI 应用，无真实外部接口/客户数据），未发现需要替换的实例。
+检查范围：`demo-evidence/` 下所有 `.txt`/`.png` 对应的源文本都过了一遍本机路径模式检查，确认只有上表这一处命中；接口地址、字段名、token、内网域名在本仓库场景下不适用（本地 FastAPI 应用，无真实外部接口/客户数据），未发现需要替换的实例。
 
 ## 已知缺口（如实记录，不打算这一轮补）
 

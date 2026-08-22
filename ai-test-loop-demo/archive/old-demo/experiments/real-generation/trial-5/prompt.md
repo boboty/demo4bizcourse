@@ -119,7 +119,7 @@ components:
 
 ## 交付
 
-把最终的 pytest 测试文件完整写到这个绝对路径：`/Users/yanbo/Documents/bizcourse/Demo/ai-test-loop-demo/experiments/real-generation/trial-5/generated_test_orders.py`
+把最终的 pytest 测试文件完整写到这个绝对路径：`<project-root>/experiments/real-generation/trial-5/generated_test_orders.py`
 
 测试文件里可以用 httpx 或 requests 向 `http://127.0.0.1:8811` 发请求（二选一即可；若用 httpx 用同步 Client 即可，不需要 async）。
 

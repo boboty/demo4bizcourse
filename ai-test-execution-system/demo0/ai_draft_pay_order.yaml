@@ -1,0 +1,9 @@
+# AI 根据 natural_case.txt 生成的初稿：可读，但尚不足以稳定执行。
+case: pay_order
+precondition: 用户有一笔待付款订单
+steps:
+  - action: 登录系统
+  - action: 进入待付款订单
+  - action: 点击立即支付
+  - action: 验证支付成功
+assertion: 页面显示支付成功

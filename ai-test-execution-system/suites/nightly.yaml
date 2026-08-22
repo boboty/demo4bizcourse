@@ -1,0 +1,54 @@
+version: 1
+suite_id: nightly_pay_order
+execution_mode: serial
+
+scenarios:
+  - scenario_id: normal_payment
+    task: cases/pay_order.yaml
+    configuration_override:
+      ui_version: v1
+      payment_mode: normal
+      product_bug_mode: "off"
+    execution_purpose: 验证正常支付完整 UI Workflow 与业务事实
+    expected_behavior: PASS
+    executor: workflow
+
+  - scenario_id: normal_payment_repeat
+    task: cases/pay_order.yaml
+    configuration_override:
+      ui_version: v1
+      payment_mode: normal
+      product_bug_mode: "off"
+    execution_purpose: 验证正常支付重复执行仍可 cleanup 并重新运行
+    expected_behavior: PASS
+    executor: workflow
+
+  - scenario_id: product_bug_inventory_not_decremented
+    task: cases/pay_order.yaml
+    configuration_override:
+      ui_version: v1
+      payment_mode: normal
+      product_bug_mode: "on"
+    execution_purpose: 暴露支付成功但库存未扣减的产品故障
+    expected_behavior: FAIL
+    executor: workflow
+
+  - scenario_id: timeout_before_commit_business_retry
+    task: cases/pay_order.yaml
+    configuration_override:
+      ui_version: v1
+      payment_mode: timeout_before_commit
+      product_bug_mode: "off"
+    execution_purpose: 仅在确认未提交后允许一次业务 Retry
+    expected_behavior: PASS
+    executor: business_retry
+
+  - scenario_id: timeout_after_commit_no_retry
+    task: cases/pay_order.yaml
+    configuration_override:
+      ui_version: v1
+      payment_mode: timeout_after_commit
+      product_bug_mode: "off"
+    execution_purpose: 确认已提交后禁止 Retry 且不产生第二笔 Payment
+    expected_behavior: PASS
+    executor: business_retry

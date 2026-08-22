@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+instructor/captures/*.patch
+validation/actual.json
+validation/report.md

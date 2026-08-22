@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 研发体系建设｜课堂 Demo 控制台</title>
+<style>
+:root{--bg:#f6f4ed;--paper:#fffef9;--ink:#10231f;--muted:#64716c;--green:#0e7c55;--green2:#dff0e8;--line:#d8d2c2;--warn:#9b5b00;--warnbg:#fff2d7;--bad:#a33b2e;--badbg:#fbe7e3;--dark:#17362d;--shadow:0 12px 35px rgba(16,35,31,.08)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:18px;line-height:1.55}
+header{position:sticky;top:0;z-index:20;background:rgba(246,244,237,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.top{max-width:1180px;margin:auto;padding:14px 22px;display:flex;gap:18px;align-items:center}.brand{font-weight:800;font-size:20px;white-space:nowrap}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav button,.ghost{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:9px 13px;border-radius:999px;font-weight:700;cursor:pointer}.nav button:hover,.ghost:hover{border-color:var(--green);color:var(--green)}
+main{max-width:1180px;margin:0 auto;padding:30px 22px 80px}.hero{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-bottom:28px}.hero>div{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow)}.hero h1{font-size:40px;line-height:1.15;margin:0 0 12px}.hero .map{font-size:22px;font-weight:800;color:var(--green)}.hero .rule{font-size:16px;color:var(--muted);margin-top:14px}.statusgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.status{padding:14px;border-radius:14px;background:var(--green2);font-weight:800}
+.demo{scroll-margin-top:90px;margin:30px 0 42px}.demohead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px}.demohead h2{font-size:34px;margin:0;line-height:1.15}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--dark);color:#fff;font-weight:800;font-size:14px}.goal{font-size:21px;font-weight:800;color:var(--green);margin-top:8px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin:12px 0}.card h3{margin:0 0 10px;font-size:23px}.card h4{margin:14px 0 8px;font-size:18px}.step{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:14px 0;border-top:1px solid #e8e4d9}.step:first-child{border-top:0}.num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green2);color:var(--green);font-weight:900}
+.code,.prompt{position:relative;background:#132b25;color:#f6f4ed;border-radius:14px;padding:16px 52px 16px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:15px;line-height:1.5;margin:8px 0}.prompt{background:#eef4ef;color:var(--ink);border:1px solid #c9ddd2;font-family:inherit;font-size:16px}.copy{position:absolute;right:9px;top:9px;border:0;border-radius:9px;padding:7px 9px;background:rgba(255,255,255,.16);color:inherit;cursor:pointer;font-weight:800}.prompt .copy{background:#fff;color:var(--green);border:1px solid #c9ddd2}
+.callout{padding:16px 18px;border-left:5px solid var(--green);background:var(--green2);border-radius:10px;font-weight:800;margin:12px 0}.pause{padding:17px 18px;border:2px solid var(--warn);background:var(--warnbg);border-radius:14px;font-size:22px;font-weight:900;margin:14px 0}.blocker{padding:15px 18px;border-left:5px solid var(--bad);background:var(--badbg);border-radius:10px;margin:12px 0}.checks label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}.checks input{width:20px;height:20px;margin-top:4px;accent-color:var(--green)}
+.timerrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.timer{font-family:"SFMono-Regular",Consolas,monospace;font-weight:900;font-size:28px;min-width:96px}.timerbtn{border:1px solid var(--line);background:#fff;padding:7px 10px;border-radius:9px;cursor:pointer;font-weight:700}.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.tslot{padding:13px;border-radius:14px;background:#fff;border:1px solid var(--line);text-align:center}.tslot strong{display:block;color:var(--green);font-size:22px}.small{font-size:15px;color:var(--muted)}
+.footerbar{position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:30}.footerbar button{border:0;background:var(--dark);color:#fff;border-radius:999px;padding:11px 14px;cursor:pointer;font-weight:800;box-shadow:var(--shadow)}details{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}summary{cursor:pointer;font-weight:800;color:var(--green)}a{color:var(--green);font-weight:800}
+@media(max-width:800px){.hero,.grid2{grid-template-columns:1fr}.timeline{grid-template-columns:1fr 1fr}.top{align-items:flex-start;flex-direction:column}.hero h1{font-size:32px}}@media print{header,.footerbar,.copy,.timerbtn{display:none!important}body{background:#fff;font-size:13px}main{max-width:none;padding:0}.card,.hero>div{box-shadow:none;break-inside:avoid}.demo{page-break-before:always}}
+</style>
+</head>
+<body>
+<header><div class="top"><div class="brand">AI 研发体系建设 · Demo 控制台</div><div class="nav"><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
+<main>
+<section class="hero"><div><h1>4 讲 · 4 Demo<br>课堂驾驶舱</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><div class="rule">仓库根目录：<b>ai-rd-system-demo/</b> · 现场工具：<b>Codex</b> · Demo 1A 使用 Adam Harley CNN 可视化</div></div><div><div class="statusgrid"><div class="status">Demo 1 · 15 min</div><div class="status">Demo 2 · 15 + 25 min</div><div class="status">Demo 3 · 45 min</div><div class="status">Demo 4 · 15 min</div></div><div class="timerrow"><span class="timer" id="globalTimer">00:00</span><button class="timerbtn" data-timer="start">开始</button><button class="timerbtn" data-timer="pause">暂停</button><button class="timerbtn" data-timer="reset">清零</button></div></div></section>
+<section class="demo" id="demo1"><div class="demohead"><div><span class="badge">第一讲 · 15 min</span><h2>Demo 1｜先看见 AI，再把一句话交给 Codex</h2><div class="goal">服务判断：AI 给出的“一个答案”，背后往往经历了候选选择；而一句需求也远不是一个可验收任务。</div></div></div><div class="grid2"><div class="card"><h3>1A｜CNN 可视化 · 约 5 min</h3><a href="https://adamharley.com/nn_vis/cnn/3d.html" target="_blank" rel="noreferrer">打开 Adam Harley CNN 3D 可视化 ↗</a><div class="step"><div class="num">1</div><div>现场写一个<strong>介于 4/9 或 1/7</strong>之间的模糊数字。</div></div><div class="step"><div class="num">2</div><div>只看最后输出候选的强弱，不讲 CNN 数学。</div></div><div class="step"><div class="num">3</div><div>让学员先看结果，再指出：系统最终必须把候选分布压成一个判断。</div></div><div class="callout">收口：模型内部面对的往往不是一个答案，而是一组候选；但业务系统最终必须落成一个判断。</div></div><div class="card"><h3>1B｜一句话交给 Codex · 约 10 min</h3><div class="code">./scripts/reset_base.sh<button class="copy">复制</button></div><p>从仓库根目录打开<strong>全新 Codex 会话</strong>，粘贴：</p><div class="prompt">给融资申请列表增加客户名称和融资状态筛选，并支持导出。<button class="copy">复制</button></div><div class="checks"><label><input type="checkbox"> 不补充信息，观察它是直接做还是追问</label><label><input type="checkbox"> 有改动则执行 capture_diff</label><label><input type="checkbox"> 只展示 diff / 追问 / 完成依据，不修</label></div><div class="code">./scripts/capture_diff.sh demo1<button class="copy">复制</button></div><details><summary>模型表现的三个合法分支</summary><p><b>直接做：</b>看它自行补了哪些假设。</p><p><b>追问：</b>说明任务没有达到可交办状态。</p><p><b>做得很好：</b>追问“凭什么证明已经完成？”</p></details><div class="callout">落点：刚才给的是一句需求，不是一个可验收的研发任务。</div></div></div></section>
+<section class="demo" id="demo2"><div class="demohead"><div><span class="badge">第二讲 · 15 min + 学员 25 min</span><h2>Demo 2｜同一个任务，改用五要素重新交办</h2><div class="goal">服务判断：从“让 AI 写代码”，到“让 AI 推进一个可验收任务”。</div></div></div><div class="card"><h3>讲师演示 · 15 min</h3><div class="code">./scripts/reset_base.sh<button class="copy">复制</button></div><p>新 Codex 会话，粘贴五要素任务包：</p><div class="prompt" style="max-height:360px;overflow:auto"># 任务 A｜五要素可交办任务
+
+## 一句话需求
+融资申请列表增加客户名称、融资状态筛选，并支持导出。
+
+## 01 背景｜为什么做
+- 业务方每天手工导出、肉眼筛选，对账耗时且容易出错。
+- 本期目标是把这段人工去掉，不改现有业务流程。
+- 已定：不新增页面，在现有列表上扩展。
+
+## 02 边界｜哪些能改，哪些绝对不能碰
+- 可改：融资申请列表的查询、筛选与导出。
+- 不可改：申请创建、审批流转、状态机逻辑。
+- 模块隔离：不修改公共查询组件的默认行为。
+
+## 03 约束｜有哪些必须遵守的既有规则
+- 沿用现有分页规则与数据权限规则，不新开口子。
+- 导出走已有的异步任务通道，不新增同步大查询。
+- 不引入新的第三方依赖。
+
+## 04 交付物｜最终交什么
+- 后端查询接口 + 前端筛选组件 + 导出任务。
+- 接口文档同步更新。
+- 一次结构清晰、可回滚的 PR。
+
+## 05 验收标准｜怎样证明对
+- 运行：pytest -q
+- 运行：python instructor/checks/task_a_acceptance.py
+- 筛选组合必须覆盖：单条件、多条件、空结果。
+- 导出任务中的字段与列表字段一致。
+- 越权访问用例必须失败；筛选不得绕过现有数据权限。
+
+## 执行要求
+1. 先读仓库结构和 AGENTS.md，先给 5 行以内执行计划。
+2. 只在允许边界内改动。
+3. 完成后运行测试与独立验收脚本。
+4. 最后列出：修改文件、验证证据、仍需人工确认的事项。<button class="copy">复制</button></div><div class="step"><div class="num">1</div><div>先让 Codex 给出<strong>5 行以内执行计划</strong>。</div></div><div class="step"><div class="num">2</div><div>允许修改，完成后展示 diff。</div></div><div class="step"><div class="num">3</div><div>跑开发测试。</div></div><div class="code">pytest -q<button class="copy">复制</button></div><div class="step"><div class="num">4</div><div>跑独立验收。</div></div><div class="code">python instructor/checks/task_a_acceptance.py<button class="copy">复制</button></div><div class="step"><div class="num">5</div><div>保存差异并与 Demo 1 并排。</div></div><div class="code">./scripts/capture_diff.sh demo2<button class="copy">复制</button></div><div class="callout">落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。</div></div><div class="card"><h3>学员实战 · 25 min</h3><div class="timeline"><div class="tslot"><strong>5 min</strong>说明</div><div class="tslot"><strong>12 min</strong>自己写</div><div class="tslot"><strong>5 min</strong>两两互评</div><div class="tslot"><strong>3 min</strong>公共收口</div></div><div class="pause">公共问题：换给旁边的人以后，哪一项最容易被误解？</div></div></section>
+<section class="demo" id="demo3"><div class="demohead"><div><span class="badge">第三讲 · 45 min · 全课高潮</span><h2>Demo 3｜测试全绿，还是错了</h2><div class="goal">服务判断：写代码的 AI，不适合完全自己验自己；验证半径决定委托半径。</div></div></div><div class="card"><h3>课前状态</h3><div class="code">./scripts/reset_base.sh<button class="copy">复制</button></div><p>基线中的任务 B 是“历史错误运行”：<b>实现与开发侧测试同源，全绿，但业务规则理解错误。</b></p><div class="small">绝不要为了剧情伪造模型失败。高潮依赖的是确定性错误态，而不是 Codex 临场犯错。</div></div><div class="timeline"><div class="tslot"><strong>6 min</strong>作战室角色</div><div class="tslot"><strong>6 min</strong>走到开发完成</div><div class="tslot"><strong>28 min</strong>独立验收</div><div class="tslot"><strong>5 min</strong>收口</div></div><div class="grid2"><div class="card"><h3>① 作战室角色 · 6 min</h3><p>展示：<b>调度（control plane） / 沉思（需求设计） / Code（开发） / 验收（独立） / 复盘（先不打开）</b></p><div class="callout">强调：调度不是第五种责任；“复盘”留到第四讲。</div></div><div class="card"><h3>② 快速走到“开发完成” · 6 min</h3><p>展示当前实现与开发侧测试，然后：</p><div class="code">pytest -q tests/test_settlement_developer.py<button class="copy">复制</button></div><p>屏幕上出现全绿。</p><div class="pause">停住问台下：到这里你会放行吗？</div></div></div><div class="card"><h3>③ 独立验收 · 28 min</h3><p>新开<strong>独立验收上下文</strong>，先粘贴短指令：</p><div class="prompt"># 验收｜独立责任
+
+严格执行 validation/independent-validation.md。
+
+重要：形成独立期望结果之前，不得读取开发实现、开发测试、开发聊天记录。<button class="copy">复制</button></div><details open><summary>独立验收角色的完整隔离规则（需要时展开）</summary><div class="prompt">你是独立验收角色。你的任务不是 review 开发者的代码，而是从业务事实源重新计算“正确结果”，再与系统实际输出比较。
+
+严格隔离：
+- 不读取 app/settlement/
+- 不读取 tests/test_settlement_developer.py
+- 不读取开发角色解释、计划或聊天记录
+- 只允许读取：
+  1. rules/settlement_source_of_truth.md
+  2. validation/cases.json
+
+步骤：
+1. 从 Source of Truth 独立解释规则。
+2. 对每个 case 自己算出期望 mode 与 amount。
+3. 先把期望写入 validation/report.md 的 Independent expectation。
+4. 再运行 python -m app.settlement.cli validation/cases.json。
+5. 比较期望与实际，标记 PASS / BLOCKER。
+6. 出现差异后，才允许读取实现和开发侧测试。
+7. 判断根因：条件遗漏、代码 bug，还是共同理解前提错误。<button class="copy">复制</button></div></details><div class="step"><div class="num">1</div><div>先读 Source of Truth + cases，形成独立期望。</div></div><div class="step"><div class="num">2</div><div>再运行系统黑盒输出，对比结果。</div></div><div class="blocker"><b>预期 BLOCKER：</b>GC-01 系统返回 <code>5000 / TAX_REFUND_ONLY</code>，独立期望为 <code>6200 / FX_LOSS_PLUS_TAX_REFUND</code>。</div><div class="step"><div class="num">3</div><div>出现差异后，才允许读取实现与开发测试，揭示“实现和测试共享了同一错误前提”。</div></div><div class="step"><div class="num">4</div><div>让 Code 修复；重新跑开发测试与独立验收。</div></div><h4>确定性兜底</h4><div class="code">./scripts/restore_demo3_wrong.sh<button class="copy">复制</button></div><div class="code">./scripts/restore_demo3_fixed.sh<button class="copy">复制</button></div><div class="code">python validation/independent_check.py<button class="copy">复制</button></div><div class="small">仅在真机独立验收路径失败时救场；这是预先算好的对照，不是现场独立推导，使用时必须明说。能录屏时优先使用录屏证据。</div></div><div class="card"><h3>④ 收口 · 5 min</h3><div class="callout">救回这一次的，不是更多测试，而是第二个独立理解源。</div><p>落回客户只说一句：</p><div class="pause">你们这边对应的就是额度口径、状态口径、资产认定口径这类规则。</div></div></section>
+<section class="demo" id="demo4"><div class="demohead"><div><span class="badge">第四讲 · 15 min</span><h2>Demo 4｜把这次错误变成下次不用重新教的规则</h2><div class="goal">服务判断：模型的归模型，沉淀的归沉淀。</div></div></div><div class="grid2"><div class="card"><h3>第一段｜复盘角色写入组织资产</h3><p>打开此前留白的“复盘”角色，粘贴：</p><div class="prompt"># 复盘｜知识沉淀责任
+
+基于 Demo 3 的验收报告和最终修复结果，把“为什么会错、以后如何阻止”变成项目资产。
+
+必须至少完成两项：
+1. 在根目录 AGENTS.md 追加一条短而明确的候选优先级规则：组合候选先评估；只有被排除才回退到退税单候选。
+2. 在 validation/checklist.md 追加一条可执行验收项，明确检查“组合候选优先级与回退条件”。
+
+要求：
+- 不写故事，不写这次 case 的具体金额；
+- 写可复用规则；
+- 保持简洁；
+- 完成后不要继续测试“新会话是否读取”。<button class="copy">复制</button></div><div class="checks"><label><input type="checkbox"> AGENTS.md 增加“组合候选优先；排除后才回退”</label><label><input type="checkbox"> validation/checklist.md 增加对应验收项</label><label><input type="checkbox"> 展示 diff：写的是可复用规则，不是案例复盘</label></div><div class="callout">完成后关闭旧 Codex 会话。</div></div><div class="card"><h3>第二段｜全新 Codex 会话验证沉淀</h3><p><strong>必须新会话。</strong>粘贴：</p><div class="prompt"># Demo 4｜全新 Codex 会话
+
+请读取 tasks/task-b-variant.md 并回答。
+
+课堂观察重点：这个会话没有 Demo 3 的聊天上下文；正确候选优先级只能来自刚刚沉淀到项目级规则中的知识。<button class="copy">复制</button></div><details><summary>变体任务实际内容</summary><div class="prompt">这是一个全新会话。不要打开 rules/、validation/、app/、tests/，也不要依赖任何历史聊天。
+只使用 Codex 在会话启动时自动加载的项目级规则，以及下面这组输入：
+
+- 汇损候选：符合，金额 2,400
+- 退税候选：符合，金额 8,600
+- 双候选排除条件：未触发
+
+请输出：
+1. 应选择的模式；
+2. 金额；
+3. 你依据的项目级规则原意是什么。
+
+不要修改代码。<button class="copy">复制</button></div></details><div class="blocker"><b>预期：</b>选择 <code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>，并指出“组合候选优先，只有被排除才回退”的项目级规则。</div><div class="callout">落点：会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</div></div></div></section>
+<section class="card"><h3>课堂前 5 分钟自检</h3><div class="checks"><label><input type="checkbox"> Adam Harley 页面可打开</label><label><input type="checkbox"> 仓库位于 ai-rd-system-demo/，当前分支干净</label><label><input type="checkbox"> Codex 已登录，能新开会话</label><label><input type="checkbox"> reset / restore 脚本可执行</label><label><input type="checkbox"> pytest 基线正常</label><label><input type="checkbox"> Demo 3 错误态与修复态都验证过</label><label><input type="checkbox"> 录屏兜底可直接打开</label></div></section>
+</main><div class="footerbar"><button id="topBtn">↑ 顶部</button><button id="clearChecks">清空勾选</button></div><script>document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{const p=btn.parentElement.cloneNode(true);const b=p.querySelector('.copy');if(b)b.remove();try{await navigator.clipboard.writeText(p.innerText.trim());const o=btn.textContent;btn.textContent='已复制';setTimeout(()=>btn.textContent=o,1200)}catch(e){btn.textContent='复制失败';setTimeout(()=>btn.textContent='复制',1200)}}));document.querySelectorAll('[data-go]').forEach(btn=>btn.addEventListener('click',()=>document.getElementById(btn.dataset.go).scrollIntoView({behavior:'smooth'})));document.getElementById('topBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));document.getElementById('clearChecks').addEventListener('click',()=>document.querySelectorAll('input[type=checkbox]').forEach(x=>x.checked=false));let elapsed=0,running=false,startAt=0,timerId=null;const timerEl=document.getElementById('globalTimer');function renderTimer(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),ss=s%60;timerEl.textContent=String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0')}function tick(){if(running)renderTimer(elapsed+Date.now()-startAt)}document.querySelector('[data-timer=start]').addEventListener('click',()=>{if(running)return;running=true;startAt=Date.now();timerId=setInterval(tick,250)});document.querySelector('[data-timer=pause]').addEventListener('click',()=>{if(!running)return;elapsed+=Date.now()-startAt;running=false;clearInterval(timerId);tick()});document.querySelector('[data-timer=reset]').addEventListener('click',()=>{running=false;elapsed=0;clearInterval(timerId);renderTimer(0)});</script></body></html>
