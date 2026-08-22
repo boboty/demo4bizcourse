@@ -33,7 +33,7 @@ pytest -q
 
 离线 wheel 以 Python 3.12 + macOS Apple Silicon 为验证目标；其他 Python 版本或平台需要联网重新生成 `vendor/wheels/`。
 
-默认测试应当全绿。注意：任务 B 的“开发侧测试”**故意与错误理解同源**，所以全绿不是业务正确性的证明。
+默认测试应当全绿。
 
 ## 课堂常用命令
 
