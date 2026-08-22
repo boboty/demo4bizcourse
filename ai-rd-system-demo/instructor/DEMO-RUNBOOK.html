@@ -22,13 +22,15 @@ main{max-width:1180px;margin:0 auto;padding:30px 22px 80px}.hero{display:grid;gr
 <main>
 <section class="hero"><div><h1>4 讲 · 4 Demo<br>课堂驾驶舱</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><div class="rule">仓库根目录：<b>ai-rd-system-demo/</b> · 现场工具：<b>Codex</b> · Demo 1A 使用 Adam Harley CNN 可视化</div></div><div><div class="statusgrid"><div class="status">Demo 1 · 15 min</div><div class="status">Demo 2 · 15 + 25 min</div><div class="status">Demo 3 · 45 min</div><div class="status">Demo 4 · 15 min</div></div><div class="timerrow"><span class="timer" id="globalTimer">00:00</span><button class="timerbtn" data-timer="start">开始</button><button class="timerbtn" data-timer="pause">暂停</button><button class="timerbtn" data-timer="reset">清零</button></div></div></section>
 
-<section class="demo" id="prep"><div class="demohead"><div><span class="badge">首次彩排 / 上课前</span><h2>课前准备｜先确认环境，再开始 Demo</h2><div class="goal">原则：项目依赖全部放进 <code>.venv</code>，不要污染 macOS 系统 Python。</div></div></div><div class="grid2"><div class="card"><h3>第一次在这台机器上彩排</h3><p>macOS 自带 Python 3.9.6 可以直接用于<strong>联网创建虚拟环境</strong>。当前仓库没有要求必须升级到 3.12。</p><div class="code">cd ai-rd-system-demo
-python3 -m venv .venv
+<section class="demo" id="prep"><div class="demohead"><div><span class="badge">首次彩排 / 上课前</span><h2>课前准备｜先确认环境，再开始 Demo</h2><div class="goal">原则：项目依赖全部放进 <code>.venv</code>，不要污染 macOS 系统 Python。</div></div></div><div class="grid2"><div class="card"><h3>第一次在这台机器上彩排</h3><p>本仓库代码使用 Python 3.10+ 语法，<strong>Python 3.9 不支持</strong>。课堂统一使用 <strong>Python 3.12</strong>，与离线 wheel 验证环境保持一致。</p><div class="code">cd ai-rd-system-demo
+brew install python@3.12   # 已安装可跳过
+rm -rf .venv              # 仅首次重建环境时执行
+"$(brew --prefix python@3.12)/bin/python3.12" -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
 pip install -r requirements.txt<button class="copy">复制</button></div><h4>确认已经进入虚拟环境</h4><div class="code">which python
 python --version
-which pytest<button class="copy">复制</button></div><div class="callout">正常：<code>python</code> 和 <code>pytest</code> 都应指向当前项目的 <code>.venv/</code>。</div><div class="small">说明：仓库里的离线 wheel 是按 Python 3.12 + macOS Apple Silicon 验证的；只有使用离线 wheel 时才锁 3.12。联网彩排不受此限制。</div></div><div class="card"><h3>基线检查｜先别开 Codex</h3><div class="code">git status
+which pytest<button class="copy">复制</button></div><div class="callout">正常：<code>python</code> 和 <code>pytest</code> 都应指向当前项目的 <code>.venv/</code>。</div><div class="small">说明：代码最低要求 Python 3.10；课堂统一按 Python 3.12 + macOS Apple Silicon 验证。这样联网安装和离线 wheel 使用同一套环境，最省心。</div></div><div class="card"><h3>基线检查｜先别开 Codex</h3><div class="code">git status
 pytest -q
 python instructor/checks/task_a_acceptance.py
 python validation/independent_check.py<button class="copy">复制</button></div><div class="checks"><label><input type="checkbox"> <code>pytest -q</code> 全绿</label><label><input type="checkbox"> 任务 A 基线验收指出缺口</label><label><input type="checkbox"> 任务 B 独立验收抓出 BLOCKER</label></div><div class="blocker"><b>注意：</b>后两项不是“环境坏了”。这是课程预置剧情：任务 A 尚未完成；任务 B 故意保留“开发测试全绿、业务理解错误”的历史状态。</div><h4>以后每次彩排 / 上课前</h4><div class="code">cd ai-rd-system-demo
