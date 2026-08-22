@@ -6,5 +6,6 @@
 1. 计划；
 2. diff；
 3. `pytest -q`；
-4. 从仓库根目录运行 `python3 instructor/checks/task_a_acceptance.py`；
-5. 与 Demo 1 保存的 patch 并排比较。
+4. 与 Demo 1 保存的 patch 并排比较。
+
+开发 Agent 不读取或运行讲师 workspace 外的独立验收脚本。Codex 会话退出 Demo 2 workspace 后，由讲师在仓库根目录运行隐藏验收。

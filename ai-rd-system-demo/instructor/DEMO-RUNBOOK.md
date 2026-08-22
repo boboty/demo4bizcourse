@@ -45,7 +45,7 @@ cd workspaces/demo2-five-elements
 
 在新会话中读取并粘贴 `task-a-five-elements.md` 的完整内容。五要素里的业务边界、约束、交付物和验收标准以该文件为准，不改写其业务内容。
 
-允许 Codex 修改，随后：
+允许 Codex 修改。开发 Agent 只运行开发侧测试，不读取或运行讲师 workspace 外的独立验收脚本；会话结束后退出 Demo 2 workspace，再由讲师执行隐藏验收：
 
 ```bash
 pytest -q
@@ -54,7 +54,7 @@ python3 instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo2
 ```
 
-独立验收脚本只存在于 `instructor/`，不会出现在 Demo 2 workspace。落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。
+`python3 instructor/checks/task_a_acceptance.py` 只能由讲师在 workspace 外运行。独立验收脚本只存在于 `instructor/`，不会出现在 Demo 2 workspace。落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。
 
 ## Demo 3｜两个独立上下文｜45 min
 

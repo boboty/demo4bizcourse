@@ -39,7 +39,8 @@ cd ../..
 ./scripts/reset_demo2.sh
 cd workspaces/demo2-five-elements
 python3 -m pytest -q
-python3 ../../instructor/checks/task_a_acceptance.py
+cd ../..
+python3 instructor/checks/task_a_acceptance.py
 
 # Demo 3：developer 与 validator 是两个 workspace
 cd ../..

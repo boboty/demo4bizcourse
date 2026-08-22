@@ -5,116 +5,43 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI 研发体系建设｜课堂 Runbook</title>
 <style>
-:root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px}.nav button,.top button{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:38px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:30px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:30px}}
+:root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px}.nav button{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:38px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:30px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:30px}}
 </style>
 </head>
 <body>
-<header><div class="top"><div class="brand">AI 研发体系建设 · Demo 控制台</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
+<header><div class="top"><div class="brand">AI 研发体系建设 · Runbook</div><div class="nav"><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
 <main>
-<section class="hero"><div><h1>4 讲 · 4 Demo<br>课堂驾驶舱</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><div class="rule">仓库根目录：<b>ai-rd-system-demo/</b> · 现场工具：<b>Codex</b> · Demo 1A 使用 Adam Harley CNN 可视化</div></div><div><div class="statusgrid"><div class="status">Demo 1 · 15 min</div><div class="status">Demo 2 · 15 + 25 min</div><div class="status">Demo 3 · 45 min</div><div class="status">Demo 4 · 15 min</div></div><div class="timerrow"><span class="timer" id="globalTimer">00:00</span><button class="timerbtn" data-timer="start">开始</button><button class="timerbtn" data-timer="pause">暂停</button><button class="timerbtn" data-timer="reset">清零</button></div></div><div><b>总原则</b><ul><li>先 reset，再 cd 到目标 workspace。</li><li>每次切换 Demo 都新开 Codex。</li><li>Demo 4 是同一 workspace，新会话。</li><li>讲师资产留在 instructor/，不复制进不应看到它的 workspace。</li></ul></div></section>
+<section class="hero"><div><h1>4 讲 · 4 Demo</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><p>同一个 Git 仓库只保存资产；课堂每个 Demo 从自己的完整 workspace 启动 Codex。</p><div class="warn">不要从 ai-rd-system-demo/ 根目录启动课堂会话，也不要跨 Demo 继续使用旧会话。</div></div><div><b>总原则</b><ul><li>先 reset，再 cd 到目标 workspace。</li><li>每次切换 Demo 都新开 Codex。</li><li>Demo 4 是同一 workspace，新会话。</li><li>讲师独立验收在 workspace 外执行。</li></ul></div></section>
 
 <section id="demo1" class="demo"><span class="badge">Demo 1 · demo1-vague · 15 min</span><h2>一句话需求</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo1-vague
-# 从这里新开 Codex</div><p>只粘贴：</p><div class="prompt">给融资申请列表增加客户名称和融资状态筛选，并支持导出。</div><p>不补充信息，观察它直接做还是追问；只展示 diff、追问和完成依据，不修复。</p><div class="callout">Demo 1 workspace 只有融资申请基础项目，不放入任务包、参考答案或未来 Demo 材料。</div></div><div class="card"><h3>1A · CNN 可视化</h3><a href="https://adamharley.com/nn_vis/cnn/3d.html" target="_blank" rel="noreferrer">打开 Adam Harley CNN 3D 可视化 ↗</a><p>只看候选强弱，不讲 CNN 数学。收口：模型面对候选分布，业务系统必须落成一个判断。</p><div class="code">cd ../..
-./scripts/capture_diff.sh demo1</div></div></div></section>
+# 从这里新开 Codex</div><p>只粘贴：</p><div class="prompt">给融资申请列表增加客户名称和融资状态筛选，并支持导出。</div><p>不补充信息，观察它直接做还是追问；只展示 diff、追问和完成依据，不修复。</p></div><div class="card"><h3>1A · CNN 可视化</h3><a href="https://adamharley.com/nn_vis/cnn/3d.html" target="_blank" rel="noreferrer">打开 Adam Harley CNN 3D 可视化 ↗</a><p>只看候选强弱，不讲 CNN 数学。收口：模型面对候选分布，业务系统必须落成一个判断。</p></div></div></section>
 
-<section id="demo2" class="demo"><span class="badge">Demo 2 · demo2-five-elements · 15 + 25 min</span><h2>五要素重新交办</h2><div class="card"><h3>必须切换目录并新开会话</h3><div class="code">./scripts/reset_demo2.sh
+<section id="demo2" class="demo"><span class="badge">Demo 2 · demo2-five-elements · 15 + 25 min</span><h2>五要素重新交办</h2><div class="card"><h3>开发会话</h3><div class="code">./scripts/reset_demo2.sh
 cd workspaces/demo2-five-elements
-# 关闭/结束 Demo 1 会话，从这里新开 Codex</div><p>粘贴当前目录中的 <code>task-a-five-elements.md</code> 完整内容。业务边界、约束、交付物和验收标准保持原文。</p><div class="code">pytest -q
-cd ../..
-python3 instructor/checks/task_a_acceptance.py
-./scripts/capture_diff.sh demo2</div><div class="callout">独立验收脚本只在 instructor/，不会提前出现在 Demo 2 workspace。</div></div></section>
+# 关闭/结束 Demo 1 会话，从这里新开 Codex</div><p>把当前目录中的 <code>task-a-five-elements.md</code> 完整内容交给 Codex。开发 Agent 只运行开发侧测试：</p><div class="code">pytest -q</div><p>开发 Agent 不读取、不运行独立验收脚本；完成后退出这个 workspace。</p><h3>讲师独立验收</h3><div class="code">cd ../..
+python3 instructor/checks/task_a_acceptance.py</div><div class="callout">独立验收脚本只在 instructor/，由讲师在 workspace 外运行。前端只验收筛选和导出功能行为，不绑定 HTML id、class 或变量名。</div></div></section>
 
 <section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="grid"><div class="card"><h3>Developer 上下文</h3><div class="code">./scripts/restore_demo3_wrong.sh
 cd workspaces/demo3-developer
 # 从这里新开 developer Codex
 pytest -q tests/test_settlement_developer.py
 ./bin/start-blackbox
-# 保持 http://127.0.0.1:8765 运行</div><p>展示历史错误实现与开发侧测试全绿。保持“汇损 + 退税双候选”的错误状态；测试全绿后才启动黑盒服务。</p></div><div class="card"><h3>Validator 上下文</h3><div class="code">cd ../demo3-validator
-# 关闭 developer 会话，从这里新开 validator Codex
-bin/actual-output validation/cases.json</div><p>黑盒服务保持运行。从这里新开 validator 会话；形成 Independent Expectation 前只读 Source of Truth 与 Golden Case 输入，实际结果只能通过 HTTP 获取。</p><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div></div><div class="card"><h3>修复后</h3><div class="code"># 先在黑盒服务终端按 Ctrl-C
+# 保持 http://127.0.0.1:8765 运行</div><p>测试全绿后启动黑盒服务。</p></div><div class="card"><h3>Validator 上下文</h3><div class="code">cd ../demo3-validator
+# 从这里新开 validator Codex
+bin/actual-output validation/cases.json</div><p>形成 Independent Expectation 前只读事实源与 case；实际结果只能通过 HTTP 黑盒入口获取。</p><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div></div><div class="card"><h3>修复后</h3><div class="code"># 先在黑盒服务终端按 Ctrl-C
 cd ../..
 ./scripts/restore_demo3_fixed.sh
 cd workspaces/demo3-developer
 ./bin/start-blackbox
-# 再回到 validator workspace 新开会话</div><p>修复态重新启动同一个 HTTP 接口后，validator 应得到 <code>FX_LOSS_PLUS_TAX_REFUND / 6200</code>。兜底脚本只恢复 developer 的正确实现，不复制源码到 validator。</p></div></section>
+# 再回到 validator workspace 新开会话</div><p>同一个 HTTP 接口应返回 <code>FX_LOSS_PLUS_TAX_REFUND / 6200</code>。</p></div></section>
 
 <section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>同一 workspace，新会话</h2><div class="card"><h3>复盘会话</h3><div class="code">./scripts/reset_demo4.sh
 cd workspaces/demo4-sedimentation
-# 从这里新开第一个 Codex</div><p>粘贴 <code>instructor/prompts/demo4/04-retro.md</code>。读取 <code>reports/demo3-validation.md</code>，把可复用规则写入 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>。</p><p>初始 AGENTS 没有“双候选优先”规则；展示写入后的 diff。</p></div><div class="card"><h3>全新会话验证沉淀</h3><p>关闭旧会话，但保持当前目录不变；在<strong>同一个 demo4-sedimentation workspace</strong>新开 Codex。</p><div class="prompt">请读取 tasks/task-b-variant.md 并回答。</div><p>新会话不得读取 rules/、validation/、app/、tests/，只依赖项目级规则和任务输入。预期：<code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>。</p><div class="code">cd ../..
-./scripts/restore_demo4_learned.sh</div></div></section>
+# 从这里新开第一个 Codex</div><p>粘贴 <code>instructor/prompts/demo4/04-retro.md</code>，读取 <code>reports/demo3-validation.md</code>，写入 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>。</p></div><div class="card"><h3>全新会话验证沉淀</h3><p>关闭旧会话但保持当前目录不变，在<strong>同一个 demo4-sedimentation workspace</strong>新开 Codex。</p><div class="prompt">请读取 tasks/task-b-variant.md 并回答。</div><p>新会话不得读取 rules/、validation/、app/、tests/，只依赖项目级规则和任务输入。预期：<code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>。</p></div></section>
 
-## 04 交付物｜最终交什么
-- 后端查询接口 + 前端筛选组件 + 导出任务。
-- 接口文档同步更新。
-- 一次结构清晰、可回滚的 PR。
-
-## 05 验收标准｜怎样证明对
-- 运行：pytest -q
-- 运行：python instructor/checks/task_a_acceptance.py
-- 筛选组合必须覆盖：单条件、多条件、空结果。
-- 导出任务中的字段与列表字段一致。
-- 越权访问用例必须失败；筛选不得绕过现有数据权限。
-
-## 执行要求
-1. 先读仓库结构和 AGENTS.md，先给 5 行以内执行计划。
-2. 只在允许边界内改动。
-3. 完成后运行测试与独立验收脚本。
-4. 最后列出：修改文件、验证证据、仍需人工确认的事项。<button class="copy">复制</button></div><div class="step"><div class="num">1</div><div>先让 Codex 给出<strong>5 行以内执行计划</strong>。</div></div><div class="step"><div class="num">2</div><div>允许修改，完成后展示 diff。</div></div><div class="step"><div class="num">3</div><div>跑开发测试。</div></div><div class="code">pytest -q<button class="copy">复制</button></div><div class="step"><div class="num">4</div><div>跑独立验收。</div></div><div class="code">python instructor/checks/task_a_acceptance.py<button class="copy">复制</button></div><div class="step"><div class="num">5</div><div>保存差异并与 Demo 1 并排。</div></div><div class="code">./scripts/capture_diff.sh demo2<button class="copy">复制</button></div><div class="callout">落点：五要素的价值不是让 Prompt 更长，而是让“完成”第一次有了共同定义。</div></div><div class="card"><h3>学员实战 · 25 min</h3><div class="timeline"><div class="tslot"><strong>5 min</strong>说明</div><div class="tslot"><strong>12 min</strong>自己写</div><div class="tslot"><strong>5 min</strong>两两互评</div><div class="tslot"><strong>3 min</strong>公共收口</div></div><div class="pause">公共问题：换给旁边的人以后，哪一项最容易被误解？</div></div></section>
-
-<section class="demo" id="demo3"><div class="demohead"><div><span class="badge">第三讲 · 45 min · 全课高潮</span><h2>Demo 3｜测试全绿，还是错了</h2><div class="goal">服务判断：写代码的 AI，不适合完全自己验自己；验证半径决定委托半径。</div></div></div><div class="card"><h3>课前状态</h3><div class="code">./scripts/reset_base.sh<button class="copy">复制</button></div><p>基线中的任务 B 是“历史错误运行”：<b>实现与开发侧测试同源，全绿，但业务规则理解错误。</b></p><div class="small">绝不要为了剧情伪造模型失败。高潮依赖的是确定性错误态，而不是 Codex 临场犯错。</div></div><div class="timeline"><div class="tslot"><strong>6 min</strong>作战室角色</div><div class="tslot"><strong>6 min</strong>走到开发完成</div><div class="tslot"><strong>28 min</strong>独立验收</div><div class="tslot"><strong>5 min</strong>收口</div></div><div class="grid2"><div class="card"><h3>① 作战室角色 · 6 min</h3><p>展示：<b>调度（control plane） / 沉思（需求设计） / Code（开发） / 验收（独立） / 复盘（先不打开）</b></p><div class="callout">强调：调度不是第五种责任；“复盘”留到第四讲。</div></div><div class="card"><h3>② 快速走到“开发完成” · 6 min</h3><p>展示当前实现与开发侧测试，然后：</p><div class="code">pytest -q tests/test_settlement_developer.py<button class="copy">复制</button></div><p>屏幕上出现全绿。</p><div class="pause">停住问台下：到这里你会放行吗？</div></div></div><div class="card"><h3>③ 独立验收 · 28 min</h3><p>新开<strong>独立验收上下文</strong>，先粘贴短指令：</p><div class="prompt"># 验收｜独立责任
-
-严格执行 validation/independent-validation.md。
-
-重要：形成独立期望结果之前，不得读取开发实现、开发测试、开发聊天记录。<button class="copy">复制</button></div><details open><summary>独立验收角色的完整隔离规则（需要时展开）</summary><div class="prompt">你是独立验收角色。你的任务不是 review 开发者的代码，而是从业务事实源重新计算“正确结果”，再与系统实际输出比较。
-
-严格隔离：
-- 不读取 app/settlement/
-- 不读取 tests/test_settlement_developer.py
-- 不读取开发角色解释、计划或聊天记录
-- 只允许读取：
-  1. rules/settlement_source_of_truth.md
-  2. validation/cases.json
-
-步骤：
-1. 从 Source of Truth 独立解释规则。
-2. 对每个 case 自己算出期望 mode 与 amount。
-3. 先把期望写入 validation/report.md 的 Independent expectation。
-4. 再运行 python -m app.settlement.cli validation/cases.json。
-5. 比较期望与实际，标记 PASS / BLOCKER。
-6. 出现差异后，才允许读取实现和开发侧测试。
-7. 判断根因：条件遗漏、代码 bug，还是共同理解前提错误。<button class="copy">复制</button></div></details><div class="step"><div class="num">1</div><div>先读 Source of Truth + cases，形成独立期望。</div></div><div class="step"><div class="num">2</div><div>再运行系统黑盒输出，对比结果。</div></div><div class="blocker"><b>预期 BLOCKER：</b>GC-01 系统返回 <code>5000 / TAX_REFUND_ONLY</code>，独立期望为 <code>6200 / FX_LOSS_PLUS_TAX_REFUND</code>。</div><div class="step"><div class="num">3</div><div>出现差异后，才允许读取实现与开发测试，揭示“实现和测试共享了同一错误前提”。</div></div><div class="step"><div class="num">4</div><div>让 Code 修复；重新跑开发测试与独立验收。</div></div><h4>确定性兜底</h4><div class="code">./scripts/restore_demo3_wrong.sh<button class="copy">复制</button></div><div class="code">./scripts/restore_demo3_fixed.sh<button class="copy">复制</button></div><div class="code">python validation/independent_check.py<button class="copy">复制</button></div></div><div class="card"><h3>④ 收口 · 5 min</h3><div class="callout">救回这一次的，不是更多测试，而是第二个独立理解源。</div><p>落回客户只说一句：</p><div class="pause">你们这边对应的就是额度口径、状态口径、资产认定口径这类规则。</div></div></section>
-
-<section class="demo" id="demo4"><div class="demohead"><div><span class="badge">第四讲 · 15 min</span><h2>Demo 4｜把这次错误变成下次不用重新教的规则</h2><div class="goal">服务判断：模型的归模型，沉淀的归沉淀。</div></div></div><div class="grid2"><div class="card"><h3>第一段｜复盘角色写入组织资产</h3><p>打开此前留白的“复盘”角色，粘贴：</p><div class="prompt"># 复盘｜知识沉淀责任
-
-基于 Demo 3 的验收报告和最终修复结果，把“为什么会错、以后如何阻止”变成项目资产。
-
-必须至少完成两项：
-1. 在根目录 AGENTS.md 追加一条短而明确的候选优先级规则：组合候选先评估；只有被排除才回退到退税单候选。
-2. 在 validation/checklist.md 追加一条可执行验收项，明确检查“组合候选优先级与回退条件”。
-
-要求：
-- 不写故事，不写这次 case 的具体金额；
-- 写可复用规则；
-- 保持简洁；
-- 完成后不要继续测试“新会话是否读取”。<button class="copy">复制</button></div><div class="checks"><label><input type="checkbox"> AGENTS.md 增加“组合候选優先；排除後才回退”</label><label><input type="checkbox"> validation/checklist.md 增加对应验收项</label><label><input type="checkbox"> 展示 diff：写的是可复用规则，不是案例复盘</label></div><div class="callout">完成后关闭旧 Codex 会话。</div></div><div class="card"><h3>第二段｜全新 Codex 会话验证沉淀</h3><p><strong>必须新会话。</strong>粘贴：</p><div class="prompt"># Demo 4｜全新 Codex 会话
-
-请读取 tasks/task-b-variant.md 并回答。
-
-课堂观察重点：这个会话没有 Demo 3 的聊天上下文；正确候选优先级只能来自刚刚沉淀到项目级规则中的知识。<button class="copy">复制</button></div><details><summary>变体任务实际内容</summary><div class="prompt">这是一个全新会话。不要打开 rules/、validation/、app/、tests/，也不要依赖任何历史聊天。
-只使用 Codex 在会话启动时自动加载的项目级规则，以及下面这组输入：
-
-- 汇损候选：符合，金额 2,400
-- 退税候选：符合，金额 8,600
-- 双候选排除条件：未触发
-
-请输出：
-1. 应选择的模式；
-2. 金额；
-3. 你依据的项目级规则原意是什么。
-
-不要修改代码。<button class="copy">复制</button></div></details><div class="blocker"><b>预期：</b>选择 <code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>，并指出“组合候选优先，只有被排除才回退”的项目级规则。</div><div class="callout">落点：会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</div></div></div></section>
-
-<section class="card"><h3>自动验收</h3><div class="code">python3 scripts/acceptance_check.py</div><p class="small">只检查结构、信息边界、单 workspace pytest、Demo 3 BLOCKER 和 Demo 4 规则沉淀；不执行真实课堂 Demo，不让 Codex 完成任务 A/B。</p></section>
-
-<section class="card"><h3>课堂前 5 分钟自检</h3><div class="checks"><label><input type="checkbox"> Adam Harley 页面可打开</label><label><input type="checkbox"> 仓库位于 ai-rd-system-demo/，当前分支干净</label><label><input type="checkbox"> Codex 已登录，能新开会话</label><label><input type="checkbox"> reset / restore 脚本可执行</label><label><input type="checkbox"> pytest 基线正常</label><label><input type="checkbox"> Demo 3 错误态与修复态都验证过</label><label><input type="checkbox"> 录屏兜底可直接打开</label></div></section>
+<section class="card"><h3>自动验收</h3><div class="code">python3 scripts/acceptance_check.py</div><p class="small">检查结构、信息边界、Demo2 API/前端行为验收、Demo3 HTTP wrong/fixed 状态和 Demo4 规则沉淀；不执行真实课堂任务。</p></section>
+</main>
+<script>document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));</script>
+</body>
+</html>

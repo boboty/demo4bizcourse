@@ -140,6 +140,22 @@ def main() -> int:
     task_a = (demo2 / "task-a-five-elements.md").read_text(encoding="utf-8")
     required_task_markers = ["背景", "边界", "约束", "交付物", "验收标准"]
     check("Demo 2 contains complete five-elements task", all(marker in task_a for marker in required_task_markers))
+    required_contract_markers = [
+        "customer_name",
+        "status",
+        "当前用户的数据权限范围",
+        "id",
+        "amount",
+        "HTML `id`、`class` 或变量名",
+        "开发 Agent 只运行开发侧测试",
+        "独立验收由讲师在 workspace 外执行",
+    ]
+    check(
+        "Demo 2 contract states filtered export and behavior-only frontend acceptance",
+        all(marker in task_a for marker in required_contract_markers)
+        and "task_a_acceptance.py" not in task_a
+        and "pytest -q" in task_a,
+    )
     demo2_text = "\n".join(text for _, text in text_files(demo2))
     demo2_forbidden = ["task-b", "Demo 3", "Demo 4", "demo3", "demo4", "settlement", "FX_LOSS", "validation/cases"]
     leaks = [token for token in demo2_forbidden if token in demo2_text]
