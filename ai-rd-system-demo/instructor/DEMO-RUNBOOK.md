@@ -210,11 +210,13 @@ cd ../..
 
 ## Demo 3｜两个独立上下文｜45 min
 
-Demo 3 的固定顺序是：`reset wrong → developer 输入与测试 → 启动 HTTP 黑盒 → validator 先算期望 → HTTP 取 actual → 报告 BLOCKER → 停旧服务 → developer 修复 → 重启 HTTP 黑盒 → validator 复验`。
+### 固定顺序
 
-### 3A. developer｜先得到“测试全绿，但业务仍错”
+`restore wrong → 开发测试 3 passed → 启动 HTTP 黑盒 → 展示 Source of Truth → 学员算出 6200 → 新开 validator → BLOCKER → 揭示实现与测试同源同错 → 第一次新开 developer 修复 → 4 passed → 重启 HTTP 黑盒 → 回原 validator 复验 PASS`
 
-讲师先在仓库根目录执行：
+### 3A. 历史开发状态｜先看到 3 passed
+
+讲师从仓库根目录执行：
 
 ```bash
 ./scripts/restore_demo3_wrong.sh
@@ -222,84 +224,251 @@ cd workspaces/demo3-developer
 ../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
 ```
 
-正常结果是 `3 passed`。这里必须保持“汇损 + 退税双候选”的历史错误状态；实现和开发测试同源，全绿不是业务正确性的证明。
+预期：
 
-从 `workspaces/demo3-developer/` 新开 developer Codex 会话，粘贴下面这段输入：
-
-> 你现在处于 Demo 3 developer 上下文。请读取 `tasks/task-b-development.md`，检查当前 `app/settlement/` 实现，并运行开发侧测试 `../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`。本阶段只报告当前实现、测试结果和仍需独立验收确认的业务前提，不要读取 validator workspace，不要修改代码，也不要宣布业务验收 PASS。
-
-开发会话展示完成后，在 developer workspace 的另一个终端启动黑盒服务，并保持该终端运行：
-
-```bash
-./bin/start-blackbox
-# 服务保持在 http://127.0.0.1:8765
+```text
+3 passed
 ```
 
-### 3B. validator｜先形成独立期望，再取得实际输出
+此时**不要开 Developer Codex**。这只是一个已经“开发完成”的历史状态：实现存在、开发测试全绿，但我们还没有证明业务正确。
 
-暂停 developer Codex 会话，但不要停止黑盒服务。切换到 validator workspace，并从这里新开独立验收 Codex 会话：
+讲师口播：
+
+> 这是一个已经开发完成的历史任务。实现有了，开发测试也是全绿的。先别急着说它对。
+
+然后在另一个终端启动黑盒服务，并保持运行：
+
+```bash
+cd workspaces/demo3-developer
+./bin/start-blackbox
+```
+
+预期：
+
+```text
+blackbox listening on http://127.0.0.1:8765
+```
+
+### 3B. 先把业务尺子摆出来｜6200 必须有客观来源
+
+仍在 `workspaces/demo3-developer/`，向学员展示独立验收方使用的业务事实源和 Golden Case 输入：
+
+```bash
+cat ../demo3-validator/rules/settlement_source_of_truth.md
+cat ../demo3-validator/validation/cases.json
+```
+
+只抓 GC-01：
+
+- `fx_loss_eligible = true`，金额 `1200`
+- `tax_refund_eligible = true`，金额 `5000`
+- `combined_excluded = false`
+
+Source of Truth 明确规定：
+
+1. 汇损和退税同时满足时，先评估“汇损 + 退税”组合候选。
+2. 组合候选未被排除时，返回 `FX_LOSS_PLUS_TAX_REFUND`。
+3. 金额 = 汇损金额 + 退税金额。
+4. 只有组合候选被排除后，才允许回退 `TAX_REFUND_ONLY`。
+
+**课堂暂停：**
+
+> 按照这份业务规则，GC-01 应该是多少？
+
+预期学员得到：
+
+```text
+1200 + 5000 = 6200
+FX_LOSS_PLUS_TAX_REFUND
+```
+
+这里要明确：**6200 不是讲师临时宣布的答案，也不是 Validator 自己猜的答案，而是由 Source of Truth + Golden Case 输入推导出来的。**
+
+### 3C. 独立 Validator｜一句话执行既有验收规则
+
+切换到 validator workspace：
 
 ```bash
 cd ../demo3-validator
+# 从这里新开 Luna + High
 ```
 
-先粘贴下面的验收输入；在形成 Independent Expectation 之前，validator 只能读取本 workspace 的 Source of Truth 和 Golden Case 输入：
+只发送一句：
 
-> 你是独立验收角色。先读取 `rules/settlement_source_of_truth.md` 和 `validation/cases.json`，不要读取 developer workspace 的实现、开发测试、解释、计划或聊天记录。请先逐个 case 独立计算 expected mode 与 amount，并把 Independent Expectation 写入 `validation/report.md`；完成期望计算前不要调用实际输出。
+> 执行 `validation/independent-validation.md`。
 
-“正确答案 6200”来自 Source of Truth 的组合规则和 GC-01 输入，不来自 developer 代码或隐藏验收脚本：
+不要在 Runbook 里重新展开一套 Validator Prompt。`validation/independent-validation.md` 已经定义了角色、隔离规则、步骤和报告格式；它会先根据 Source of Truth + cases 形成 Independent Expectation，再通过 HTTP 黑盒取得 Actual Output。
 
-| Case | 独立计算 | Expected |
-| --- | --- | --- |
-| GC-01 | 汇损 1,200 + 退税 5,000，组合未排除 | `6200 / FX_LOSS_PLUS_TAX_REFUND` |
-| GC-02 | 组合被排除，回退退税 | `5000 / TAX_REFUND_ONLY` |
-| GC-03 | 只有退税具备资格 | `5000 / TAX_REFUND_ONLY` |
-| GC-04 | 退税不具备资格，汇损不能单独申报 | `0 / NO_CANDIDATE` |
-
-确认 Independent Expectation 已写入报告后，在 validator workspace 执行唯一的实际结果入口：
-
-```bash
-../../.venv/bin/python bin/actual-output validation/cases.json
-```
-
-再粘贴下面这段输入，要求 validator 将 HTTP 返回与独立期望逐项比较：
-
-> 现在读取刚才的 HTTP actual output，与 `validation/report.md` 中的 Independent Expectation 比较，补充 Actual output、Mismatches 和 Overall。不要读取 developer workspace。错误态预期：GC-01 actual 为 `5000 / TAX_REFUND_ONLY`，因此必须报告 `Overall = BLOCKER`。
-
-错误态必须稳定得到：
+预期：
 
 ```text
-GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND
-GC-01 actual = 5000 / TAX_REFUND_ONLY
-Overall = BLOCKER
+Overall: BLOCKER
+
+GC-01
+Expected: FX_LOSS_PLUS_TAX_REFUND / 6200
+Actual:   TAX_REFUND_ONLY / 5000
+
+GC-02 ~ GC-04: PASS
 ```
 
-### 3C. 修复与复验｜必须停止旧服务并重启
+报告写入：
 
-出现 BLOCKER 后，先在黑盒服务终端按 `Ctrl-C` 停止旧进程。再切回 developer workspace，恢复或继续 developer Codex 会话，粘贴：
+```text
+validation/report.md
+```
 
-> 根据独立验收报告中的 BLOCKER 修复 `app/settlement/` 候选判定逻辑，使组合候选优先、只有组合被排除时才回退到退税单候选。不要修改 Source of Truth 或 validator workspace。完成后运行 `../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`，报告修改文件和测试结果，不自行宣布独立验收 PASS。
+课堂提醒：仍然是 Luna + High，没有偷偷换更强模型。变化的是**理解来源独立了**。
+
+### 3D. 揭开为什么“测试全绿还是错”
+
+Validator 报告 BLOCKER 后，回 developer workspace：
 
 ```bash
 cd ../demo3-developer
-../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
+sed -n '1,220p' app/settlement/service.py
+sed -n '1,240p' tests/test_settlement_developer.py
 ```
 
-测试全绿后，必须重新启动黑盒服务；旧进程不会自动加载刚刚修改的代码：
+只抓 GC-01，不讲完整代码。
+
+开发实现里的关键错误：
+
+```python
+if refund_ok:
+    return {"mode": "TAX_REFUND_ONLY", "amount": refund}
+```
+
+开发测试里的关键错误：
+
+```python
+assert evaluate_candidate(case) == {
+    "mode": "TAX_REFUND_ONLY",
+    "amount": 5000.0,
+}
+```
+
+屏幕上形成三层证据：
+
+```text
+Source of Truth：两者都成立 + 组合未排除 → 6200
+开发实现：                                  → 5000
+开发测试：                                  → 也把 5000 当正确答案
+```
+
+讲师口播：
+
+> 为什么代码错了，测试还能全绿？因为这个历史开发状态里，开发实现和开发测试来自同一个需求理解源。需求一开始被理解成了“两个候选都存在时选退税”，于是代码按这个理解写，测试也按这个理解验证。代码给 5000，测试也认为 5000 正确，所以当然全部通过。
+
+继续强调：
+
+> 这不是测试没覆盖。第一条测试已经覆盖了两个候选同时存在的场景。问题是测试自己也把错误答案当成了正确答案。
+
+落点：
+
+> **测试全绿，只能证明实现符合这套测试；如果测试和实现来自同一个错误理解，它证明不了业务理解本身是对的。**
+
+最后再给这个现象命名：
+
+> **同源验证抓不到共同理解偏差。**
+
+### 3E. 第一次新开 Developer Agent｜把缺陷交回开发责任
+
+**到这里才第一次在 `workspaces/demo3-developer/` 新开 Luna + High Developer Codex。**
+
+给 Developer 完整缺陷单：
+
+> 独立验收发现一个 BLOCKER，请修复当前实现和开发侧测试。
+>
+> 业务规则：
+> - 当汇损候选和退税候选同时具备资格时，必须先评估“汇损 + 退税”组合候选。
+> - 如果组合候选未被排除，应返回 FX_LOSS_PLUS_TAX_REFUND。
+> - 金额 = 汇损金额 + 退税金额。
+> - 只有组合候选被明确排除后，才允许回退到 TAX_REFUND_ONLY。
+> - 如果只有退税候选具备资格，则返回 TAX_REFUND_ONLY。
+> - 如果退税候选不具备资格，本演示返回 NO_CANDIDATE。
+>
+> 独立验收发现：
+> GC-01：
+> fx_loss_eligible = true
+> fx_loss_amount = 1200
+> tax_refund_eligible = true
+> tax_refund_amount = 5000
+> combined_excluded = false
+>
+> 当前系统实际：
+> TAX_REFUND_ONLY / 5000
+>
+> 正确结果：
+> FX_LOSS_PLUS_TAX_REFUND / 6200
+>
+> 请：
+> 1. 检查当前实现和开发测试为什么会得到错误结果。
+> 2. 修正实现。
+> 3. 修正开发侧测试。
+> 4. 运行：`../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`
+> 5. 汇报修改和测试结果。
+
+真实彩排预期：
+
+```text
+4 passed
+```
+
+讲师点一句：
+
+> 修复共同理解偏差，不只是改代码，还要把同源的错误测试一起纠正。
+
+### 3F. 修复后必须重启黑盒
+
+**不要漏。旧黑盒进程是在修复前启动的。**
+
+回到运行黑盒的终端：
 
 ```bash
+Ctrl+C
 ./bin/start-blackbox
-# 保持 http://127.0.0.1:8765 运行
 ```
 
-回到 validator workspace，在原独立验收会话中重新取得实际输出：
+预期：
 
-```bash
-cd ../demo3-validator
-../../.venv/bin/python bin/actual-output validation/cases.json
+```text
+blackbox listening on http://127.0.0.1:8765
 ```
 
-修复后应为 `Overall = PASS`，GC-01 应为 `6200 / FX_LOSS_PLUS_TAX_REFUND`。如果仍看到 `5000 / TAX_REFUND_ONLY`，先检查是否真的停止并重启了 `127.0.0.1:8765` 的旧服务，再重复 actual-output；不要复制 developer 源码到 validator。
+如果修复后 Validator 仍看到 5000，第一件事就是检查旧服务是否真的停止并重启。
+
+### 3G. 回到原来的 Validator 会话复验
+
+不要新开 Validator，不告诉它 Developer 具体改了哪行代码。
+
+回到刚才那个 validator Codex 会话，只发送：
+
+> 开发方已提交修复，请按 `validation/independent-validation.md` 重新执行独立验收。
+
+预期：
+
+```text
+GC-01 PASS  FX_LOSS_PLUS_TAX_REFUND / 6200
+GC-02 PASS
+GC-03 PASS
+GC-04 PASS
+
+Overall: PASS
+```
+
+报告继续更新 `validation/report.md`。
+
+### Demo 3 收口
+
+按这个顺序说：
+
+1. **救回这一次的，不是更多测试，而是第二个独立理解源。**
+2. **写代码的 AI，不适合完全自己验自己。**
+3. **关键不是换一个更强的模型，而是验证要有独立的理解来源。**
+
+模型控制说明：Developer 和 Validator 都使用 Luna + High。课堂可补一句：
+
+> 你们注意，我这里没有偷偷换一个更强的模型。还是同一档模型，只是不给它看开发者的答案，让它重新从业务事实算一遍。
 
 确定性兜底仅供彩排恢复使用：先停止黑盒服务，再从仓库根目录执行 `./scripts/restore_demo3_fixed.sh`；恢复后仍要重新启动黑盒服务，并通过 validator 的 HTTP 入口复验。
 
