@@ -10,15 +10,43 @@ https://adamharley.com/nn_vis/cnn/3d.html
 
 ## 快速开始
 
+> **建议始终使用项目自己的 `.venv`，不要把依赖安装进 macOS 系统 Python。**
+>
+> 联网彩排时，macOS 系统自带的 Python 3.9.6 可以直接用于创建 `.venv`；本仓库当前没有要求必须使用 Python 3.12。下面“离线安装”里的 Python 3.12，只是因为仓库内预置 wheel 缓存按 **Python 3.12 + macOS Apple Silicon** 验证。
+
 ```bash
-python -m venv .venv
+cd ai-rd-system-demo
+python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\\Scripts\\activate
+python -m pip install -U pip
 pip install -r requirements.txt
 pytest -q
 uvicorn app.main:app --reload --port 8000
 ```
 
+确认虚拟环境：
+
+```bash
+which python
+python --version
+which pytest
+```
+
+正常情况下，`python` 和 `pytest` 都应指向当前项目的 `.venv/`。
+
 浏览器打开 http://127.0.0.1:8000
+
+### 已经创建过 `.venv` 时
+
+以后彩排或上课前不需要重新安装，只需：
+
+```bash
+cd ai-rd-system-demo
+source .venv/bin/activate
+./scripts/reset_base.sh
+pytest -q
+open instructor/DEMO-RUNBOOK.html
+```
 
 ### 离线安装
 
@@ -34,6 +62,25 @@ pytest -q
 离线 wheel 以 Python 3.12 + macOS Apple Silicon 为验证目标；其他 Python 版本或平台需要联网重新生成 `vendor/wheels/`。
 
 默认测试应当全绿。
+
+## 彩排基线检查
+
+第一次彩排先确认环境与预置剧情状态，不要一上来就让 Codex 改代码：
+
+```bash
+git status
+pytest -q
+python instructor/checks/task_a_acceptance.py
+python validation/independent_check.py
+```
+
+这里**不要期待后三条全部 PASS**：
+
+- `pytest -q`：应全绿；
+- 任务 A：基线尚未完成五要素任务，独立验收应指出缺口；
+- 任务 B：基线故意保留“开发测试全绿、业务理解错误”的历史状态，独立验收应抓出 BLOCKER。
+
+这正是 Demo 2 与 Demo 3 后续要展示的对照基础。
 
 ## 课堂常用命令
 
