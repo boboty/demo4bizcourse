@@ -26,8 +26,9 @@ def assert_business_state(context: ExecutionContext) -> Dict[str, Any]:
             raise AssertionError("固定 API 四项事实被修改或缺失。")
         endpoint = context.case["assertions"]["api_facts"]["endpoint"].format(order_id=context.order_id)
         facts = require_success(context.base_url + endpoint)
-        assert_expected_facts(facts, REQUIRED_FACTS, "API 业务事实")
+        # 断言失败时也必须保留真实返回，供 PRODUCT BUG evidence 使用。
         context.record["api_facts"] = facts
+        assert_expected_facts(facts, REQUIRED_FACTS, "API 业务事实")
         context.record["api_assertion"] = "PASS"
         return {"api_result": "PASS", "facts": facts}
     except Exception as error:

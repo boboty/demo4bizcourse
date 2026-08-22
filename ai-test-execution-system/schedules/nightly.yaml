@@ -1,0 +1,11 @@
+version: 1
+plan_id: nightly_pay_order_plan
+suite: suites/nightly.yaml
+execution_mode: serial
+
+preflight:
+  health_endpoint: /health
+  require_physical_device: true
+
+artifact_root: artifacts/runs
+report_output: reports

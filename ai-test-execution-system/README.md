@@ -91,6 +91,18 @@ Round 3 只整理已经验证的支付能力，不扩展业务范围：
 
 冻结的任务契约见 [`docs/executable-task-schema-v1.md`](docs/executable-task-schema-v1.md)。`pay_order` 只证明 UI 交互和页面结果；`assert_business_state` 独立验证 `PAID`、Payment=1、`SUCCEEDED`、库存=9。
 
+## Round 4：Suite → Run Plan → 业务语义 Retry → Artifacts → Report
+
+Round 4 在 Round 3 task、Skill 和 Workflow 之上增加单一 serial Suite、显式 Run Plan、业务状态确认后的单次 Retry、结构化 artifacts 和 Markdown report：
+
+```bash
+IOS_UDID='<iPhone-UDID>' IOS_TEAM_ID='<Personal-Team-ID>' \
+DEMO_BASE_URL='http://<Mac-LAN-IP>:8000' \
+python3 -m runner.run_plan --run-now schedules/nightly.yaml
+```
+
+Suite 场景声明在 `suites/nightly.yaml`，不复制 task 或临时生成 UI steps；Run Plan 声明在 `schedules/nightly.yaml`。`timeout_before_commit` 只有在查询确认未提交后允许一次 Retry，`timeout_after_commit` 查询确认已提交后不 Retry。`PRODUCT_BUG_MODE=on` 保持真实 FAIL，并保存实际 API facts。运行证据位于 `artifacts/runs/<run-id>/`，报告位于 `reports/<run-id>/report.md`。
+
 ## Round 2：受控 UI locator Self-Heal
 
 Round 2 只演示这一条边界：UI V2 令正式资产中的 `#pay-now` 真实失败，模型只给出 Candidate；确定性 Review、临时真机验证和 Write Back 负责控制风险。模型不会直接改动 `cases/pay_order.yaml`，运行时没有双 locator / fallback。
