@@ -172,6 +172,10 @@ def main() -> int:
         "HTML Runbook has copy buttons",
         'data-copy="demo1-task"' in html_runbook
         and 'data-copy="demo2-spec"' in html_runbook
+        and 'data-copy="d3-validator-first"' in html_runbook
+        and 'data-copy="d4-retro"' in html_runbook
+        and 'data-copy="d4-variant"' in html_runbook
+        and 'data-copy="d4-refine"' in html_runbook
         and "navigator.clipboard.writeText" in html_runbook,
     )
 
@@ -258,13 +262,45 @@ def main() -> int:
         )
 
     demo4 = WORKSPACES / "demo4-sedimentation"
+    demo4_baseline = ROOT / "instructor/baselines/demo4-sedimentation"
     initial_agents = (demo4 / "AGENTS.md").read_text(encoding="utf-8")
     initial_checklist = (demo4 / "validation/checklist.md").read_text(encoding="utf-8")
     precedence = "先评估“汇损 + 退税”组合候选"
     check("Demo 4 reset state has no precedence rule", precedence not in initial_agents and precedence not in initial_checklist)
+
+    source_report = (demo4_baseline / "reports/demo3-validation.md").read_text(encoding="utf-8")
+    check(
+        "Demo 4 source report contains final verified rule",
+        "Overall: `PASS`" in source_report
+        and "FX_LOSS_PLUS_TAX_REFUND" in source_report
+        and "组合候选金额 = 汇损金额 + 退税金额" in source_report
+        and "TAX_REFUND_ONLY" in source_report,
+    )
+
     learned_agents = (ROOT / "instructor/golden/AGENTS.learned.md").read_text(encoding="utf-8")
     learned_checklist = (ROOT / "instructor/golden/validation_checklist.learned.md").read_text(encoding="utf-8")
-    check("Demo 4 learned assets contain precedence rule", precedence in learned_agents and "组合候选" in learned_checklist)
+    required_semantics = [
+        precedence,
+        "FX_LOSS_PLUS_TAX_REFUND",
+        "汇损金额 + 退税金额",
+        "TAX_REFUND_ONLY",
+    ]
+    check(
+        "Demo 4 learned assets contain executable rule",
+        all(token in learned_agents for token in required_semantics)
+        and "FX_LOSS_PLUS_TAX_REFUND" in learned_checklist
+        and "汇损金额 + 退税金额" in learned_checklist
+        and "TAX_REFUND_ONLY" in learned_checklist,
+    )
+
+    retro_prompt = (ROOT / "instructor/prompts/demo4/04-retro.md").read_text(encoding="utf-8")
+    check(
+        "Demo 4 retro prompt requires complete semantics",
+        "FX_LOSS_PLUS_TAX_REFUND" in retro_prompt
+        and "汇损金额 + 退税金额" in retro_prompt
+        and "TAX_REFUND_ONLY" in retro_prompt,
+    )
+
     with tempfile.TemporaryDirectory(prefix="demo4-acceptance-") as temp:
         learned = Path(temp)
         shutil.copytree(demo4, learned / "workspace")
@@ -272,10 +308,14 @@ def main() -> int:
         shutil.copy(ROOT / "instructor/golden/validation_checklist.learned.md", learned / "workspace/validation/checklist.md")
         learned_text = (learned / "workspace/AGENTS.md").read_text(encoding="utf-8")
         variant = json.loads("{\"fx\":2400,\"refund\":8600,\"excluded\":false}")
-        combined = precedence in learned_text and not variant["excluded"]
+        rule_complete = all(token in learned_text for token in required_semantics)
+        combined = rule_complete and not variant["excluded"]
         mode = "FX_LOSS_PLUS_TAX_REFUND" if combined else "TAX_REFUND_ONLY"
         amount = variant["fx"] + variant["refund"] if combined else variant["refund"]
-        check("Demo 4 new-session variant resolves 11000", mode == "FX_LOSS_PLUS_TAX_REFUND" and amount == 11000)
+        check(
+            "Demo 4 new-session variant resolves 11000 from complete rule",
+            rule_complete and mode == "FX_LOSS_PLUS_TAX_REFUND" and amount == 11000,
+        )
 
     for name in NAMES:
         workspace = WORKSPACES / name
