@@ -1,12 +1,38 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+from __future__ import annotations
 
-if [[ $# -ne 1 ]]; then
-  echo "usage: bin/actual-output <cases.json>" >&2
-  exit 2
-fi
+import json
+import sys
+from pathlib import Path
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-developer_root="${DEMO3_DEVELOPER_ROOT:-$script_dir/../../demo3-developer}"
-cd "$developer_root"
-PYTHONPATH="$developer_root${PYTHONPATH:+:$PYTHONPATH}" python3 -m app.settlement.cli "$1"
+
+URL = "http://127.0.0.1:8765/evaluate"
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print("usage: bin/actual-output <cases.json>", file=sys.stderr)
+        return 2
+    cases = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    output = []
+    try:
+        for case in cases:
+            request = Request(
+                URL,
+                data=json.dumps(case, ensure_ascii=False).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urlopen(request, timeout=5) as response:
+                output.append({"id": case["id"], **json.load(response)})
+    except (OSError, URLError, ValueError) as exc:
+        print(f"blackbox request failed: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

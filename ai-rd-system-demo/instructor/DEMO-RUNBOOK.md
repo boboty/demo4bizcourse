@@ -71,7 +71,12 @@ cd workspaces/demo3-developer
 pytest -q tests/test_settlement_developer.py
 ```
 
-这里保持“汇损 + 退税双候选”的错误状态：实现和开发测试同源，全绿不是业务正确性的证明。
+这里保持“汇损 + 退税双候选”的错误状态：实现和开发测试同源，全绿不是业务正确性的证明。测试全绿后，在 developer workspace 的另一个终端启动固定端口黑盒服务，并保持该终端运行：
+
+```bash
+./bin/start-blackbox
+# 服务保持在 http://127.0.0.1:8765
+```
 
 ### 3B. validator｜切换 workspace 后新开独立验收会话
 
@@ -81,7 +86,7 @@ pytest -q tests/test_settlement_developer.py
 cd ../demo3-validator
 ```
 
-先粘贴 `instructor/prompts/demo3/03-validation.md`，并强调：形成 Independent Expectation 之前，只能读 validator workspace 中的 Source of Truth 与 Golden Case 输入，不能读取 developer workspace 的实现、开发测试或聊天记录。通过黑盒入口获取实际输出：
+在黑盒服务保持运行时，从 validator workspace 新开 Codex 会话，粘贴 `instructor/prompts/demo3/03-validation.md`，并强调：形成 Independent Expectation 之前，只能读 validator workspace 中的 Source of Truth 与 Golden Case 输入，不能读取 developer workspace 的实现、开发测试或聊天记录。实际结果只能通过 HTTP 黑盒入口获取：
 
 ```bash
 bin/actual-output validation/cases.json

@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
+from urllib.request import urlopen
 from pathlib import Path
 
 
@@ -43,6 +46,43 @@ def digest(path: Path) -> str:
 
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+
+
+def start_blackbox(root: Path) -> subprocess.Popen[str]:
+    env = os.environ.copy()
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = str(root) + (os.pathsep + existing_pythonpath if existing_pythonpath else "")
+    process = subprocess.Popen(
+        [sys.executable, "-m", "app.settlement.blackbox_server"],
+        cwd=root,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            detail = (process.stderr.read() if process.stderr else "").strip()
+            raise RuntimeError(f"blackbox server exited: {detail}")
+        try:
+            with urlopen("http://127.0.0.1:8765/health", timeout=0.2) as response:
+                if response.status == 200:
+                    return process
+        except OSError:
+            time.sleep(0.05)
+    process.terminate()
+    raise RuntimeError("blackbox server did not become ready")
+
+
+def stop_blackbox(process: subprocess.Popen[str]) -> None:
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
 
 
 def main() -> int:
@@ -116,15 +156,28 @@ def main() -> int:
 
     validator = WORKSPACES / "demo3-validator"
     check("Demo 3 validator has no developer source", not (validator / "app").exists() and not (validator / "tests/test_settlement_developer.py").exists())
+    validator_text = "\n".join(text for _, text in text_files(validator))
+    validator_path_leaks = [token for token in ("demo3-developer", "../", "app.settlement", "app/settlement") if token in validator_text]
+    check("Demo 3 validator is HTTP-only and path-isolated", not validator_path_leaks, ", ".join(validator_path_leaks))
     expected = {
         "GC-01": {"mode": "FX_LOSS_PLUS_TAX_REFUND", "amount": 6200.0},
         "GC-02": {"mode": "TAX_REFUND_ONLY", "amount": 5000.0},
         "GC-03": {"mode": "TAX_REFUND_ONLY", "amount": 5000.0},
         "GC-04": {"mode": "NO_CANDIDATE", "amount": 0.0},
     }
-    result = run([str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+    wrong_server = start_blackbox(developer)
+    try:
+        result = run([str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+    finally:
+        stop_blackbox(wrong_server)
     actual = json.loads(result.stdout) if result.returncode == 0 else []
     actual_by_id = {item["id"]: item for item in actual}
+    wrong_gc01 = actual_by_id.get("GC-01", {})
+    check(
+        "Demo 3 wrong HTTP GC-01",
+        result.returncode == 0
+        and wrong_gc01 == {"id": "GC-01", "mode": "TAX_REFUND_ONLY", "amount": 5000.0},
+    )
     validator_lines = ["Independent expectation"]
     for case_id, item in expected.items():
         got = actual_by_id.get(case_id, {})
@@ -145,6 +198,21 @@ def main() -> int:
         and "Overall = BLOCKER" in validator_output,
         validator_output.strip(),
     )
+    with tempfile.TemporaryDirectory(prefix="demo3-fixed-http-") as temp:
+        fixed_root = Path(temp) / "fixed"
+        shutil.copytree(ROOT / "instructor/baselines/demo3-fixed", fixed_root)
+        fixed_server = start_blackbox(fixed_root)
+        try:
+            fixed_result = run([str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+        finally:
+            stop_blackbox(fixed_server)
+        fixed_actual = json.loads(fixed_result.stdout) if fixed_result.returncode == 0 else []
+        fixed_by_id = {item["id"]: item for item in fixed_actual}
+        check(
+            "Demo 3 fixed HTTP GC-01",
+            fixed_result.returncode == 0
+            and fixed_by_id.get("GC-01") == {"id": "GC-01", "mode": "FX_LOSS_PLUS_TAX_REFUND", "amount": 6200.0},
+        )
 
     demo4 = WORKSPACES / "demo4-sedimentation"
     initial_agents = (demo4 / "AGENTS.md").read_text(encoding="utf-8")

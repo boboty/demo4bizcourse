@@ -18,7 +18,9 @@
 
 ## Demo 3
 - [ ] 在 `workspaces/demo3-developer/` 运行 `python3 -m pytest -q tests/test_settlement_developer.py`，wrong state 全绿。
+- [ ] developer 测试全绿后启动 `./bin/start-blackbox`，固定端口为 `127.0.0.1:8765`。
 - [ ] 在 `workspaces/demo3-validator/` 先形成 Independent Expectation，再运行 `bin/actual-output validation/cases.json`；wrong state 必须发现 BLOCKER。
+- [ ] validator 的实际结果只来自 HTTP，不包含 developer 路径或实现模块名。
 - [ ] GC-01 的差异必须是 6200 combined vs 5000 refund-only。
 - [ ] 验收角色在形成期望前看不到实现、开发测试和开发聊天。
 - [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致。

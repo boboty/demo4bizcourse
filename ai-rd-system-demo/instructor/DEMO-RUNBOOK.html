@@ -28,12 +28,16 @@ python3 instructor/checks/task_a_acceptance.py
 <section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="grid"><div class="card"><h3>Developer 上下文</h3><div class="code">./scripts/restore_demo3_wrong.sh
 cd workspaces/demo3-developer
 # 从这里新开 developer Codex
-pytest -q tests/test_settlement_developer.py</div><p>展示历史错误实现与开发侧测试全绿。保持“汇损 + 退税双候选”的错误状态。</p></div><div class="card"><h3>Validator 上下文</h3><div class="code">cd ../demo3-validator
+pytest -q tests/test_settlement_developer.py
+./bin/start-blackbox
+# 保持 http://127.0.0.1:8765 运行</div><p>展示历史错误实现与开发侧测试全绿。保持“汇损 + 退税双候选”的错误状态；测试全绿后才启动黑盒服务。</p></div><div class="card"><h3>Validator 上下文</h3><div class="code">cd ../demo3-validator
 # 关闭 developer 会话，从这里新开 validator Codex
-bin/actual-output validation/cases.json</div><p>形成 Independent Expectation 前只读 Source of Truth 与 Golden Case 输入；实际输出只能通过黑盒入口获取。</p><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div></div><div class="card"><h3>修复后</h3><div class="code">cd ../..
+bin/actual-output validation/cases.json</div><p>黑盒服务保持运行。从这里新开 validator 会话；形成 Independent Expectation 前只读 Source of Truth 与 Golden Case 输入，实际结果只能通过 HTTP 获取。</p><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div></div><div class="card"><h3>修复后</h3><div class="code"># 先在黑盒服务终端按 Ctrl-C
+cd ../..
 ./scripts/restore_demo3_fixed.sh
-cd workspaces/demo3-validator
-bin/actual-output validation/cases.json</div><p>修复态 validator 应为 <code>Overall = PASS</code>。兜底脚本只恢复 developer 的正确实现，不复制源码到 validator。</p></div></section>
+cd workspaces/demo3-developer
+./bin/start-blackbox
+# 再回到 validator workspace 新开会话</div><p>修复态重新启动同一个 HTTP 接口后，validator 应得到 <code>FX_LOSS_PLUS_TAX_REFUND / 6200</code>。兜底脚本只恢复 developer 的正确实现，不复制源码到 validator。</p></div></section>
 
 <section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>同一 workspace，新会话</h2><div class="card"><h3>复盘会话</h3><div class="code">./scripts/reset_demo4.sh
 cd workspaces/demo4-sedimentation

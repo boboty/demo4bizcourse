@@ -9,6 +9,4 @@
 
 ## Workspace isolation
 
-- `workspaces/demo1-vague/`、`demo2-five-elements/`、`demo3-developer/`、`demo3-validator/` 和 `demo4-sedimentation/` 是五个独立课堂工程根目录。
-- Codex 课堂会话必须从目标 workspace 启动；不要从本仓库根目录开始任务。
-- `instructor/` 是讲师资产区，包含 Runbook、验收脚本、Golden 和 reset 快照，不复制进学员 workspace。
+- 课堂必须从指定 workspace 启动，不从仓库根目录启动。
