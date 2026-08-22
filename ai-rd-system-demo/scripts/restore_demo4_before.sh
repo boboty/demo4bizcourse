@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-git checkout demo/base -- AGENTS.md validation/checklist.md
+"$(dirname "$0")/reset_demo4.sh"
 echo "restored Demo 4 before-learning state"

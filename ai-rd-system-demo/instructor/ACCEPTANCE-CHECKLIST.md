@@ -13,15 +13,15 @@
 
 ## Demo 2
 - [ ] 五要素文字与课件 P37–41 一致。
-- [ ] `python instructor/checks/task_a_acceptance.py` 能验单条件、多条件、空结果、权限、异步导出、前端控件。
+- [ ] 从仓库根目录运行 `python3 instructor/checks/task_a_acceptance.py` 能验单条件、多条件、空结果、权限、异步导出、前端控件。
 - [ ] 学员实战 25 分钟：5+12+5+3。
 
 ## Demo 3
-- [ ] `pytest -q tests/test_settlement_developer.py` 在 wrong state 全绿。
-- [ ] `python validation/independent_check.py` 在 wrong state 必须 BLOCKER。
+- [ ] 在 `workspaces/demo3-developer/` 运行 `python3 -m pytest -q tests/test_settlement_developer.py`，wrong state 全绿。
+- [ ] 在 `workspaces/demo3-validator/` 先形成 Independent Expectation，再运行 `bin/actual-output validation/cases.json`；wrong state 必须发现 BLOCKER。
 - [ ] GC-01 的差异必须是 6200 combined vs 5000 refund-only。
 - [ ] 验收角色在形成期望前看不到实现、开发测试和开发聊天。
-- [ ] fixed state 下开发测试 + independent check 全绿。
+- [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致。
 
 ## Demo 4
 - [ ] 复盘新增的是规则与检查项，不是这次案例金额。

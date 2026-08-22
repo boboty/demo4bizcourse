@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "usage: bin/actual-output <cases.json>" >&2
+  exit 2
+fi
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+developer_root="${DEMO3_DEVELOPER_ROOT:-$script_dir/../../demo3-developer}"
+cd "$developer_root"
+PYTHONPATH="$developer_root${PYTHONPATH:+:$PYTHONPATH}" python3 -m app.settlement.cli "$1"

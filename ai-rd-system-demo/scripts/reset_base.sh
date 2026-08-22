@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-git reset --hard demo/base
-git clean -fd -e .venv/ -e instructor/captures/
-echo "restored demo/base"
+echo "reset_base.sh 已废弃；课堂请使用各 Demo 的独立 reset 脚本。" >&2
+exit 2

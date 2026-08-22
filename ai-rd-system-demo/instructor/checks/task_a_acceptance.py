@@ -1,8 +1,9 @@
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE = REPO_ROOT / "workspaces" / "demo2-five-elements"
+sys.path.insert(0, str(WORKSPACE))
 
 from fastapi.testclient import TestClient
 from app.main import app
@@ -53,7 +54,7 @@ if r.status_code in (200,202):
             check("export fields match list", payload.get("fields")==["id", "customer_name", "status", "amount"])
 
 # 6. frontend has controls
-html=(Path(__file__).resolve().parents[2]/"static/index.html").read_text(encoding="utf-8")
+html=(WORKSPACE / "static/index.html").read_text(encoding="utf-8")
 check("frontend customer control", 'id="customer_name"' in html)
 check("frontend status control", 'id="status"' in html)
 check("frontend export control", 'id="export"' in html and "导出" in html)
