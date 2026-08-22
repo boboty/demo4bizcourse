@@ -1,0 +1,22 @@
+[
+  {
+    "id": "GC-01",
+    "mode": "FX_LOSS_PLUS_TAX_REFUND",
+    "amount": 6200.0
+  },
+  {
+    "id": "GC-02",
+    "mode": "TAX_REFUND_ONLY",
+    "amount": 5000.0
+  },
+  {
+    "id": "GC-03",
+    "mode": "TAX_REFUND_ONLY",
+    "amount": 5000.0
+  },
+  {
+    "id": "GC-04",
+    "mode": "NO_CANDIDATE",
+    "amount": 0.0
+  }
+]
