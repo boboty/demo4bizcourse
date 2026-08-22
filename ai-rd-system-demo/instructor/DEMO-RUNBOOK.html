@@ -83,19 +83,18 @@ cd ../..
 .venv/bin/python instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo2</div><div class="callout">开发 Agent 只运行开发侧测试；退出 workspace 后，讲师运行同一套独立验收。独立验收脚本不出现在 workspace。</div></div></section>
 
-<section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="grid"><div class="card"><h3>Developer 上下文</h3><div class="code">./scripts/restore_demo3_wrong.sh
+<section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="callout">固定顺序：reset wrong → developer 输入与测试 → 启动 HTTP 黑盒 → validator 先算期望 → HTTP 取 actual → BLOCKER → 停旧服务 → developer 修复 → 重启 HTTP 黑盒 → validator 复验。</div><div class="card"><h3>3A · developer：测试全绿但业务仍错</h3><div class="code">./scripts/restore_demo3_wrong.sh
 cd workspaces/demo3-developer
-# 从这里新开 developer Codex
+../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py</div><p>正常结果：<code>3 passed</code>。从这里新开 developer Codex，会话中粘贴：</p><div class="prompt">你现在处于 Demo 3 developer 上下文。请读取 tasks/task-b-development.md，检查当前 app/settlement/ 实现，并运行开发侧 ../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py。本阶段只报告当前实现、测试结果和仍需独立验收确认的业务前提，不要读取 validator workspace，不要修改代码，也不要宣布业务验收 PASS。</div><p>展示完成后，在 developer workspace 的另一个终端启动并保持黑盒服务：</p><div class="code">./bin/start-blackbox
+# 保持 http://127.0.0.1:8765 运行</div></div><div class="card"><h3>3B · validator：先算 expected，再取 actual</h3><div class="code">cd ../demo3-validator
+# 从这里新开 validator Codex</div><div class="prompt">你是独立验收角色。先读取 rules/settlement_source_of_truth.md 和 validation/cases.json，不要读取 developer workspace 的实现、开发测试、解释、计划或聊天记录。请先逐个 case 独立计算 expected mode 与 amount，并把 Independent Expectation 写入 validation/report.md；完成期望计算前不要调用实际输出。</div><p>正确答案 6200 来自 Source of Truth 与 GC-01 输入：汇损 1,200 + 退税 5,000，组合未排除，所以 expected 是 <code>6200 / FX_LOSS_PLUS_TAX_REFUND</code>。</p><div class="code">GC-01  1200 + 5000，组合未排除 → 6200 / FX_LOSS_PLUS_TAX_REFUND
+GC-02  组合被排除 → 5000 / TAX_REFUND_ONLY
+GC-03  只有退税 → 5000 / TAX_REFUND_ONLY
+GC-04  退税不具备资格 → 0 / NO_CANDIDATE</div><p>确认 Independent Expectation 已写入后，唯一通过 HTTP 取得实际结果：</p><div class="code">../../.venv/bin/python bin/actual-output validation/cases.json</div><div class="prompt">现在将 HTTP actual output 与 validation/report.md 的 Independent Expectation 比较，补充 Actual output、Mismatches 和 Overall。不要读取 developer workspace。错误态中 GC-01 actual 应为 5000 / TAX_REFUND_ONLY，因此必须报告 Overall = BLOCKER。</div><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div><div class="card"><h3>3C · 修复与复验：必须重启黑盒服务</h3><p>出现 BLOCKER 后，在黑盒服务终端按 <code>Ctrl-C</code>。回到 developer workspace 的 Codex 会话，粘贴：</p><div class="prompt">根据独立验收报告中的 BLOCKER 修复 app/settlement/ 候选判定逻辑，使组合候选优先、只有组合被排除时才回退到退税单候选。不要修改 Source of Truth 或 validator workspace。完成后运行 ../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py，报告修改文件和测试结果，不自行宣布独立验收 PASS。</div><div class="code">cd ../demo3-developer
 ../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
 ./bin/start-blackbox
-# 保持 http://127.0.0.1:8765 运行</div><p>测试全绿后启动黑盒服务。</p></div><div class="card"><h3>Validator 上下文</h3><div class="code">cd ../demo3-validator
-# 从这里新开 validator Codex
-../../.venv/bin/python bin/actual-output validation/cases.json</div><p>形成 Independent Expectation 前只读事实源与 case；实际结果只能通过 HTTP 黑盒入口获取。</p><div class="blocker">GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND<br>GC-01 actual = 5000 / TAX_REFUND_ONLY<br>Overall = BLOCKER</div></div></div><div class="card"><h3>修复后</h3><div class="code"># 先在黑盒服务终端按 Ctrl-C
-cd ../..
-./scripts/restore_demo3_fixed.sh
-cd workspaces/demo3-developer
-./bin/start-blackbox
-# 再回到 validator workspace 新开会话</div><p>同一个 HTTP 接口应返回 <code>FX_LOSS_PLUS_TAX_REFUND / 6200</code>。</p></div></section>
+# 重新启动并保持 http://127.0.0.1:8765 运行</div><p>旧进程不会自动加载新代码；必须停止并重启。然后回到 validator workspace 重新取 actual：</p><div class="code">cd ../demo3-validator
+../../.venv/bin/python bin/actual-output validation/cases.json</div><p>修复后应为 <code>Overall = PASS</code>，GC-01 为 <code>6200 / FX_LOSS_PLUS_TAX_REFUND</code>。若仍是 5000，先检查 8765 服务是否确实重启。彩排兜底：停止服务后从仓库根目录运行 <code>./scripts/restore_demo3_fixed.sh</code>，再重新启动黑盒并复验。</p></div></section>
 
 <section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>同一 workspace，新会话</h2><div class="card"><h3>复盘会话</h3><div class="code">./scripts/reset_demo4.sh
 cd workspaces/demo4-sedimentation

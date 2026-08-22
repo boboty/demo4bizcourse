@@ -210,39 +210,61 @@ cd ../..
 
 ## Demo 3｜两个独立上下文｜45 min
 
-### 3A. developer｜历史错误但开发测试全绿
+Demo 3 的固定顺序是：`reset wrong → developer 输入与测试 → 启动 HTTP 黑盒 → validator 先算期望 → HTTP 取 actual → 报告 BLOCKER → 停旧服务 → developer 修复 → 重启 HTTP 黑盒 → validator 复验`。
+
+### 3A. developer｜先得到“测试全绿，但业务仍错”
+
+讲师先在仓库根目录执行：
 
 ```bash
 ./scripts/restore_demo3_wrong.sh
 cd workspaces/demo3-developer
-```
-
-从这个目录新开 developer Codex 会话，读取 `tasks/task-b-development.md`，展示当前实现和开发侧测试：
-
-```bash
 ../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
 ```
 
-这里保持“汇损 + 退税双候选”的错误状态：实现和开发测试同源，全绿不是业务正确性的证明。测试全绿后，在 developer workspace 的另一个终端启动固定端口黑盒服务，并保持该终端运行：
+正常结果是 `3 passed`。这里必须保持“汇损 + 退税双候选”的历史错误状态；实现和开发测试同源，全绿不是业务正确性的证明。
+
+从 `workspaces/demo3-developer/` 新开 developer Codex 会话，粘贴下面这段输入：
+
+> 你现在处于 Demo 3 developer 上下文。请读取 `tasks/task-b-development.md`，检查当前 `app/settlement/` 实现，并运行开发侧测试 `../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`。本阶段只报告当前实现、测试结果和仍需独立验收确认的业务前提，不要读取 validator workspace，不要修改代码，也不要宣布业务验收 PASS。
+
+开发会话展示完成后，在 developer workspace 的另一个终端启动黑盒服务，并保持该终端运行：
 
 ```bash
 ./bin/start-blackbox
 # 服务保持在 http://127.0.0.1:8765
 ```
 
-### 3B. validator｜切换 workspace 后新开独立验收会话
+### 3B. validator｜先形成独立期望，再取得实际输出
 
-关闭或暂停 developer 会话，切换到另一个 workspace，再新开 validator Codex 会话：
+暂停 developer Codex 会话，但不要停止黑盒服务。切换到 validator workspace，并从这里新开独立验收 Codex 会话：
 
 ```bash
 cd ../demo3-validator
 ```
 
-在黑盒服务保持运行时，从 validator workspace 新开 Codex 会话，粘贴 `instructor/prompts/demo3/03-validation.md`，并强调：形成 Independent Expectation 之前，只能读 validator workspace 中的 Source of Truth 与 Golden Case 输入，不能读取 developer workspace 的实现、开发测试或聊天记录。实际结果只能通过 HTTP 黑盒入口获取：
+先粘贴下面的验收输入；在形成 Independent Expectation 之前，validator 只能读取本 workspace 的 Source of Truth 和 Golden Case 输入：
+
+> 你是独立验收角色。先读取 `rules/settlement_source_of_truth.md` 和 `validation/cases.json`，不要读取 developer workspace 的实现、开发测试、解释、计划或聊天记录。请先逐个 case 独立计算 expected mode 与 amount，并把 Independent Expectation 写入 `validation/report.md`；完成期望计算前不要调用实际输出。
+
+“正确答案 6200”来自 Source of Truth 的组合规则和 GC-01 输入，不来自 developer 代码或隐藏验收脚本：
+
+| Case | 独立计算 | Expected |
+| --- | --- | --- |
+| GC-01 | 汇损 1,200 + 退税 5,000，组合未排除 | `6200 / FX_LOSS_PLUS_TAX_REFUND` |
+| GC-02 | 组合被排除，回退退税 | `5000 / TAX_REFUND_ONLY` |
+| GC-03 | 只有退税具备资格 | `5000 / TAX_REFUND_ONLY` |
+| GC-04 | 退税不具备资格，汇损不能单独申报 | `0 / NO_CANDIDATE` |
+
+确认 Independent Expectation 已写入报告后，在 validator workspace 执行唯一的实际结果入口：
 
 ```bash
 ../../.venv/bin/python bin/actual-output validation/cases.json
 ```
+
+再粘贴下面这段输入，要求 validator 将 HTTP 返回与独立期望逐项比较：
+
+> 现在读取刚才的 HTTP actual output，与 `validation/report.md` 中的 Independent Expectation 比较，补充 Actual output、Mismatches 和 Overall。不要读取 developer workspace。错误态预期：GC-01 actual 为 `5000 / TAX_REFUND_ONLY`，因此必须报告 `Overall = BLOCKER`。
 
 错误态必须稳定得到：
 
@@ -252,16 +274,34 @@ GC-01 actual = 5000 / TAX_REFUND_ONLY
 Overall = BLOCKER
 ```
 
-此后由讲师在 developer workspace 展示共同理解偏差并让 Code 修复；不要为了剧情伪造模型失败。修复态兜底：
+### 3C. 修复与复验｜必须停止旧服务并重启
+
+出现 BLOCKER 后，先在黑盒服务终端按 `Ctrl-C` 停止旧进程。再切回 developer workspace，恢复或继续 developer Codex 会话，粘贴：
+
+> 根据独立验收报告中的 BLOCKER 修复 `app/settlement/` 候选判定逻辑，使组合候选优先、只有组合被排除时才回退到退税单候选。不要修改 Source of Truth 或 validator workspace。完成后运行 `../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`，报告修改文件和测试结果，不自行宣布独立验收 PASS。
 
 ```bash
-cd ../..
-./scripts/restore_demo3_fixed.sh
-cd workspaces/demo3-validator
+cd ../demo3-developer
+../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
+```
+
+测试全绿后，必须重新启动黑盒服务；旧进程不会自动加载刚刚修改的代码：
+
+```bash
+./bin/start-blackbox
+# 保持 http://127.0.0.1:8765 运行
+```
+
+回到 validator workspace，在原独立验收会话中重新取得实际输出：
+
+```bash
+cd ../demo3-validator
 ../../.venv/bin/python bin/actual-output validation/cases.json
 ```
 
-修复后 validator 应为 `Overall = PASS`。`restore_demo3_fixed.sh` 只恢复 developer 的正确实现与测试；validator 始终通过黑盒入口取结果。
+修复后应为 `Overall = PASS`，GC-01 应为 `6200 / FX_LOSS_PLUS_TAX_REFUND`。如果仍看到 `5000 / TAX_REFUND_ONLY`，先检查是否真的停止并重启了 `127.0.0.1:8765` 的旧服务，再重复 actual-output；不要复制 developer 源码到 validator。
+
+确定性兜底仅供彩排恢复使用：先停止黑盒服务，再从仓库根目录执行 `./scripts/restore_demo3_fixed.sh`；恢复后仍要重新启动黑盒服务，并通过 validator 的 HTTP 入口复验。
 
 ## Demo 4｜demo4-sedimentation｜同 workspace，新会话｜15 min
 
