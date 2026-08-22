@@ -31,3 +31,7 @@ self_heal/candidates/*.json
 # Round 4 原始 Suite/Run Plan artifacts 与报告只保留在本机，不提交公开仓库。
 artifacts/runs/
 reports/
+
+# Round 5 实验运行结果与跨运行历史只保留在本机。
+artifacts/round5/
+artifacts/history/

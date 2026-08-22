@@ -41,6 +41,8 @@ def build_report(run_dir: Path, output_path: Path) -> Dict[str, Any]:
                 "evidence": str(scenario_dir.relative_to(run_dir)),
                 "retry_count": _retry_count(scenario_dir),
                 "error": result.get("error"),
+                "failure_category": result.get("failure_category"),
+                "stability": result.get("stability"),
             }
         )
     total = len(scenarios)
@@ -71,12 +73,12 @@ def build_report(run_dir: Path, output_path: Path) -> Dict[str, Any]:
         "",
         "## Scenarios",
         "",
-        "| scenario | result | duration | retry count | evidence |",
-        "| --- | --- | ---: | ---: | --- |",
+        "| scenario | result | category | stability | duration | retry count | evidence |",
+        "| --- | --- | --- | --- | ---: | ---: | --- |",
     ]
     for item in scenarios:
         lines.append(
-            "| `{scenario_id}` | **{result}** | {duration}s | {retry_count} | `{evidence}` |".format(**item)
+            "| `{scenario_id}` | **{result}** | {failure_category} | {stability} | {duration}s | {retry_count} | `{evidence}` |".format(**item)
         )
     lines.extend(["", "## Needs attention", ""])
     failures = [item for item in scenarios if item["result"] != "PASS"]
