@@ -140,9 +140,54 @@ Ctrl+C
 <div class="card"><h3>Demo 3 收口</h3><ol><li><b>救回这一次的，不是更多测试，而是第二个独立理解源。</b></li><li><b>写代码的 AI，不适合完全自己验自己。</b></li><li><b>关键不是换一个更强的模型，而是验证要有独立的理解来源。</b></li></ol><p>Developer 和 Validator 都是 Luna + High。可补一句：你们注意，我这里没有偷偷换一个更强的模型。还是同一档模型，只是不给它看开发者的答案，让它重新从业务事实算一遍。</p><p class="small">彩排兜底：先停止黑盒，从仓库根目录执行 <code>./scripts/restore_demo3_fixed.sh</code>，然后重新启动黑盒，再通过 Validator HTTP 入口复验。</p></div>
 </section>
 
-<section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>同一 workspace，新会话</h2><div class="card"><h3>复盘会话</h3><div class="code">./scripts/reset_demo4.sh
+<section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>不是“写进文件”，而是“下一次还能正确执行”</h2><div class="callout">故事线：Bug 已修 → 想把经验留下 → 第一次规则压缩过头 → 新会话读到了规则却仍算错 → 补全可执行语义 → 再用全新会话验证 → 沉淀才算完成。</div>
+
+<div class="card"><h3>4A · 铺垫：Bug 修完，项目真的学会了吗？</h3><p>先不要敲命令。接着 Demo 3 问学员一句：</p><div class="warn"><b>“如果我现在把所有 Codex 会话都关掉，明天换一个人、换一个新会话，这次经验还在吗？”</b></div><p>这里区分三件事：会话记忆会消失；代码修复只解决这一次；真正希望留下的是<strong>项目级规则和验收标准</strong>，让下一次任务天然继承。</p><p>口播：我们不是要保存聊天记录，而是把已经被验证过的业务事实，变成下一次工作的默认约束。</p></div>
+
+<div class="card"><h3>4B · 原本设想 vs 真实彩排偏差</h3><p><b>原本设想：</b>把 Demo 3 的经验写进 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>，关掉会话，再开一个新会话处理新数据；如果还能得到正确结果，就证明规则留下来了。</p><p>第一次彩排确实沉淀了一句：</p><div class="code">候选优先级：组合候选先评估；只有组合候选被明确排除时，才允许回退到退税单候选。</div><p>然后全新会话面对“汇损 2400、退税 8600、组合未排除”，它准确复述了这条规则，却回答：</p><div class="blocker"><b>汇损候选（组合候选） / 2400</b><br>规则读到了，但结果仍然错了。</div><p>这不是模型没加载 <code>AGENTS.md</code>。恰恰相反，它已经证明自己读到了。问题在于我们把规则压缩得太狠，只说了<strong>谁优先</strong>，却没有定义<strong>组合候选到底是什么、返回什么 mode、金额怎么算</strong>。</p><div class="evidence"><div><b>触发条件</b>什么时候进入组合候选</div><div><b>执行语义</b>返回什么 mode、金额怎么算</div><div><b>回退条件</b>什么时候才允许退税单候选</div></div><div class="callout">新的判断：<b>不是所有写进 AGENTS.md 的东西都叫沉淀。规则本身也必须完整到足以执行。</b></div></div>
+
+<div class="card"><h3>4C · 最终版现场：先恢复“还没学会”的项目</h3><div class="code" id="d4-start">./scripts/reset_demo4.sh
 cd workspaces/demo4-sedimentation
-# 从这里新开第一个 Codex</div><p>粘贴 <code>instructor/prompts/demo4/04-retro.md</code>，读取 <code>reports/demo3-validation.md</code>，写入 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>。</p></div><div class="card"><h3>全新会话验证沉淀</h3><p>关闭旧会话但保持当前目录不变，在<strong>同一个 demo4-sedimentation workspace</strong>新开 Codex。</p><div class="prompt">请读取 tasks/task-b-variant.md 并回答。</div><p>新会话不得读取 rules/、validation/、app/、tests/，只依赖项目级规则和任务输入。预期：<code>FX_LOSS_PLUS_TAX_REFUND</code>，金额 <code>11,000</code>。</p></div></section>
+cat AGENTS.md
+cat validation/checklist.md
+cat reports/demo3-validation.md</div><button class="copy-btn" data-copy="d4-start">复制 Demo4 起始命令</button><p>讲师只让学员看两点：项目规则里还没有候选判定规则；Demo 3 报告已经包含最终 PASS 和经过独立验收确认的完整业务事实。也就是说，<strong>经验已经发生，但还没有进入项目默认规则</strong>。</p></div>
+
+<div class="card"><h3>4D · 第一个会话：把“已验证事实”沉淀成可执行规则</h3><p>在 <code>workspaces/demo4-sedimentation</code> 新开 Luna + High。复制下面的复盘任务：</p><div class="prompt" id="d4-retro">请复盘 reports/demo3-validation.md 中已经通过独立验收的最终结论，把可复用经验沉淀成项目资产。
+
+不要只写一句抽象的“组合候选优先”。沉淀后的规则必须让一个完全新的会话在没有历史聊天的情况下，能够唯一确定正确执行结果。
+
+必须完成两项：
+1. 在 AGENTS.md 追加候选判定规则，至少写清：
+   - 什么时候进入组合候选；
+   - 组合未被排除时应选择准确模式 FX_LOSS_PLUS_TAX_REFUND；
+   - 组合候选金额 = 汇损金额 + 退税金额；
+   - 只有组合候选被明确排除时，才允许回退到 TAX_REFUND_ONLY。
+2. 在 validation/checklist.md 追加一条可执行验收项，检查同样四件事：触发条件、模式、金额公式、回退条件。
+
+要求：
+- 不写故事；
+- 不写这次 case 的具体金额；
+- 只沉淀以后还能复用、能够直接指导执行和验收的规则；
+- 保持简洁；
+- 完成后展示修改内容；
+- 不要继续测试新会话是否读取，复验必须由我另开全新会话完成。</div><button class="copy-btn" data-copy="d4-retro">复制复盘沉淀任务</button><div class="callout">预期：AGENTS 里同时出现 <code>FX_LOSS_PLUS_TAX_REFUND</code>、金额相加公式和 <code>TAX_REFUND_ONLY</code> 回退条件；checklist 也能检查同样内容。</div><p>展示 diff 后，<b>关闭这个会话</b>。这一步很重要：下一步不能靠聊天记忆。</p></div>
+
+<div class="card"><h3>4E · 全新会话：用新数据验收“沉淀”</h3><p>仍停留在同一个 workspace，但新开一个完全新的 Luna + High。只发送：</p><div class="prompt" id="d4-variant">请读取 tasks/task-b-variant.md 并回答。</div><button class="copy-btn" data-copy="d4-variant">复制新会话任务</button><p>不要补充 Demo 3，不贴规则，不解释刚才改过什么。变体输入是汇损 2400、退税 8600、组合未排除。</p><div class="callout"><b>最终正确结果：</b><br>模式：<code>FX_LOSS_PLUS_TAX_REFUND</code><br>金额：<code>11000</code><br>依据：组合未被排除时选组合模式，金额 = 汇损金额 + 退税金额；只有组合被排除才回退 <code>TAX_REFUND_ONLY</code>。</div><p>这时问学员：“这个新会话见过刚才那次复盘吗？”——没有。它知道规则，是因为<strong>项目记住了，不是会话记住了</strong>。</p></div>
+
+<div class="card"><h3>4F · 如果现场仍答错：不要喂答案，修沉淀资产</h3><p>如果新会话能复述优先级但 mode 或金额仍错误，不要在新会话里直接纠正答案。把结果当成对沉淀资产的验收失败，重新开一个复盘修正会话，发送：</p><div class="prompt" id="d4-refine">新会话已经证明它读到了项目规则，但仍然无法唯一得到正确结果，说明当前沉淀规则方向正确但执行语义不完整。
+
+请只修正项目沉淀资产，不修改任务输入，不修改业务代码，不写具体 case 金额。
+
+检查并补全：
+1. 触发条件：什么时候进入“汇损 + 退税”组合候选；
+2. 准确模式：组合未被排除时必须返回 FX_LOSS_PLUS_TAX_REFUND；
+3. 金额公式：组合候选金额 = 汇损金额 + 退税金额；
+4. 回退条件：只有组合候选被明确排除时才允许返回 TAX_REFUND_ONLY。
+
+同步更新 AGENTS.md 和 validation/checklist.md。完成后展示修改，不要在当前会话继续验证；复验必须由另一个全新会话完成。</div><button class="copy-btn" data-copy="d4-refine">复制沉淀修正任务</button><p>修完后再次关闭会话，再开第三个全新会话执行同一个 <code>tasks/task-b-variant.md</code>。同一把尺子再次量，直到得到 11000。</p></div>
+
+<div class="card"><h3>Demo 4 收口｜什么时候才算“沉淀”</h3><ol><li><b>写进文件，不等于沉淀完成。</b></li><li><b>只有新会话面对新输入还能正确执行，规则才算真正留下来。</b></li><li><b>沉淀本身，也需要验收。</b></li></ol><p>最后落一句：<b>会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</b></p><p class="small">确定性兜底：从仓库根目录执行 <code>./scripts/restore_demo4_learned.sh</code> 可恢复已经补全 mode、金额公式和回退条件的最终沉淀态。</p></div>
+</section>
 
 <section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py</div><p class="small">检查结构、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
 </main>
