@@ -8,20 +8,22 @@
 Demo 1 的前 5 分钟使用外部 CNN 可视化页面，不在本仓库内：
 https://adamharley.com/nn_vis/cnn/3d.html
 
-## 快速开始
+## Python 环境要求
 
 > **建议始终使用项目自己的 `.venv`，不要把依赖安装进 macOS 系统 Python。**
 >
-> 联网彩排时，macOS 系统自带的 Python 3.9.6 可以直接用于创建 `.venv`；本仓库当前没有要求必须使用 Python 3.12。下面“离线安装”里的 Python 3.12，只是因为仓库内预置 wheel 缓存按 **Python 3.12 + macOS Apple Silicon** 验证。
+> 本仓库代码使用 `X | None` 等 Python 3.10+ 语法，因此 **Python 3.9 不支持**。课堂统一使用 **Python 3.12**，与仓库内离线 wheel 的验证环境保持一致。
+
+### 首次准备这台 Mac
 
 ```bash
 cd ai-rd-system-demo
-python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\\Scripts\\activate
+brew install python@3.12   # 已安装可跳过
+rm -rf .venv              # 仅首次重建环境时执行
+"$(brew --prefix python@3.12)/bin/python3.12" -m venv .venv
+source .venv/bin/activate
 python -m pip install -U pip
 pip install -r requirements.txt
-pytest -q
-uvicorn app.main:app --reload --port 8000
 ```
 
 确认虚拟环境：
@@ -32,9 +34,11 @@ python --version
 which pytest
 ```
 
-正常情况下，`python` 和 `pytest` 都应指向当前项目的 `.venv/`。
+正常情况下：
 
-浏览器打开 http://127.0.0.1:8000
+- `python` 和 `pytest` 都应指向当前项目的 `.venv/`；
+- `python --version` 应显示 Python 3.12.x；
+- 不要使用 macOS 系统自带的 Python 3.9.x。
 
 ### 已经创建过 `.venv` 时
 
@@ -53,15 +57,23 @@ open instructor/DEMO-RUNBOOK.html
 现场断网时可使用仓库内的锁定依赖和 wheel 缓存：
 
 ```bash
-python3.12 -m venv .venv
+rm -rf .venv
+"$(brew --prefix python@3.12)/bin/python3.12" -m venv .venv
 source .venv/bin/activate
 python -m pip install --no-index --find-links vendor/wheels -r requirements.lock.txt
 pytest -q
 ```
 
-离线 wheel 以 Python 3.12 + macOS Apple Silicon 为验证目标；其他 Python 版本或平台需要联网重新生成 `vendor/wheels/`。
+离线 wheel 以 **Python 3.12 + macOS Apple Silicon** 为验证目标；其他 Python 版本或平台需要联网重新生成 `vendor/wheels/`。
 
-默认测试应当全绿。
+## 快速启动应用
+
+```bash
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+```
+
+浏览器打开 http://127.0.0.1:8000
 
 ## 彩排基线检查
 
@@ -74,13 +86,16 @@ python instructor/checks/task_a_acceptance.py
 python validation/independent_check.py
 ```
 
-这里**不要期待后三条全部 PASS**：
+预期结果：
 
-- `pytest -q`：应全绿；
-- 任务 A：基线尚未完成五要素任务，独立验收应指出缺口；
-- 任务 B：基线故意保留“开发测试全绿、业务理解错误”的历史状态，独立验收应抓出 BLOCKER。
+- `git status`：工作区干净；
+- `pytest -q`：5 个开发侧测试全绿；
+- 任务 A：基线尚未完成五要素任务，独立验收应为 **BLOCKER**；
+- 任务 B：基线故意保留“开发测试全绿、业务理解错误”的历史状态，独立验收应在 GC-01 抓出 **BLOCKER**。
 
 这正是 Demo 2 与 Demo 3 后续要展示的对照基础。
+
+> 当前依赖组合可能出现 Starlette/httpx 的 deprecation warning；只要测试仍为 PASS，不影响本课程 Demo。
 
 ## 课堂常用命令
 
