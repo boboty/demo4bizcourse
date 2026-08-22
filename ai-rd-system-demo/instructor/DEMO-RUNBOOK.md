@@ -6,6 +6,81 @@
 
 所有命令默认从 `ai-rd-system-demo/` 根目录执行；每个代码块中的 `cd` 都是课堂操作的一部分。
 
+## 课前准备｜先确认环境，再开始 Demo
+
+课堂统一使用仓库根目录的 `.venv`，Python 版本统一为 3.12。不要为各 workspace 创建独立虚拟环境，也不要污染系统 Python。
+
+### 首次环境安装
+
+```bash
+cd ai-rd-system-demo
+brew install python@3.12  # 已安装可跳过
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+which python
+python --version
+which pytest
+```
+
+正常结果：`which python` 指向 `ai-rd-system-demo/.venv/bin/python`，版本为 Python 3.12，`which pytest` 指向 `.venv/bin/pytest`。如果命令指向系统路径，先停止，不要继续课堂操作。
+
+### 虚拟环境确认
+
+每次开新终端或重新进入课堂前都确认：
+
+```bash
+cd ai-rd-system-demo
+source .venv/bin/activate
+which python
+python --version
+which pytest
+```
+
+### 上课前 Preflight
+
+```bash
+cd ai-rd-system-demo
+source .venv/bin/activate
+which python
+python --version
+python scripts/acceptance_check.py
+```
+
+正常结果：所有 workspace、baseline、隔离检查和 Demo 3/4 确定性检查均为 `PASS`，最后显示 `OVERALL: PASS`。异常结果：立即停止课堂，先检查当前 shell 是否使用仓库根目录 `.venv`、旧服务是否占用端口，再重新运行；不要因为 import 失败临时 `pip install`，不要在课堂中访问 PyPI 修环境。
+
+### Demo12 baseline 检查
+
+```bash
+./scripts/reset_demo1.sh
+cd workspaces/demo12-financing
+../../.venv/bin/python -m pytest -q
+cd ../..
+```
+
+正常结果：baseline 测试通过。若 import 失败，首先检查是否使用 `ai-rd-system-demo/.venv`，不要切换到系统 Python。
+
+### 查看 baseline 页面
+
+```bash
+cd workspaces/demo12-financing
+../../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+浏览器打开 <http://127.0.0.1:8000/>。正常结果：能看到融资申请基础列表；异常结果：停止服务并检查 `.venv`、端口和当前 workspace，不在课堂中临时访问 PyPI。
+
+### 服务启动方式
+
+Demo 3 developer 测试全绿后，在 developer workspace 的另一个终端启动固定端口黑盒服务：
+
+```bash
+cd workspaces/demo3-developer
+./bin/start-blackbox
+```
+
+该脚本使用仓库根目录 `.venv`，服务地址为 `http://127.0.0.1:8765`。端口已被旧进程占用时，先停止旧服务，再重新启动。
+
 ## Demo 1 / Demo 2 共同基准
 
 ### 业务需求基准
@@ -14,7 +89,7 @@
 
 ### 独立质控 / 业务验收标准
 
-标准公开，验收实现独立。讲师在退出 workspace 后运行同一套独立验收；开发 Agent 只运行开发侧 `pytest -q`，不读取验收脚本实现。
+标准公开，验收实现独立。讲师在退出 workspace 后运行同一套独立验收；开发 Agent 只运行开发侧 `../../.venv/bin/python -m pytest -q`，不读取验收脚本实现。
 
 - 客户名称为模糊筛选，状态为精确筛选。
 - 覆盖单条件、多条件和空结果。
@@ -55,14 +130,14 @@ cd workspaces/demo12-financing
 开发 Agent 只运行开发侧测试：
 
 ```bash
-pytest -q
+../../.venv/bin/python -m pytest -q
 ```
 
 关闭会话并退出 workspace 后，由讲师从仓库根目录运行同一套独立验收，再保存 Demo 1 差异：
 
 ```bash
 cd ../..
-python3 instructor/checks/task_a_acceptance.py
+.venv/bin/python instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo1
 ```
 
@@ -110,7 +185,7 @@ cd workspaces/demo12-financing
 >
 > ## 05 验收标准｜怎样证明对
 >
-> - 开发侧只运行 `pytest -q`。
+> - 开发侧只运行 `../../.venv/bin/python -m pytest -q`。
 > - 独立验收由讲师在 workspace 外执行，开发 Agent 不读取独立验收脚本实现。
 > - 筛选组合覆盖单条件、多条件、空结果，且不绕过现有数据权限。
 > - 导出是当前筛选结果，并保留筛选条件和当前用户权限范围。
@@ -120,14 +195,14 @@ cd workspaces/demo12-financing
 允许 Codex 修改。开发侧完成后只运行：
 
 ```bash
-pytest -q
+../../.venv/bin/python -m pytest -q
 ```
 
 退出 workspace 后，由讲师运行同一套独立验收，并保存 Demo 2 差异：
 
 ```bash
 cd ../..
-python3 instructor/checks/task_a_acceptance.py
+.venv/bin/python instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo2
 ```
 
@@ -145,7 +220,7 @@ cd workspaces/demo3-developer
 从这个目录新开 developer Codex 会话，读取 `tasks/task-b-development.md`，展示当前实现和开发侧测试：
 
 ```bash
-pytest -q tests/test_settlement_developer.py
+../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
 ```
 
 这里保持“汇损 + 退税双候选”的错误状态：实现和开发测试同源，全绿不是业务正确性的证明。测试全绿后，在 developer workspace 的另一个终端启动固定端口黑盒服务，并保持该终端运行：
@@ -166,7 +241,7 @@ cd ../demo3-validator
 在黑盒服务保持运行时，从 validator workspace 新开 Codex 会话，粘贴 `instructor/prompts/demo3/03-validation.md`，并强调：形成 Independent Expectation 之前，只能读 validator workspace 中的 Source of Truth 与 Golden Case 输入，不能读取 developer workspace 的实现、开发测试或聊天记录。实际结果只能通过 HTTP 黑盒入口获取：
 
 ```bash
-bin/actual-output validation/cases.json
+../../.venv/bin/python bin/actual-output validation/cases.json
 ```
 
 错误态必须稳定得到：
@@ -183,7 +258,7 @@ Overall = BLOCKER
 cd ../..
 ./scripts/restore_demo3_fixed.sh
 cd workspaces/demo3-validator
-bin/actual-output validation/cases.json
+../../.venv/bin/python bin/actual-output validation/cases.json
 ```
 
 修复后 validator 应为 `Overall = PASS`。`restore_demo3_fixed.sh` 只恢复 developer 的正确实现与测试；validator 始终通过黑盒入口取结果。
@@ -234,7 +309,7 @@ cd ../..
 本轮结构验收：
 
 ```bash
-python3 scripts/acceptance_check.py
+.venv/bin/python scripts/acceptance_check.py
 ```
 
 该命令只做自动检查，不启动真实课堂流程，也不让 Codex 执行任务 A/B。

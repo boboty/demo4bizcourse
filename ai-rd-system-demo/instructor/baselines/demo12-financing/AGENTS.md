@@ -1,6 +1,6 @@
 # 当前 Demo 工程规则
 
 - 当前目录就是完整项目上下文，不读取父目录或兄弟 workspace。
-- 本工程使用 Python 3.11+、FastAPI 和 pytest；不引入新的第三方依赖。
-- 修改 Python 后运行 `pytest -q`，只修改完成当前课堂任务所需的内容。
+- 本工程统一使用 Python 3.12、FastAPI 和 pytest；不引入新的第三方依赖。
+- 修改 Python 后运行 `../../.venv/bin/python -m pytest -q`，只修改完成当前课堂任务所需的内容。
 - 需求没有明确的业务边界时，先识别假设和待确认事项，不把猜测当成验收标准。

@@ -94,6 +94,12 @@ def stop_blackbox(process: subprocess.Popen[str]) -> None:
 
 
 def main() -> int:
+    expected_python = ROOT / ".venv" / "bin" / "python"
+    check(
+        "Python 3.12 root venv",
+        sys.version_info[:2] == (3, 12) and Path(sys.executable) == expected_python,
+        f"{sys.executable} / Python {sys.version_info.major}.{sys.version_info.minor}",
+    )
     for name in NAMES:
         workspace = WORKSPACES / name
         check(f"workspace exists: {name}", workspace.is_dir())
@@ -188,8 +194,14 @@ def main() -> int:
     validator = WORKSPACES / "demo3-validator"
     check("Demo 3 validator has no developer source", not (validator / "app").exists() and not (validator / "tests/test_settlement_developer.py").exists())
     validator_text = "\n".join(text for _, text in text_files(validator))
-    validator_path_leaks = [token for token in ("demo3-developer", "../", "app.settlement", "app/settlement") if token in validator_text]
-    check("Demo 3 validator is HTTP-only and path-isolated", not validator_path_leaks, ", ".join(validator_path_leaks))
+    actual_output_text = (validator / "bin/actual-output").read_text(encoding="utf-8")
+    validator_path_leaks = [token for token in ("demo3-developer", "app.settlement", "app/settlement") if token in validator_text]
+    actual_output_path_leaks = [token for token in ("demo3-developer", "../", "app.settlement", "app/settlement") if token in actual_output_text]
+    check(
+        "Demo 3 validator is HTTP-only and path-isolated",
+        not validator_path_leaks and not actual_output_path_leaks,
+        ", ".join(validator_path_leaks + actual_output_path_leaks),
+    )
     expected = {
         "GC-01": {"mode": "FX_LOSS_PLUS_TAX_REFUND", "amount": 6200.0},
         "GC-02": {"mode": "TAX_REFUND_ONLY", "amount": 5000.0},
@@ -198,7 +210,7 @@ def main() -> int:
     }
     wrong_server = start_blackbox(developer)
     try:
-        result = run([str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+        result = run([sys.executable, str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
     finally:
         stop_blackbox(wrong_server)
     actual = json.loads(result.stdout) if result.returncode == 0 else []
@@ -234,7 +246,7 @@ def main() -> int:
         shutil.copytree(ROOT / "instructor/baselines/demo3-fixed", fixed_root)
         fixed_server = start_blackbox(fixed_root)
         try:
-            fixed_result = run([str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+            fixed_result = run([sys.executable, str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
         finally:
             stop_blackbox(fixed_server)
         fixed_actual = json.loads(fixed_result.stdout) if fixed_result.returncode == 0 else []

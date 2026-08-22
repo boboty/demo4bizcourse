@@ -16,7 +16,7 @@
 1. 从 Source of Truth 独立解释规则。
 2. 对 `validation/cases.json` 的每个 case 自己算出期望 `mode` 与 `amount`。
 3. 把你的期望先写入 `validation/report.md` 的“Independent expectation”部分。
-4. 再运行：`bin/actual-output validation/cases.json`，通过黑盒入口取得系统实际输出。
+4. 再运行：`../../.venv/bin/python bin/actual-output validation/cases.json`，通过黑盒入口取得系统实际输出。
 5. 比较期望与实际，给每个 case 标记 PASS / BLOCKER。
 6. 如果出现差异，先报告差异；开发实现和开发侧测试仍不属于本 workspace 的输入。
 7. 将根因分类为：条件遗漏、代码 bug，或共同理解前提错误；根因证据由讲师在开发 workspace 另行展示。

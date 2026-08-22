@@ -6,7 +6,7 @@ from app.settlement.service import evaluate_candidate
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("usage: python -m app.settlement.cli <cases.json>")
+        print("usage: ../../.venv/bin/python -m app.settlement.cli <cases.json>")
         return 2
     cases = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     out = [{"id": c["id"], **evaluate_candidate(c)} for c in cases]
