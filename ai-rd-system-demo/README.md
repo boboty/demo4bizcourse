@@ -20,6 +20,19 @@ uvicorn app.main:app --reload --port 8000
 
 浏览器打开 http://127.0.0.1:8000
 
+### 离线安装
+
+现场断网时可使用仓库内的锁定依赖和 wheel 缓存：
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --no-index --find-links vendor/wheels -r requirements.lock.txt
+pytest -q
+```
+
+离线 wheel 以 Python 3.12 + macOS Apple Silicon 为验证目标；其他 Python 版本或平台需要联网重新生成 `vendor/wheels/`。
+
 默认测试应当全绿。注意：任务 B 的“开发侧测试”**故意与错误理解同源**，所以全绿不是业务正确性的证明。
 
 ## 课堂常用命令

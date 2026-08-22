@@ -2,7 +2,6 @@ from app.settlement.service import evaluate_candidate
 
 
 def test_refund_candidate_is_selected_when_both_signals_exist():
-    # This expectation encodes the same wrong interpretation as the implementation.
     case = {
         "fx_loss_eligible": True,
         "fx_loss_amount": 1200,
