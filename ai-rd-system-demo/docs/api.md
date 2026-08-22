@@ -1,16 +1,10 @@
 # API
 
 ## GET /api/financing-applications
+参数：`page`、`page_size`、`customer_name`、`status`。请求头 `X-User` 保留既有数据权限。
 
-现有参数：
-- `page`
-- `page_size`
-
-请求头：
-- `X-User`：模拟数据权限用户。
+## POST /api/financing-applications/export
+参数：`customer_name`、`status`。使用已有异步导出任务通道，返回 202 与 job id。
 
 ## GET /api/export-jobs/{job_id}
-
 查询已有异步导出任务。
-
-> Demo 2 的任务要求在这里同步补充筛选与导出接口文档。
