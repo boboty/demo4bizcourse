@@ -1,7 +1,9 @@
 # Round 4 PASS 摘要（脱敏）
 
 - 自动测试：Round 3 基线及 Round 4 测试共 `26 passed`。
-- Run Plan：`nightly_pay_order_plan`，`execution_mode=serial`，真实完整执行 PASS（PRODUCT BUG 场景按要求真实 FAIL）。
+- Round 4 engineering acceptance：PASS。
+- Run Plan execution：completed；test run result：FAIL（PRODUCT BUG 场景按要求真实 FAIL）。
+- Run Plan：`nightly_pay_order_plan`，`execution_mode=serial`，total=5、passed=4、failed=1。
 - Report：total=5，passed=4，failed=1；数字由 artifacts 计算。
 - 真机 normal payment：PASS（UI V1、Safari、Appium/XCUITest、Workflow、API facts、cleanup）。
 - 真机 normal payment repeat：PASS，cleanup 后可重新执行。

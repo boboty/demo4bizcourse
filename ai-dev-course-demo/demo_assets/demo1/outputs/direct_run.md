@@ -8,7 +8,7 @@
 
 ```text
 $ codex exec --ephemeral --sandbox workspace-write -m gpt-5.4 \
-    -C /tmp/ai-dev-course-direct-run \
+    -C <temporary-worktree> \
     '请根据当前项目，实现用户列表导出功能。'
 
 OpenAI Codex v0.135.0

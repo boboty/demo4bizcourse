@@ -27,3 +27,7 @@ evidence/round1-*/
 evidence/round2-*/
 !evidence/round2-pass-summary.md
 self_heal/candidates/*.json
+
+# Round 4 原始 Suite/Run Plan artifacts 与报告只保留在本机，不提交公开仓库。
+artifacts/runs/
+reports/

@@ -2,7 +2,7 @@ $ python -m pytest experiments/real-generation/trial-6/generated_test_orders.py 
 
 ============================= test session starts ==============================
 platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
-rootdir: <local-user>/Documents/bizcourse/Demo/ai-test-loop-demo
+rootdir: <project-root>/ai-test-loop-demo
 configfile: pyproject.toml
 plugins: anyio-4.14.2
 collected 26 items
