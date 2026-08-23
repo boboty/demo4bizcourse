@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Test Execution System · Classroom Runbook</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #637083;
+      --line: #dbe2eb;
+      --panel: #ffffff;
+      --soft: #f4f7fb;
+      --blue: #155eef;
+      --blue-soft: #eaf1ff;
+      --green: #087443;
+      --green-soft: #e8f7ef;
+      --amber: #9a6700;
+      --amber-soft: #fff6dc;
+      --red: #b42318;
+      --red-soft: #fff0ee;
+      --purple: #6941c6;
+      --terminal: #111827;
+      --terminal-ink: #f4f7fb;
+      --shadow: 0 8px 24px rgba(32, 49, 75, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef2f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    button, code, pre { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--blue); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, .96);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 2px 12px rgba(32, 49, 75, .06);
+      backdrop-filter: blur(8px);
+    }
+    .topbar-inner {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand { font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
+    .brand small { display: block; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .nav { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: #fff;
+    }
+    .nav a:hover, .nav a:focus { color: var(--blue); border-color: var(--blue); outline: none; }
+
+    .page { max-width: 1480px; margin: 0 auto; padding: 28px 24px 64px; }
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 28px 30px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    h1, h2, h3, h4 { line-height: 1.2; margin: 0; }
+    h1 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.03em; }
+    h2 { font-size: clamp(25px, 3vw, 34px); }
+    h3 { font-size: 21px; }
+    h4 { font-size: 15px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .hero p { max-width: 900px; margin: 12px 0 0; color: #3c485b; }
+    .hero-grid { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; }
+    .progress-box { min-width: 230px; }
+    .progress-label { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; font-weight: 700; }
+    progress { width: 100%; height: 12px; accent-color: var(--blue); }
+    .reset-progress {
+      margin-top: 8px;
+      border: 1px solid #c8d1df;
+      border-radius: 8px;
+      background: #fff;
+      padding: 7px 10px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .reset-progress:hover { border-color: var(--red); color: var(--red); }
+
+    .workbench { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+    .runbook { min-width: 0; }
+    .sidecar {
+      position: sticky;
+      top: 78px;
+      background: var(--terminal);
+      color: var(--terminal-ink);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .sidecar h3 { color: #fff; margin-bottom: 4px; }
+    .sidecar p, .sidecar li { color: #c5cedb; font-size: 14px; }
+    .sidecar code { color: #d8e4ff; }
+    .sidecar hr { border: 0; border-top: 1px solid #344054; margin: 18px 0; }
+    .sidecar .safety { color: #ffd66b; font-weight: 800; }
+    .legend { display: grid; gap: 8px; margin-top: 15px; }
+    .legend-row { display: flex; gap: 9px; align-items: center; font-size: 14px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+    .dot.live { background: #57d98b; }
+    .dot.fallback { background: #ffd166; }
+    .dot.static { background: #9ca3af; }
+
+    section { scroll-margin-top: 82px; margin-bottom: 28px; }
+    .section-head {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 7px solid var(--blue);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 12px rgba(32, 49, 75, .05);
+    }
+    .section-head p { margin: 7px 0 0; color: var(--muted); }
+    .stop-banner, .fallback-banner, .manual-gate {
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      border: 1px solid;
+    }
+    .stop-banner { background: var(--red-soft); border-color: #f4b4ae; color: var(--red); font-weight: 800; }
+    .fallback-banner { background: var(--amber-soft); border-color: #f2cf75; color: #714b00; }
+    .manual-gate { background: #fff4e5; border-color: #f5b76a; color: #713b00; }
+    .manual-gate strong { font-size: 20px; display: block; margin-bottom: 4px; }
+    .manual-gate code { display: inline-block; margin: 7px 0; background: #2e1d08; color: #fff8e6; padding: 6px 9px; border-radius: 6px; }
+
+    .step-list { display: grid; gap: 14px; }
+    .step {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 19px 20px 20px;
+      box-shadow: 0 3px 12px rgba(32, 49, 75, .04);
+    }
+    .step.is-done { border-color: #8bd2ac; background: #fbfffc; }
+    .step-top { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; }
+    .step-title { display: flex; gap: 10px; align-items: flex-start; }
+    .step-title input { width: 23px; height: 23px; margin: 2px 0 0; accent-color: var(--green); flex: 0 0 auto; }
+    .step-number { color: var(--muted); font-weight: 800; font-size: 14px; white-space: nowrap; }
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .badge { border-radius: 999px; padding: 3px 9px; font-size: 12px; line-height: 1.25; font-weight: 900; letter-spacing: .04em; white-space: nowrap; }
+    .badge.live { color: #075c35; background: var(--green-soft); border: 1px solid #9bdab8; }
+    .badge.fallback { color: #704900; background: var(--amber-soft); border: 1px solid #edca6d; }
+    .badge.static { color: #455468; background: #edf0f5; border: 1px solid #cdd5e0; }
+    .step-purpose { color: #3c485b; margin: 9px 0 14px 37px; }
+    .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; margin-left: 37px; }
+    .detail { min-width: 0; }
+    .detail h4 { margin-bottom: 4px; }
+    .detail p { margin: 0; color: #39465a; }
+    .detail.full { grid-column: 1 / -1; }
+    .observation { border-left: 3px solid var(--blue); padding-left: 10px; }
+    .judgement { border-left: 3px solid var(--purple); padding-left: 10px; }
+    .failure { border-left: 3px solid var(--red); padding-left: 10px; }
+
+    .command-wrap { grid-column: 1 / -1; }
+    .command-label { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .command-label h4 { color: #344054; }
+    .copy-btn {
+      border: 1px solid #667085;
+      border-radius: 7px;
+      padding: 5px 10px;
+      background: #fff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .copy-btn:hover, .copy-btn:focus { background: var(--blue); border-color: var(--blue); color: #fff; outline: none; }
+    .command {
+      margin: 0;
+      padding: 14px 15px;
+      overflow-x: auto;
+      border-radius: 9px;
+      background: var(--terminal);
+      color: var(--terminal-ink);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #283548;
+    }
+    .asset-command { background: #263246; color: #dce7ff; }
+    .command-note { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+
+    .flow {
+      display: flex;
+      gap: 0;
+      align-items: stretch;
+      overflow-x: auto;
+      padding: 3px 2px 12px;
+      margin: 0 0 14px;
+    }
+    .flow-node {
+      min-width: 116px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 2px solid #b9c6d8;
+      color: #344054;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+    .flow-node:first-child { border-radius: 10px 0 0 10px; }
+    .flow-node:last-child { border-radius: 0 10px 10px 0; }
+    .flow-node + .flow-node { border-left: 0; }
+    .flow-node.live { border-color: #6dc794; background: var(--green-soft); color: #075c35; }
+    .flow-node.gate { border-color: #a98ce7; background: #f4f0ff; color: #53329f; }
+    .flow-arrow { display: flex; align-items: center; color: #7b8798; font-size: 22px; font-weight: 900; }
+
+    .footer-note { color: var(--muted); font-size: 14px; text-align: center; padding: 12px 0; }
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      padding: 10px 14px;
+      border-radius: 9px;
+      background: #162235;
+      color: #fff;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1050px) {
+      .workbench { grid-template-columns: 1fr; }
+      .sidecar { position: static; order: -1; }
+      .sidecar .legend { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      body { font-size: 16px; }
+      .topbar-inner, .page { padding-left: 14px; padding-right: 14px; }
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      .nav { justify-content: flex-start; }
+      .hero { padding: 22px 18px; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .details { grid-template-columns: 1fr; margin-left: 0; }
+      .step-purpose { margin-left: 0; }
+      .step-title { align-items: flex-start; }
+      .step-top { display: block; }
+      .badges { justify-content: flex-start; margin: 10px 0 0 33px; }
+      .detail.full { grid-column: auto; }
+      .sidecar .legend { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">AI Test Execution System <small>Round 6A · Classroom Runbook</small></div>
+      <nav class="nav" aria-label="课堂固定导航">
+        <a href="#preflight">PRE-FLIGHT</a>
+        <a href="#demo0">DEMO 0</a>
+        <a href="#demo1">DEMO 1</a>
+        <a href="#demo2">DEMO 2</a>
+        <a href="#reset">RESET</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-grid">
+        <div>
+          <h1 id="page-title">课堂控制页面</h1>
+          <p>按固定路径操作、观察、判断。每一步都可手动勾选；状态仅保存在本机浏览器 localStorage，不需要服务器。</p>
+          <p><strong>事实边界：</strong>课堂先说 Evidence Level，再说结论。任何 baseline 未通过，都停止进入 Route C。</p>
+        </div>
+        <div class="progress-box" aria-live="polite">
+          <div class="progress-label"><span>课堂进度</span><span id="progressText">0 / 0</span></div>
+          <progress id="progressBar" value="0" max="1"></progress>
+          <button class="reset-progress" id="resetProgress" type="button">重置课堂进度</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="workbench">
+      <div class="runbook">
+        <section id="preflight" aria-labelledby="preflight-title">
+          <div class="section-head">
+            <h2 id="preflight-title">开课前 Gate</h2>
+            <p>Evidence Level：GATE / TRUE_DEVICE。任何必需门禁失败，课堂停在这里。</p>
+          </div>
+          <div class="stop-banner">STOP 规则：baseline 未通过，不能进入 Demo 1 的 Route C；不把占位符替换成仓库文件或 Git 内容。</div>
+          <div class="manual-gate">
+            <strong>人工检查项：Appium 启动时 XCUITest Driver 必须真实 load 成功</strong>
+            这是今天新机器排练发现的门禁缺口。执行下面命令并观察：<code> XCUITestDriver successfully loaded </code>。如果出现 <code>Could not load driver</code>，则 <strong>STOP</strong>。本页面不会修改 <code>preflight_ios.sh</code>。
+          </div>
+          <div class="step-list">
+            <article class="step" data-step="preflight-pytest">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：测试 Gate"><span class="step-number">GATE 01</span><h3>测试 Gate</h3></div><div class="badges"><span class="badge static">GATE</span></div></div>
+              <p class="step-purpose">确认课堂开始前的工程测试基线为 34 tests PASS。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 -m pytest">一键复制</button></div><pre class="command">python3 -m pytest</pre><p class="command-note">默认已在 ai-test-execution-system/ 目录执行。</p></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>终端显示 34 passed。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>PASS 才能继续开课；数字或结果不符就停止并查环境。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不现场绕过测试。记录失败，修复环境后重新执行；本课堂没有用静态结果替代 Gate。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="preflight-diff">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：patch Gate"><span class="step-number">GATE 02</span><h3>Patch Gate</h3></div><div class="badges"><span class="badge static">GATE</span></div></div>
+              <p class="step-purpose">确认工作区没有空白错误或未预期 patch。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="git diff --check">一键复制</button></div><pre class="command">git diff --check</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>命令无输出并返回成功。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>工作区干净到足以开始演示。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>停止并检查 patch；不要把未解释的改动带进课堂。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="preflight-reset">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：恢复 Demo 初始状态"><span class="step-number">GATE 03</span><h3>恢复 Demo 初始状态</h3></div><div class="badges"><span class="badge static">RESET</span></div></div>
+              <p class="step-purpose">恢复 V1、normal、Product Bug off、PENDING_PAY、库存 10。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="./scripts/reset_demo.sh">一键复制</button></div><pre class="command">./scripts/reset_demo.sh</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>正式 locator 为旧的 <code>#pay-now</code>，状态恢复。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>只有初始状态明确，后续 V2 failure 才有可比性。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不进入 Demo 1。重跑 reset 或按课堂环境排查；Demo 0 可以单独继续。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="preflight-ios">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：真机前置检查"><span class="step-number">LIVE 04</span><h3>真机前置检查</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">确认 Xcode、Appium、QuickTime、真机链路具备课堂条件。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="./scripts/preflight_ios.sh">一键复制</button></div><pre class="command">./scripts/preflight_ios.sh</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>iPhone Developer Mode、USB trust、签名、Safari、QuickTime 均正常。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>真机链路可以进入 baseline 排练。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>Demo 1 改为课前保存的真实 fallback；只展示真实 Candidate / Evidence / Result，不声称现场真机执行。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="preflight-appium-load">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Appium XCUITest Driver load 检查"><span class="step-number">LIVE 05</span><h3>Appium / XCUITest Driver load 检查</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge static">人工 Gate</span></div></div>
+              <p class="step-purpose">验证 Appium 启动时 XCUITest Driver 真实加载成功；这是进入真机 UI 的硬门禁。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>课堂检查命令</h4><button class="copy-btn" type="button" data-copy="appium">一键复制</button></div><pre class="command">appium</pre><p class="command-note">此命令是本页新增的人工门禁检查，不改动 preflight_ios.sh。</p></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>必须看到 <code>XCUITestDriver successfully loaded</code>。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>真实 load 成功才算 PASS；看到 <code>Could not load driver</code> 立即 STOP。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>STOP，不继续真机 baseline，也不把失败伪装成 fallback 的现场结果。课前修复 driver / Appium 环境后再开课。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="preflight-t30">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：T-5 min 最短 Gate"><span class="step-number">GATE 06</span><h3>T-5 min 最短 Gate</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">在开场前只确认服务健康、Appium 可用、设备可见和 baseline locator 已恢复。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>课堂命令（逐条执行）</h4><button class="copy-btn" type="button" data-copy="curl -fsS http://<MAC-LAN-IP>:8000/health\nappium --version\n./scripts/restore_self_heal_baseline.sh">一键复制</button></div><pre class="command">curl -fsS http://&lt;MAC-LAN-IP&gt;:8000/health
+appium --version
+./scripts/restore_self_heal_baseline.sh</pre><p class="command-note">设备可见性另行观察：<code>xcrun devicectl list devices</code>。不在 T-5 min 运行完整 Round 2 或生成新 Candidate。</p></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>health 返回 <code>{"status":"ok"}</code>；设备在列表中；Safari 和 QuickTime 已就绪。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>所有短 Gate 通过，才开始 Demo 1。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不临时重跑完整套件。切换为课前保存的真实 fallback，并明确事实边界。</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="demo0" aria-labelledby="demo0-title">
+          <div class="section-head">
+            <h2 id="demo0-title">Demo 0：从测试用例到可执行任务</h2>
+            <p>5–8 分钟 · Evidence Level：STATIC_ASSET · 不需要现场调用 AI。</p>
+          </div>
+          <div class="step-list">
+            <article class="step" data-step="demo0-natural">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：打开自然语言用例"><span class="step-number">01</span><h3>打开自然语言用例</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">先让学员看到“测什么”的业务意图，但还没有完整执行契约。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="demo0/natural_case.txt">复制路径</button></div><pre class="command asset-command">直接打开：demo0/natural_case.txt</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>自然语言步骤和业务意图。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>测试用例描述测什么，还没有说明怎么稳定执行。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>文件打不开时直接展示课前准备的同一静态资产；不要现场生成新的 YAML。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo0-draft">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：打开 AI draft"><span class="step-number">02</span><h3>打开 AI draft</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">说明 AI draft 可以有结构，但不能直接视为可执行资产。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="demo0/ai_draft_pay_order.yaml">复制路径</button></div><pre class="command asset-command">直接打开：demo0/ai_draft_pay_order.yaml</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>缺失或待确认的字段。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>“看起来合理”不是验收条件，draft 必须经过 review。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>直接打开课前保存的 draft；不现场补字段，不把 AI 输出说成生产级自动化框架。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo0-review">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：打开 review notes"><span class="step-number">03</span><h3>打开 review notes</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">把验收责任落到确定性 review，而不是“看起来合理”。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="demo0/review_notes.md">复制路径</button></div><pre class="command asset-command">直接打开：demo0/review_notes.md</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>缺失字段、风险和修订点。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>Review 决定资产是否能进入确定性执行。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>使用课前保存的 notes；不要临时改写 review 结论。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo0-task">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：打开最终 task"><span class="step-number">04</span><h3>打开最终 task</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">展示完整 version 1 task：状态、数据、workflow、UI、断言、证据和 cleanup。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="cases/pay_order.yaml">复制路径</button></div><pre class="command asset-command">直接打开：cases/pay_order.yaml</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>device、precondition、test data、workflow、UI、assertions、evidence、cleanup 齐全。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>这才是可进入执行系统的 task。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>文件不可用时展示同一课前静态资产；不在课堂现场重建 task。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo0-schema">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：打开 task schema"><span class="step-number">05</span><h3>打开冻结的 task schema</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">说明 schema 冻结后，AI 不得自行改固定业务事实和 workflow。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="docs/executable-task-schema-v1.md">复制路径</button></div><pre class="command asset-command">直接打开：docs/executable-task-schema-v1.md</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>字段契约和不可修改项。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>课堂钉子：测试用例描述测什么；可执行任务还必须说明在什么状态下、怎么做、怎么判断、失败后留下什么。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>直接打开课前保存的 schema；不要现场调用 AI 或生成新的 YAML。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo0-fallback">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 0 fallback 证据"><span class="step-number">FALLBACK</span><h3>Demo 0 备用展示</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">当静态资产当前不可打开时，使用课前保存的真实 Round 3 summary 保持课堂连续性。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="evidence/round3-pass-summary.md">复制路径</button></div><pre class="command asset-command">直接打开：evidence/round3-pass-summary.md</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>只展示课前真实保存的 summary。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>这是静态课堂资产，不是现场 AI 生成。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不得临时生成新的 YAML 或伪造结果数字。</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="demo1" aria-labelledby="demo1-title">
+          <div class="section-head">
+            <h2 id="demo1-title">Demo 1：真机 UI + Route C</h2>
+            <p>20–25 分钟 · LIVE 优先；FALLBACK 必须明确是预先保存的真实 Candidate / Evidence / Result。</p>
+          </div>
+          <div class="fallback-banner"><strong>FALLBACK 事实边界：</strong>只能展示课前保存的真实 Candidate、Review、3/3 Verify、Write Back evidence 和 Result；不得伪造现场结果，不得临时编写看似合理的 locator。</div>
+          <div class="flow" aria-label="Demo 1 流程导航">
+            <div class="flow-node live">Baseline</div><span class="flow-arrow">→</span>
+            <div class="flow-node live">V2 Failure</div><span class="flow-arrow">→</span>
+            <div class="flow-node live">Failure Bundle</div><span class="flow-arrow">→</span>
+            <div class="flow-node gate">Candidate</div><span class="flow-arrow">→</span>
+            <div class="flow-node gate">Review /<br>Policy Gate</div><span class="flow-arrow">→</span>
+            <div class="flow-node gate">Verify 3/3</div><span class="flow-arrow">→</span>
+            <div class="flow-node gate">Write Back</div><span class="flow-arrow">→</span>
+            <div class="flow-node live">AI-off PASS</div><span class="flow-arrow">→</span>
+            <div class="flow-node live">Restore</div>
+          </div>
+          <div class="step-list">
+            <article class="step" data-step="demo1-baseline-reset">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 baseline reset"><span class="step-number">A</span><h3>Baseline：重置并启动被测系统</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">让真机 Demo 从已知的 V1 / normal / Product Bug off 状态开始。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令（终端 1，逐条执行）</h4><button class="copy-btn" type="button" data-copy="./scripts/reset_demo.sh\n./scripts/start_demo.sh">一键复制</button></div><pre class="command">./scripts/reset_demo.sh
+./scripts/start_demo.sh</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>FastAPI 启动；iPhone 端 Safari 可访问演示页面。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>baseline 服务与状态准备好，才进入真机执行。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>停止 Route C；使用课前保存的真实 Round 1/3 结果，不把 fallback 说成当前现场真机执行。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-baseline-ios">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 真机 baseline"><span class="step-number">A2</span><h3>Baseline：真机 UI 执行</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">建立 Mac → Appium → XCUITest/WDA → iPhone → Safari → FastAPI 的真实链路。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令（终端 2）</h4><button class="copy-btn" type="button" data-copy="DEMO_BASE_URL='http://<MAC-LAN-IP>:8000' IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' python3 scripts/run_pay_order_ios.py">一键复制</button></div><pre class="command">DEMO_BASE_URL='http://&lt;MAC-LAN-IP&gt;:8000' IOS_UDID='&lt;IPHONE-UDID&gt;' IOS_TEAM_ID='&lt;APPLE-TEAM-ID&gt;' IOS_WDA_BUNDLE_ID='&lt;PERSONAL-WDA-BUNDLE-ID&gt;' python3 scripts/run_pay_order_ios.py</pre><p class="command-note">占位符保留原样；不要写入 YAML / Git。</p></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>Appium/XCUITest 建立 session；Safari 中登录、待付款订单、支付成功；同时观察 API facts 与 cleanup。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>单条支付链路真实跑过物理 iPhone，证据级别为 TRUE_DEVICE。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>baseline 失败时停止，不允许继续 V2。Fallback 只展示课前保存的真实结果。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-v2-failure">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 V2 failure"><span class="step-number">B–C</span><h3>V2 Failure：制造正式 locator 变化</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">先恢复旧 locator，再执行 V1 baseline → V2，制造真实 old locator failure。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令（逐条执行）</h4><button class="copy-btn" type="button" data-copy="./scripts/restore_self_heal_baseline.sh\npython3 scripts/run_round2_self_heal.py --stop-after-failure">一键复制</button></div><pre class="command">./scripts/restore_self_heal_baseline.sh
+python3 scripts/run_round2_self_heal.py --stop-after-failure</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>Failure Bundle 中有 <code>failure_step=pay_order</code>；真实 page source 中 <code>#pay-now</code> 匹配数为 0；结果为 <code>EXPECTED_LOCATOR_FAILURE</code>。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>没有真机 session、真实 page source 或匹配数不是 0，就判定执行失败，不进入 Self-Heal。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不要把普通报错当成 Route C 入口。转入课前保存的真实 failure bundle，并明确是 FALLBACK。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-bundle">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 Failure Bundle"><span class="step-number">C2</span><h3>Failure Bundle：渲染最小 Candidate 输入</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge fallback">FALLBACK 可用</span></div></div>
+              <p class="step-purpose">从真实 failure-context、page source 和 screenshot 生成交互式 Codex 的最小输入。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/render_round2_candidate_prompt.py <failure-context> <page-source> <screenshot>">一键复制</button></div><pre class="command">python3 scripts/render_round2_candidate_prompt.py &lt;failure-context&gt; &lt;page-source&gt; &lt;screenshot&gt;</pre><p class="command-note">实际文件来自本次 FAILURE-DIR；命令格式保持 commands.md 原样。</p></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>failure-context.json、page-source.html、failure-screenshot.png 和 Appium log 可定位到同一失败。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>输入是 evidence bundle，不是凭空猜 locator。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>网络或 AI 响应不可用时，展示课前保存的真实 failure bundle；不得临时编写一个看似合理的 locator。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-candidate">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 Candidate"><span class="step-number">D</span><h3>Candidate：提交候选修复</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">让 AI 提出候选，但把正式变更留在确定性 Gate 之后。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/run_round2_self_heal.py --failure-dir <FAILURE-DIR> --interactive-candidate <REAL-CANDIDATE-JSON>">一键复制</button></div><pre class="command">python3 scripts/run_round2_self_heal.py --failure-dir &lt;FAILURE-DIR&gt; --interactive-candidate &lt;REAL-CANDIDATE-JSON&gt;</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>Candidate 只包含规定 JSON；候选指向新的正式 UI locator。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>AI 只提候选，不能任意自修复正式回归脚本。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>FALLBACK 只打开课前保存的真实 Candidate；不得生成或篡改 Candidate 以“演示成功”。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-review-gate">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 Review Policy Gate"><span class="step-number">E</span><h3>Review / Policy Gate：确定性审查</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">检查候选是否只触及允许的 pay locator，且没有改动固定 API facts 或 workflow。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/run_round2_self_heal.py --failure-dir <FAILURE-DIR> --interactive-candidate <REAL-CANDIDATE-JSON>">一键复制</button></div><pre class="command">python3 scripts/run_round2_self_heal.py --failure-dir &lt;FAILURE-DIR&gt; --interactive-candidate &lt;REAL-CANDIDATE-JSON&gt;</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>Candidate 进入确定性 Review；唯一允许的正式写回对象是 pay locator。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>Review 不通过就不能 Verify / Write Back。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示课前真实 Review evidence，并标为 FALLBACK；不口头补齐缺失的 Gate。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-verify">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 Verify 3/3"><span class="step-number">F</span><h3>Verify 3/3：候选验证</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">证明 candidate 的 DOM 匹配唯一且连续三次验证通过。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/run_round2_self_heal.py --failure-dir <FAILURE-DIR> --interactive-candidate <REAL-CANDIDATE-JSON>">一键复制</button></div><pre class="command">python3 scripts/run_round2_self_heal.py --failure-dir &lt;FAILURE-DIR&gt; --interactive-candidate &lt;REAL-CANDIDATE-JSON&gt;</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>unique DOM match = 1；Verify = 3/3 evidence。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>没有真实 3/3 evidence，就不进入 Write Back。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>FALLBACK 展示课前保存的真实 3/3 evidence；不得把一次偶然匹配说成 3/3。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-writeback">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 Write Back"><span class="step-number">G</span><h3>Write Back：受控写回</h3></div><div class="badges"><span class="badge live">LIVE</span><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">只有 Review 和 Verify 通过后，才允许把候选写回正式资产。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/run_round2_self_heal.py --failure-dir <FAILURE-DIR> --interactive-candidate <REAL-CANDIDATE-JSON>">一键复制</button></div><pre class="command">python3 scripts/run_round2_self_heal.py --failure-dir &lt;FAILURE-DIR&gt; --interactive-candidate &lt;REAL-CANDIDATE-JSON&gt;</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>正式资产只写回 pay locator；固定 API facts 不变。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>正式修改由 Gate 控制，不由 AI 直接控制。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>使用课前保存的真实 Write Back evidence；不手动修改正式 YAML / 脚本来制造成功。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo1-ai-off">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 1 AI-off PASS"><span class="step-number">I–J</span><h3>AI-off PASS：验证并恢复</h3></div><div class="badges"><span class="badge live">LIVE 优先</span><span class="badge fallback">FALLBACK 可用</span></div></div>
+              <p class="step-purpose">指出最终 rerun 不调用 AI；演示结束或任何中断后都要恢复 baseline。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="python3 scripts/run_round2_self_heal.py --failure-dir <FAILURE-DIR> --interactive-candidate <REAL-CANDIDATE-JSON>\n./scripts/restore_self_heal_baseline.sh\n./scripts/reset_demo.sh">一键复制</button></div><pre class="command">python3 scripts/run_round2_self_heal.py --failure-dir &lt;FAILURE-DIR&gt; --interactive-candidate &lt;REAL-CANDIDATE-JSON&gt;
+./scripts/restore_self_heal_baseline.sh
+./scripts/reset_demo.sh</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>Gate + Verify 后 V2 rerun PASS；最终恢复 baseline 并再次制造旧 locator failure。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>修复可以在 AI-off 条件下被确定性验证；恢复时机是 Demo 结束或任何中断后。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示 <code>evidence/round2-pass-summary.md</code> 和本机真实 failure bundle，并明确“预先保存的真实结果”；不说成当前现场执行。</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="demo2" aria-labelledby="demo2-title">
+          <div class="section-head">
+            <h2 id="demo2-title">Demo 2：从 Case 到可信执行系统</h2>
+            <p>约 20 分钟 · 主要展示，不现场完整重跑 5 个真机 scenario。</p>
+          </div>
+          <div class="step-list">
+            <article class="step" data-step="demo2-case-suite-plan">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 Case Suite Run Plan"><span class="step-number">01–03</span><h3>Case → Suite → Run Plan</h3></div><div class="badges"><span class="badge static">STATIC_ASSET</span></div></div>
+              <p class="step-purpose">沿着固定业务事实，展示单一 serial Suite 和显式 serial Run Plan。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="cases/pay_order.yaml\nsuites/nightly.yaml\nschedules/nightly.yaml">复制路径</button></div><pre class="command asset-command">直接打开：cases/pay_order.yaml
+直接打开：suites/nightly.yaml
+直接打开：schedules/nightly.yaml</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>task → 单一 serial Suite → 显式 serial Run Plan。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>调度层不重写 task，也不把并发当成默认能力。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>使用课前静态资产；不要现场改 Suite / Run Plan。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-evidence-report">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 Evidence Report"><span class="step-number">04–05</span><h3>Evidence → Report：一条真实失败</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">展示脱敏的真实 Round 4 结果和本机 report / PRODUCT BUG evidence。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="evidence/round4-pass-summary.md\nreports/<run-id>/report.md\nartifacts/runs/<run-id>/cases/product_bug_inventory_not_decremented/">复制路径</button></div><pre class="command asset-command">直接打开：evidence/round4-pass-summary.md
+展示：reports/&lt;run-id&gt;/report.md
+展示：artifacts/runs/&lt;run-id&gt;/cases/product_bug_inventory_not_decremented/</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>total=5、passed=4、failed=1；Engineering acceptance=PASS，但 test run=FAIL。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>不要把 Run Plan test result 写成 PASS。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>只展示本机已保存的脱敏真实结果；不从 GitHub 取原始产物。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-retry">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 Retry history"><span class="step-number">06</span><h3>Retry：业务语义</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">通过 before/after commit 的 retry history，说明 Retry 不是通用技术重试。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>文件动作</h4><button class="copy-btn" type="button" data-copy="before/after commit 的 retry_history.json">复制说明</button></div><pre class="command asset-command">展示：before/after commit 的 retry_history.json</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>未提交可 Retry 一次；已提交禁止重试。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>Retry 是业务规则，不是可以无限重试的技术按钮。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示课前保存的真实 history；不要现场补造重试记录。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-classification">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 Failure Classification"><span class="step-number">07</span><h3>Failure Cause：四类分类与 UNCLASSIFIED</h3></div><div class="badges"><span class="badge live">LIVE 推荐</span><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">用一个短的本地实验展示 Failure Cause 与 Stability 是正交维度。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>LIVE 命令</h4><button class="copy-btn" type="button" data-copy="python3 -m experiments.failure_classification">一键复制</button></div><pre class="command">python3 -m experiments.failure_classification</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>PRODUCT / ENVIRONMENT / DEVICE / AUTOMATION 四类，以及 UNCLASSIFIED 反例。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>FLAKY 是 Stability，不是第五种 Failure Cause。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示本机已保存的 Round 5 summary；不要现场连续重跑 iPhone Suite。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-flaky">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 Flaky experiment"><span class="step-number">08</span><h3>Stability：受控 timing/wait 实验</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span><span class="badge static">OPTIONAL LIVE</span></div></div>
+              <p class="step-purpose">展示 12 次受控实验、history 和 FLAKY 结论。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>可选命令</h4><button class="copy-btn" type="button" data-copy="python3 -m experiments.flaky_automation">一键复制</button></div><pre class="command">python3 -m experiments.flaky_automation</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>12 runs、6 PASS、6 FAIL；FAIL category=AUTOMATION；stability=FLAKY。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>这是 controlled timing/wait 实验，不是真机自然随机出现 6 次失败。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示 <code>artifacts/round5/flaky-automation/summary.json</code> 与 <code>artifacts/history/flaky_automation.jsonl</code> 的课前真实结果。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-shared-state">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 shared state experiment"><span class="step-number">09</span><h3>Test Independence：共享状态实验</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span><span class="badge static">OPTIONAL LIVE</span></div></div>
+              <p class="step-purpose">展示同一 order_id 的 worker timeline 和状态污染，说明测试独立性。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>可选命令</h4><button class="copy-btn" type="button" data-copy="python3 -m experiments.shared_state_concurrency">一键复制</button></div><pre class="command">python3 -m experiments.shared_state_concurrency</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>同一 shared order：一个 committed、一个 already_paid；最终只产生一个 payment。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>共享业务状态会破坏测试独立性；不声称数据库已发生并发写坏。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>展示 <code>artifacts/round5/shared-state-concurrency/summary.json</code> 的真实保存结果；不现场扩展实验范围。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="demo2-fallback-summary">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 2 fallback summary"><span class="step-number">FALLBACK</span><h3>Demo 2 备用展示入口</h3></div><div class="badges"><span class="badge fallback">FALLBACK</span></div></div>
+              <p class="step-purpose">当短实验无法运行时，用本机课前保存的真实 Round 4 / Round 5 summary 继续讲解。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="cat evidence/round4-pass-summary.md\ncat evidence/round5-pass-summary.md">一键复制</button></div><pre class="command">cat evidence/round4-pass-summary.md
+cat evidence/round5-pass-summary.md</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>从 Case → Suite → Run Plan → Evidence → Report → Failure Cause → Stability → Test Independence。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>fallback 是已保存的真实结果，不是现场重跑的替代说法。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>如果 summary 也不可用，停在当前展示，不自行补写结果数字。</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="reset" aria-labelledby="reset-title">
+          <div class="section-head">
+            <h2 id="reset-title">Demo 后 Reset</h2>
+            <p>课堂结束或任何中断后执行；保留 ignored evidence 供课后核验。</p>
+          </div>
+          <div class="step-list">
+            <article class="step" data-step="reset-demo-assets">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：Demo 后恢复资产"><span class="step-number">RESET 01</span><h3>恢复正式旧 locator 与初始状态</h3></div><div class="badges"><span class="badge live">LIVE</span></div></div>
+              <p class="step-purpose">确保课堂不会把 V2 / Candidate 写回状态留给下一次排练。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>命令</h4><button class="copy-btn" type="button" data-copy="./scripts/restore_self_heal_baseline.sh && ./scripts/reset_demo.sh">一键复制</button></div><pre class="command">./scripts/restore_self_heal_baseline.sh &amp;&amp; ./scripts/reset_demo.sh</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>正式旧 locator、V1、normal、Product Bug off 和业务初始状态恢复。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>reset 完成后才能结束课堂。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不要关闭课堂而留下未知状态；记录失败并在关闭服务前完成恢复。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="reset-processes">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：关闭课堂进程"><span class="step-number">RESET 02</span><h3>关闭 FastAPI / Appium / QuickTime 进程</h3></div><div class="badges"><span class="badge static">人工动作</span></div></div>
+              <p class="step-purpose">释放课堂设备与本机进程，避免下次课堂受到残留 session 影响。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>人工动作</h4><button class="copy-btn" type="button" data-copy="关闭 FastAPI/Appium/QuickTime 进程">复制提示</button></div><pre class="command asset-command">人工关闭 FastAPI / Appium / QuickTime 进程</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>服务、Appium server、QuickTime 投屏窗口均已关闭。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>本机环境回到可交接状态。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>按本机应用界面关闭残留进程；不删除任何 evidence。</p></div>
+              </div>
+            </article>
+
+            <article class="step" data-step="reset-evidence">
+              <div class="step-top"><div class="step-title"><input type="checkbox" aria-label="完成：保留 ignored evidence"><span class="step-number">RESET 03</span><h3>保留课后核验资料</h3></div><div class="badges"><span class="badge fallback">LOCAL ONLY</span></div></div>
+              <p class="step-purpose">保留本机 ignored evidence，阻止原始日志、截图、设备信息或 history 进入 Git。</p>
+              <div class="details">
+                <div class="detail command-wrap"><div class="command-label"><h4>检查提示</h4><button class="copy-btn" type="button" data-copy="保留本机 ignored evidence；不要把原始日志、截图、设备信息或 history 加入 Git。">复制提示</button></div><pre class="command asset-command">保留本机 ignored evidence；不要把原始日志、截图、设备信息或 history 加入 Git。</pre></div>
+                <div class="detail observation"><h4>课堂观察点</h4><p>课后核验资料仍在本机，仓库没有新增敏感产物。</p></div>
+                <div class="detail judgement"><h4>讲师判断</h4><p>课堂证据边界与仓库边界都保持不变。</p></div>
+                <div class="detail failure full"><h4>失败 / fallback 处理</h4><p>不删除或移动用户资料；只记录需要课后核验的路径。</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+        <p class="footer-note">本页面是正式课堂操作界面；工程文档仍以 instructor/classroom-runbook.md、classroom-preflight.md、commands.md、evidence-map.md 为准。</p>
+      </div>
+
+      <aside class="sidecar" aria-label="Terminal sidecar">
+        <h3>Terminal Sidecar</h3>
+        <p>浏览器左右分屏时，将此页放左侧、Terminal 放右侧。命令默认在 <code>ai-test-execution-system/</code> 目录执行。</p>
+        <hr>
+        <p class="safety">占位符必须保留：</p>
+        <ul>
+          <li><code>&lt;MAC-LAN-IP&gt;</code></li>
+          <li><code>&lt;IPHONE-UDID&gt;</code></li>
+          <li><code>&lt;APPLE-TEAM-ID&gt;</code></li>
+          <li><code>&lt;PERSONAL-WDA-BUNDLE-ID&gt;</code></li>
+        </ul>
+        <hr>
+        <p><strong>Evidence Level</strong> 先说等级，再说结论。</p>
+        <div class="legend">
+          <div class="legend-row"><span class="dot live"></span> LIVE · 当前真实执行</div>
+          <div class="legend-row"><span class="dot fallback"></span> FALLBACK · 课前保存的真实结果</div>
+          <div class="legend-row"><span class="dot static"></span> STATIC_ASSET · 文档 / 代码 / 静态资产</div>
+        </div>
+        <hr>
+        <p><strong>停止条件</strong></p>
+        <p class="safety">Appium 出现 Could not load driver → STOP</p>
+        <p class="safety">baseline 未通过 → STOP</p>
+        <p>Fallback 不伪造现场结果，不临时生成 Candidate。</p>
+      </aside>
+    </div>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+      var storageKey = 'ai-test-execution-classroom-runbook-progress-v1';
+      var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+      var progressBar = document.getElementById('progressBar');
+      var progressText = document.getElementById('progressText');
+      var toast = document.getElementById('toast');
+      var toastTimer;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () { toast.classList.remove('show'); }, 1500);
+      }
+
+      function readProgress() {
+        try { return JSON.parse(window.localStorage.getItem(storageKey) || '{}'); }
+        catch (error) { return {}; }
+      }
+
+      function saveProgress() {
+        var progress = {};
+        steps.forEach(function (step) {
+          var checkbox = step.querySelector('input[type="checkbox"]');
+          progress[step.getAttribute('data-step')] = checkbox.checked;
+          step.classList.toggle('is-done', checkbox.checked);
+        });
+        try { window.localStorage.setItem(storageKey, JSON.stringify(progress)); }
+        catch (error) { /* file:// environments may disable storage; UI still works */ }
+        updateProgress();
+      }
+
+      function loadProgress() {
+        var progress = readProgress();
+        steps.forEach(function (step) {
+          var checkbox = step.querySelector('input[type="checkbox"]');
+          checkbox.checked = progress[step.getAttribute('data-step')] === true;
+          step.classList.toggle('is-done', checkbox.checked);
+          checkbox.addEventListener('change', saveProgress);
+        });
+        updateProgress();
+      }
+
+      function updateProgress() {
+        var done = steps.filter(function (step) { return step.querySelector('input').checked; }).length;
+        progressBar.max = steps.length || 1;
+        progressBar.value = done;
+        progressText.textContent = done + ' / ' + steps.length;
+      }
+
+      function fallbackCopy(text) {
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        var copied = false;
+        try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
+        document.body.removeChild(area);
+        return copied;
+      }
+
+      function copyText(text, button) {
+        var done = function () {
+          var oldLabel = button.textContent;
+          button.textContent = '已复制';
+          showToast('已复制到剪贴板');
+          window.setTimeout(function () { button.textContent = oldLabel; }, 1200);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done).catch(function () {
+            if (fallbackCopy(text)) done(); else showToast('复制失败，请手动选择命令');
+          });
+        } else if (fallbackCopy(text)) {
+          done();
+        } else {
+          showToast('复制失败，请手动选择命令');
+        }
+      }
+
+      document.querySelectorAll('[data-copy]').forEach(function (button) {
+        button.addEventListener('click', function () { copyText(button.getAttribute('data-copy'), button); });
+      });
+
+      document.getElementById('resetProgress').addEventListener('click', function () {
+        steps.forEach(function (step) {
+          step.querySelector('input').checked = false;
+          step.classList.remove('is-done');
+        });
+        try { window.localStorage.removeItem(storageKey); } catch (error) { /* no-op */ }
+        updateProgress();
+        showToast('课堂进度已重置');
+      });
+
+      loadProgress();
+    }());
+  </script>
+</body>
+</html>
