@@ -183,7 +183,7 @@ echo "Failure Bundle: READY"
 
 不要使用 `ls -td evidence/round2-*`，因为它会错误匹配 `evidence/round2-pass-summary.md`。
 
-#### 03A Render Candidate Prompt
+#### 03A Generate Codex Task
 
 ```bash
 source .venv/bin/activate
@@ -197,18 +197,20 @@ python scripts/render_round2_candidate_prompt.py \
 pbcopy < "$PROMPT_FILE"
 ```
 
-课堂动作：Prompt 已复制到剪贴板；打开交互式 Codex，粘贴 Prompt，同时提供真实 `failure-screenshot.png`，要求只输出 JSON，不要解释文字。AI 输入是 Failure Context + Old Locator + Target Semantic + Real DOM + Real Screenshot + Restricted Output Schema，而不是一句“按钮坏了，帮我修”。主页面不提前泄露 locator 答案。
+课堂动作：Prompt 已复制到剪贴板；打开当前仓库中的交互式 Codex，Cmd+V 粘贴并执行。Codex 会自行读取三个真实 Failure Bundle 文件，并直接写入 `artifacts/runs/interactive/round2-candidate.json`，不需要讲师再复制 JSON。若当前 Codex 环境无法读取图片文件，再人工拖入 screenshot 作为 fallback，但不是默认主流程。AI 输入是 Failure Context + Old Locator + Target Semantic + Real DOM + Real Screenshot + Restricted Output Schema，而不是一句“按钮坏了，帮我修”。主页面不提前泄露 locator 答案。
 
-#### 03B 保存 Codex Candidate
+#### 03B Check Candidate
 
 ```bash
+source .venv/bin/activate
 CANDIDATE="artifacts/runs/interactive/round2-candidate.json"
-mkdir -p "$(dirname "$CANDIDATE")"
-pbpaste > "$CANDIDATE"
+test -f "$CANDIDATE" && echo "Candidate: READY"
 python -m json.tool "$CANDIDATE"
 ```
 
-`artifacts/runs/interactive/` 必须保持 ignored runtime，不提交 Git。Candidate 必须只有 `target`、`old_locator`、`candidate`、`evidence`，不得包含解释文字、Markdown code fence 或 confidence。
+课堂必须看到 `Candidate: READY`；JSON 顶层只能包含 `target`、`old_locator`、`candidate`、`evidence`。`artifacts/runs/interactive/` 必须保持 ignored runtime，不提交 Git。
+
+课堂判断：**AI 不需要把建议交给人搬运，但它也不能因为能写文件，就获得修改正式资产的权力。** AI Candidate ≠ 正式资产。
 
 ### 04 Deterministic Gate & Asset
 
