@@ -118,6 +118,10 @@ try:
     record["page_change"] = text
     record["quicktime"] = "需人工按 docs/ios-personal-team-setup.md 验证 USB 画面稳定显示"
     record["result"] = "PASS (automation); QuickTime requires human visual confirmation"
+    if os.environ.get("ROUND0_WAIT_FOR_ENTER") == "1":
+        print("\n✓ Round0 真机自动化验证通过")
+        print("✓ Safari 保持当前成功页面，供 QuickTime / 课堂观察")
+        input("按 Enter 结束 Round0 并释放 Appium session...")
 except Exception as error:
     record["error"] = str(error)
 finally:
