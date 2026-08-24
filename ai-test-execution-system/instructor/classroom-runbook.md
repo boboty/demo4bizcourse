@@ -128,23 +128,147 @@ wrapper 会把结构化课堂 artifact 保存到被 Git 忽略的 `artifacts/run
 
 将真机 UI Self-Heal 主体放在这里，保留所有真实 evidence Gate。FastAPI 已由 Demo 2 启动并继续运行。
 
-1. **Business baseline**：新 Terminal source `.venv`，使用 `MAC_LAN_IP`、`IOS_UDID`、`IOS_TEAM_ID`、`IOS_WDA_BUNDLE_ID` 执行 `python scripts/run_pay_order_ios.py`。baseline 失败必须 STOP，不进入 Self-Heal；FAIL 时额外打印 current step、error、cleanup error 和 evidence 目录。
-2. **V1 → V2 old locator failure**：先恢复 baseline，再使用同一组 runtime 参数执行 `python scripts/run_round2_self_heal.py --stop-after-failure` 制造真实旧 locator 失败。
-3. **Failure Bundle**：确认真实 page source、截图、failure context 和 Appium log；再执行 `python scripts/render_round2_candidate_prompt.py <failure-context> <page-source> <screenshot>`。
-4. **real Candidate**：交互式 Codex 产生真实 Candidate；网络不可用时只能展示课前保存的真实 Candidate，不能临时编写 locator。
-5. **Review / Policy Gate**：候选只进入确定性 Review，不能直接写回正式资产。
-6. **Verify 3/3**：必须有 unique DOM match=1 和真实 3/3 evidence。
-7. **Write Back**：只在 Review 和 Verify 通过后受控写回允许的 pay locator。
-8. **AI-off rerun**：用写回后的正式资产验证，不调用 AI。
-9. **restore**：结束或中断都执行：
+### 01 Business baseline
 
-   ```bash
-   source .venv/bin/activate
-   ./scripts/restore_self_heal_baseline.sh
-   ./scripts/reset_demo.sh
-   ```
+保持已经验证通过的完整 runtime 命令：
 
-不得削弱 baseline、Failure Bundle、real Candidate、Review / Policy Gate、3/3 Verify、Write Back、AI-off rerun 或 restore 的真实证据要求。
+```bash
+source .venv/bin/activate
+
+MAC_LAN_IP='<MAC-LAN-IP>' \
+IOS_UDID='<IPHONE-UDID>' \
+IOS_TEAM_ID='<APPLE-TEAM-ID>' \
+IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+python scripts/run_pay_order_ios.py
+```
+
+baseline FAIL → STOP，不进入 Self-Heal。FAIL 时保留当前 step、error、cleanup error 和 evidence 目录输出。
+
+### 02 Real Failure Bundle
+
+这一节只负责 V1 baseline evidence → V2 → 旧 locator `#pay-now` 真实失败 → 保存完整 Failure Bundle：
+
+```bash
+source .venv/bin/activate
+./scripts/restore_self_heal_baseline.sh
+
+MAC_LAN_IP='<MAC-LAN-IP>' IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+python scripts/run_round2_self_heal.py --stop-after-failure
+```
+
+课堂必须看到：
+
+- `STOPPED_AFTER_REAL_FAILURE`
+- `failure_step=pay_order`
+- old locator = `#pay-now`
+- old locator DOM match = `0`
+- `EXPECTED_LOCATOR_FAILURE`
+- 脚本打印真实 failure bundle 路径
+
+这一步内部再次执行 V1 baseline 是正常的：它让同一个 Failure Bundle 携带 V1 baseline PASS 证据，不重复 Demo 3 01 的教学目的。
+
+### 03 Interactive AI Candidate
+
+#### 自动定位真实 Failure Bundle
+
+```bash
+source .venv/bin/activate
+FAILDIR=$(find evidence -maxdepth 2 -type d -name 'v2-old-locator-failure' -print | sort | tail -1)
+echo "$FAILDIR"
+test -f "$FAILDIR/failure-context.json" && \
+test -f "$FAILDIR/page-source.html" && \
+test -f "$FAILDIR/failure-screenshot.png" && \
+echo "Failure Bundle: READY"
+```
+
+不要使用 `ls -td evidence/round2-*`，因为它会错误匹配 `evidence/round2-pass-summary.md`。
+
+#### 03A Render Candidate Prompt
+
+```bash
+source .venv/bin/activate
+FAILDIR=$(find evidence -maxdepth 2 -type d -name 'v2-old-locator-failure' -print | sort | tail -1)
+PROMPT_FILE="/tmp/round2-candidate-prompt.txt"
+python scripts/render_round2_candidate_prompt.py \
+  "$FAILDIR/failure-context.json" \
+  "$FAILDIR/page-source.html" \
+  "$FAILDIR/failure-screenshot.png" \
+  | tee "$PROMPT_FILE"
+pbcopy < "$PROMPT_FILE"
+```
+
+课堂动作：Prompt 已复制到剪贴板；打开交互式 Codex，粘贴 Prompt，同时提供真实 `failure-screenshot.png`，要求只输出 JSON，不要解释文字。AI 输入是 Failure Context + Old Locator + Target Semantic + Real DOM + Real Screenshot + Restricted Output Schema，而不是一句“按钮坏了，帮我修”。主页面不提前泄露 locator 答案。
+
+#### 03B 保存 Codex Candidate
+
+```bash
+CANDIDATE="artifacts/runs/interactive/round2-candidate.json"
+mkdir -p "$(dirname "$CANDIDATE")"
+pbpaste > "$CANDIDATE"
+python -m json.tool "$CANDIDATE"
+```
+
+`artifacts/runs/interactive/` 必须保持 ignored runtime，不提交 Git。Candidate 必须只有 `target`、`old_locator`、`candidate`、`evidence`，不得包含解释文字、Markdown code fence 或 confidence。
+
+### 04 Deterministic Gate & Asset
+
+自动重新定位真实 Failure Bundle，并导入固定 Candidate：
+
+```bash
+source .venv/bin/activate
+FAILDIR=$(find evidence -maxdepth 2 -type d -name 'v2-old-locator-failure' -print | sort | tail -1)
+CANDIDATE="artifacts/runs/interactive/round2-candidate.json"
+
+MAC_LAN_IP='<MAC-LAN-IP>' \
+IOS_UDID='<IPHONE-UDID>' \
+IOS_TEAM_ID='<APPLE-TEAM-ID>' \
+IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+python scripts/run_round2_self_heal.py \
+  --failure-dir "$FAILDIR" \
+  --interactive-candidate "$CANDIDATE"
+```
+
+这一条命令本身完成后续完整链路：
+
+```text
+Interactive Candidate
+        ↓
+Import
+        ↓
+Review / Policy Gate
+        ↓
+Unique DOM Match = 1
+        ↓
+True-device Verify 3/3
+        ↓
+Write Back
+        ↓
+AI-off V2 rerun
+        ↓
+Restore baseline
+        ↓
+再次制造 old-locator failure
+        ↓
+PASS
+```
+
+必须看到：`baseline_v1 PASS`（从真实 bundle 复核）、`old_locator_failure EXPECTED_LOCATOR_FAILURE`、`ai_candidate GENERATED`、Review APPROVED、Candidate verification 3/3 PASS、`post_writeback_rerun PASS`、`baseline_restore PASS`、repeat old-locator failure 和最终 `result PASS`。
+
+课堂核心判断：第一次证明 AI 能找到变化；第二次证明系统没有把 AI 的不确定性直接带进正式回归。
+
+### 安全复位 / 中断恢复
+
+正常 Demo 3 PASS 后只是额外安全收口；如果中途异常，可人工执行：
+
+```bash
+source .venv/bin/activate
+./scripts/restore_self_heal_baseline.sh
+./scripts/reset_demo.sh
+```
+
+这不是 AI-off rerun evidence，也不是 Self-Heal 主链的一部分。
+
+不得削弱 baseline、Failure Bundle、Interactive Candidate、Review / Policy Gate、3/3 Verify、Write Back、AI-off rerun、restore 或 repeat-failure 的真实证据要求。
 
 ## Demo 4：从 Case 到可信执行系统
 
