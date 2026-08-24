@@ -80,7 +80,7 @@ try:
     os.chdir(SITE)
     server = ThreadingHTTPServer(("0.0.0.0", PORT), QuietHandler)
     Thread(target=server.serve_forever, daemon=True).start()
-    host_ip = lan_ip()
+    host_ip = os.environ.get("MAC_LAN_IP") or lan_ip()
     test_url = f"http://{host_ip}:{PORT}/index.html"
     record["test_page"] = test_url
     with urllib.request.urlopen("http://127.0.0.1:8000/index.html", timeout=5) as response:
