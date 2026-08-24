@@ -1,52 +1,79 @@
-# Round 6A Classroom Preflight
+# 4-Demo Classroom Preflight
 
-所有时间点都使用本机环境，不把设备标识、Team ID、LAN IP、session id 或原始 evidence 写入仓库。
+所有 Python 命令统一使用项目 `.venv`。任何新 Terminal 都先执行：
+
+```bash
+source .venv/bin/activate
+```
+
+不把设备标识、Team ID、LAN IP、session id 或原始 evidence 写入仓库。`evidence/`、`artifacts/runs/` 和其他运行日志按 `AGENTS.md` 规则作为 ignored runtime。
 
 ## T-2 days
 
-- [ ] Xcode 登录和 Personal Team 可用；确认签名时效。
+- [ ] 确认项目 `.venv` 已准备；首次准备执行 `python -m pip install -r requirements.txt`。
+- [ ] 用 `.venv` 执行 `python -m pytest` 和 `git diff --check`。
+- [ ] Xcode Personal Team 可用，确认 WDA signing freshness；重新 Build/Sign WebDriverAgent。
 - [ ] iPhone Developer Mode、USB trust、解锁状态正常。
-- [ ] 重新 Build/Sign WebDriverAgent；确认 Appium XCUITest 可建立真机 session。
-- [ ] iPhone Safari 可访问本地 FastAPI 页面。
-- [ ] QuickTime 可投屏；准备 USB 线和充电。
-- [ ] 完整排练 Demo 1：baseline → V2 failure → Candidate → Review → Verify → Write Back → AI-off PASS → restore。
+- [ ] 保留并完整执行 `./scripts/preflight_ios.sh`。
+- [ ] 完整排练 Demo 1 Round0：Appium/XCUITest Driver load Gate → `appium driver run xcuitest open-wda` → Xcode `Product → Test` → 停止 Xcode Test → 8000/4723 检查 → `run_round0_ios.py` → Safari 点击和 screenshot evidence → QuickTime 人工确认。
+- [ ] 确认 Round0 期间没有提前启动 FastAPI 或独立 Appium；Round0 会占用 8000 和 4723。
+- [ ] Demo 2 API 三场景完整：`normal`、`timeout-before`、`timeout-after`；确认 stdout 中出现各自的 HTTP 504、业务 facts 和 Retry 判断。
+- [ ] Demo 3 Self-Heal 完整：business baseline → V1/V2 old locator failure → Failure Bundle → real Candidate → Review / Policy Gate → Verify 3/3 → Write Back → AI-off rerun → restore。
+- [ ] Demo 4 的脱敏 evidence、report 和 artifact 可打开；不修改既有真实 evidence 数字。
+
+首次准备示例（只在 `.venv` 尚不存在时创建）：
 
 ```bash
-cd ai-test-execution-system
-./scripts/preflight_ios.sh
-./scripts/reset_demo.sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
-
-## T-1 day
-
-- [ ] 完整跑一次 Round 2；保留真实 Candidate 的本机备用文件。
-- [ ] 确认 Failure Bundle 中有 `failure-context.json`、`page-source.html`、截图和 Appium log。
-- [ ] 确认 Candidate verification 是真实 3/3 evidence；没有就使用已经保存的真实结果并标注 fallback。
-- [ ] 确认 `./scripts/restore_self_heal_baseline.sh` 能恢复 `#pay-now`、V1、normal、Product Bug off。
-- [ ] 确认 Demo 2 的脱敏摘要和 Round 5 summary 可打开；不依赖 GitHub 原始 artifacts。
 
 ## T-30 min
 
-- [ ] 启动 FastAPI：`./scripts/start_demo.sh`。
-- [ ] 检查 `http://<MAC-LAN-IP>:8000/health` 返回 `{"status":"ok"}`。
-- [ ] iPhone 可打开 Safari 页面；关闭旧标签页或缓存影响。
-- [ ] Appium 与 XCUITest driver 正常；QuickTime 投屏窗口可见。
-- [ ] iPhone 连接充电、关闭自动锁屏/通知干扰，保持 Developer Mode。
-- [ ] 执行 `./scripts/reset_demo.sh`，确认正式 locator 为 `#pay-now`。
+Demo 1 Round0 尚未完成时，不要启动 FastAPI：
+
+- [ ] 不执行 `./scripts/start_demo.sh`，不提前占用 8000。
+- [ ] 不启动独立 Appium，不提前占用 4723。
+- [ ] 新 Terminal source `.venv` 后确认端口可用；若占用只定位进程，不盲杀：
+
+  ```bash
+  source .venv/bin/activate
+  lsof -nP -iTCP:8000 -sTCP:LISTEN
+  lsof -nP -iTCP:4723 -sTCP:LISTEN
+  ```
+
+- [ ] QuickTime、iPhone、Xcode、Appium 都已 ready；iPhone 已连接、解锁并可投屏。
+- [ ] Appium 启动时人工观察 XCUITest Driver 必须真实 load 成功；`Could not load driver` → STOP。
+
+## Demo 1 完成以后
+
+只有 Round0 完整、Xcode Test 已停止、screenshot evidence 已保存并完成 QuickTime 人工确认后，才启动 FastAPI：
+
+```bash
+source .venv/bin/activate
+./scripts/reset_demo.sh
+./scripts/start_demo.sh
+```
+
+- [ ] `curl -fsS http://127.0.0.1:8000/health` 成功。
+- [ ] `curl -fsS http://<MAC-LAN-IP>:8000/health` 成功。
+- [ ] iPhone Safari 能访问 `http://<MAC-LAN-IP>:8000/`。
+- [ ] FastAPI 保持运行供 Demo 3 使用。
 
 ## T-5 min
 
-只做最短 gate：
+T-5 不写成“FastAPI 一定已经启动”。上午 Demo 1 需要先使用 8000；T-5 只做不依赖该假设的最短检查：
 
 ```bash
-curl -fsS http://<MAC-LAN-IP>:8000/health
+source .venv/bin/activate
 appium --version
+xcrun devicectl list devices
 ./scripts/restore_self_heal_baseline.sh
 ```
 
+- [ ] 不运行完整 Round0、完整 iPhone Suite 或新的 Candidate 生成。
 - [ ] 设备在 `xcrun devicectl list devices` 中可见。
-- [ ] Safari 已打开 Demo 页面。
-- [ ] QuickTime 投屏正常。
-- [ ] baseline locator 已恢复。
-
-T-5 min 不再运行完整 Round 2、完整 iPhone Suite 或新的 Candidate 生成。
+- [ ] QuickTime 投屏窗口、Xcode、Appium ready。
+- [ ] baseline locator 已恢复为 `#pay-now`。
+- [ ] 如果已经完成 Demo 1，按“Demo 1 完成以后”检查 FastAPI local + LAN `/health`；如果尚未完成，不启动 FastAPI。

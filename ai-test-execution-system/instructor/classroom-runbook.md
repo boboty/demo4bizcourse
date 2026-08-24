@@ -1,138 +1,185 @@
-# Round 6A Classroom Runbook
+# 4-Demo Classroom Runbook
 
-目标是让讲师按固定路径操作并观察判断，不需要重新理解 Round 1–5 代码。课堂只做三个 Demo；本 Runbook 不新增测试能力、不改变 task、Suite、Failure taxonomy 或 Flaky 判据。
+本 Runbook 将课堂固定为 Gate + 四个 Demo。课堂 Python 统一使用项目 `.venv`；每个新 Terminal 都重新执行 `source .venv/bin/activate`。不改变 app 业务语义、`cases/pay_order.yaml`、`suites/nightly.yaml`、`schedules/nightly.yaml`、self-heal 治理规则、Failure taxonomy、Stability 判据或已有真实 evidence 数字。
 
-## 开课前固定动作
+## 0. Gate
+
+首次准备（项目目录内）：
 
 ```bash
-cd ai-test-execution-system
-python3 -m pytest                 # Gate：34 passed
-git diff --check
-./scripts/reset_demo.sh
+python3 -m venv .venv  # 仅在 .venv 不存在时执行
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-真机 Demo 还必须完成 [`classroom-preflight.md`](classroom-preflight.md)。任何 baseline 未通过，都停止进入 Route C。
-
-## Demo 0：从测试用例到可执行任务（5–8 分钟）
-
-证据级别：`STATIC_ASSET`。不需要现场调用 AI。
-
-| 步骤 | 讲师操作 | 讲师说的判断 | 学员应看到 |
-| --- | --- | --- | --- |
-| 1 | 打开 `demo0/natural_case.txt` | 人类描述说明测什么，但没有完整执行契约 | 自然语言步骤和业务意图 |
-| 2 | 打开 `demo0/ai_draft_pay_order.yaml` | AI draft 可能有结构，但要经过 review，不能直接视为可执行资产 | 缺失或待确认的字段 |
-| 3 | 打开 `demo0/review_notes.md` | 验收责任在确定性 review，不在“看起来合理” | 缺失字段、风险和修订点 |
-| 4 | 打开 `cases/pay_order.yaml` | 最终 task 明确 device、precondition、test data、workflow、UI、assertions、evidence、cleanup | 完整 version 1 task |
-| 5 | 打开 `docs/executable-task-schema-v1.md` | schema 冻结后，AI 不得自行改固定业务事实和 workflow | 字段契约和不可修改项 |
-
-课堂钉子：测试用例描述测什么；可执行任务还必须说明在什么状态下、怎么做、怎么判断、失败后留下什么。
-
-Fallback：直接打开以上文件和 `evidence/round3-pass-summary.md`，不要现场生成新的 YAML。
-
-## Demo 1：真机 UI + Route C（20–25 分钟）
-
-证据级别：`TRUE_DEVICE`。这部分区分 LIVE 与 fallback；fallback 必须标明“预先保存的真实结果”。
-
-### A. 真机 baseline（LIVE）
-
-终端 1：
+正式 Gate：
 
 ```bash
-cd ai-test-execution-system
+source .venv/bin/activate
+python -m pytest
+git diff --check
+```
+
+Gate 只确认命令成功，不在 Runbook 中硬编码测试数量。每个后续新 Terminal 的第一行都要重新执行：
+
+```bash
+source .venv/bin/activate
+```
+
+同时保留 `./scripts/preflight_ios.sh`，并保留人工门禁：启动 Appium 时必须观察到 XCUITest Driver 真实 load 成功；出现 `Could not load driver` 立即 STOP。
+
+课堂只保留一张可选 STATIC BRIDGE 卡：
+
+> 测试用例 ≠ 可执行测试任务；本课从执行开始。
+
+不再要求课堂逐个打开自然语言用例、AI draft 或 review notes。
+
+## Demo 1：移动端真机自动化框架搭建
+
+目的不是业务支付测试，而是证明：
+
+```text
+Mac → Appium → XCUITest Driver → WebDriverAgent → XCTest → 真实 iPhone Safari
+```
+
+Android 只讲架构：`Android：Appium → UiAutomator2 Driver → ADB → UiAutomator2 Server / UiAutomator → Android`。课堂不增加 Android 真机 live。
+
+### Live 顺序
+
+1. 新 Terminal：`source .venv/bin/activate`，执行 `./scripts/preflight_ios.sh`。
+2. 启动 Appium，完成 XCUITest Driver load 人工 Gate。
+3. 执行 `appium driver run xcuitest open-wda`。
+4. 在 Xcode 展示 `WebDriverAgentRunner`、Signing、Personal Team 和 Bundle ID，执行 `Product → Test`。
+5. 观察 iPhone 出现 `Automation Running`；明确停止 Xcode Test 后再进入 Round0。
+6. 新 Terminal 重新 source `.venv`，检查 8000 和 4723 是否空闲。若占用，只定位进程，不盲杀：
+
+   ```bash
+   source .venv/bin/activate
+   lsof -nP -iTCP:8000 -sTCP:LISTEN
+   lsof -nP -iTCP:4723 -sTCP:LISTEN
+   ```
+
+7. 使用 `IOS_UDID`、`IOS_TEAM_ID`、`IOS_WDA_BUNDLE_ID` 执行 Round0：
+
+   ```bash
+   source .venv/bin/activate
+   IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' \
+   IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+   python scripts/run_round0_ios.py
+   ```
+
+8. 观察 Safari 自动打开、`#round0-action` 自动点击、页面状态改变和 screenshot evidence；用 QuickTime 人工确认投屏。
+
+`run_round0_ios.py` 自己占用 8000 和 4723，因此 T-30 / Demo 1 之前不要启动 FastAPI 或独立 Appium。Demo 1 结束后，才允许启动 FastAPI。
+
+### 讲师判断
+
+- 这是 TRUE_DEVICE 框架链路 Gate，不是业务支付 PASS。
+- Xcode Test 停止、Round0 完整、投屏确认后，才进入 Demo 2。
+- Round0 baseline 失败就 STOP，不跳到后续 UI Self-Heal。
+
+## Demo 2：接口自动化执行
+
+Demo 1 完成后启动 FastAPI，并保持运行供 Demo 3 使用。新 Terminal 先 source：
+
+```bash
+source .venv/bin/activate
 ./scripts/reset_demo.sh
 ./scripts/start_demo.sh
 ```
 
-终端 2：使用课堂环境变量占位符，不把 UDID、Team ID 或 LAN IP 写入 YAML/Git：
+检查 localhost 和 LAN `/health`，并确认 iPhone Safari 可以访问业务页：
 
 ```bash
-cd ai-test-execution-system
-DEMO_BASE_URL='http://<MAC-LAN-IP>:8000' \
-IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' \
-IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
-python3 scripts/run_pay_order_ios.py
+source .venv/bin/activate
+curl -fsS http://127.0.0.1:8000/health
+curl -fsS http://<MAC-LAN-IP>:8000/health
 ```
 
-屏幕关注点：Appium/XCUITest 建立 session；iPhone 关注 Safari 中登录、待付款订单、支付成功；最终观察 API facts 与 cleanup。baseline 失败时停止，不允许继续 V2。
+课堂核心：重复的事情继续交给确定性工具；Agent 不替代 HTTP executor。API wrapper 只编排现有 `tools/api.py`、Skills 和 `runner/retry_policy.py`，不复制业务规则，也不描述成“Agent 亲自发 HTTP 请求”。
 
-### B–C. 制造 V2 变化和旧 locator failure（LIVE）
-
-先确认正式资产恢复为旧 locator：
+### API-only 课堂入口
 
 ```bash
-./scripts/restore_self_heal_baseline.sh
-python3 scripts/run_round2_self_heal.py --stop-after-failure
+source .venv/bin/activate
+python instructor/run_api_demo.py normal
+python instructor/run_api_demo.py timeout-before
+python instructor/run_api_demo.py timeout-after
 ```
 
-该命令先跑 V1 baseline，再切到 V2 并使用正式 `#pay-now` 制造真实失败。屏幕关注 Failure Bundle；iPhone 关注页面没有旧按钮。必须看到：`failure_step=pay_order`、真实 page source 中 `#pay-now` 匹配数为 0、结果为 `EXPECTED_LOCATOR_FAILURE`。若没有建立真机 session、没有真实 page source 或匹配数不是 0，判定为执行失败，不进入 Self-Heal。
-
-### D–H. Candidate、Review、Verify、Write Back
-
-从命令输出取得本次 failure bundle 路径，生成给交互式 Codex 的最小输入：
+需要一次性完整演示时可执行：
 
 ```bash
-python3 scripts/render_round2_candidate_prompt.py \
-  <FAILURE-DIR>/failure-context.json \
-  <FAILURE-DIR>/page-source.html \
-  <FAILURE-DIR>/failure-screenshot.png
+source .venv/bin/activate
+python instructor/run_api_demo.py all
 ```
 
-LIVE：Candidate 由交互式 Codex 真实产生时，只保存规定 JSON；随后继续：
+`normal` 顺序固定为：`reset → config normal → prepare → POST pay → GET facts → 固定断言 → cleanup`。
 
-```bash
-python3 scripts/run_round2_self_heal.py \
-  --failure-dir <FAILURE-DIR> \
-  --interactive-candidate <REAL-CANDIDATE-JSON>
+`timeout-before` 必须现场看到：`HTTP 504`、业务 facts 未提交、`RETRY_ALLOWED`、只 Retry 一次、最终 facts PASS。
+
+`timeout-after` 必须现场看到：`HTTP 504`、业务 facts 已提交、`NO_RETRY_ALREADY_COMMITTED`、不发送第二次支付请求。
+
+wrapper 会把结构化课堂 artifact 保存到被 Git 忽略的 `artifacts/runs/api-demo/`；运行日志、请求结果和历史只作 `ignore` runtime，不提交原始运行数据。
+
+课堂判断：**脚本负责执行明确规则；Agent 的价值从需要结合上下文进行可验证判断开始。**
+
+## Demo 3：真机 UI + AI Self-Heal
+
+将真机 UI Self-Heal 主体放在这里，保留所有真实 evidence Gate。FastAPI 已由 Demo 2 启动并继续运行。
+
+1. **Business baseline**：新 Terminal source `.venv`，执行 `python scripts/run_pay_order_ios.py`。baseline 失败必须 STOP，不进入 Self-Heal。
+2. **V1 → V2 old locator failure**：先恢复 baseline，再用 `python scripts/run_round2_self_heal.py --stop-after-failure` 制造真实旧 locator 失败。
+3. **Failure Bundle**：确认真实 page source、截图、failure context 和 Appium log；再执行 `python scripts/render_round2_candidate_prompt.py <failure-context> <page-source> <screenshot>`。
+4. **real Candidate**：交互式 Codex 产生真实 Candidate；网络不可用时只能展示课前保存的真实 Candidate，不能临时编写 locator。
+5. **Review / Policy Gate**：候选只进入确定性 Review，不能直接写回正式资产。
+6. **Verify 3/3**：必须有 unique DOM match=1 和真实 3/3 evidence。
+7. **Write Back**：只在 Review 和 Verify 通过后受控写回允许的 pay locator。
+8. **AI-off rerun**：用写回后的正式资产验证，不调用 AI。
+9. **restore**：结束或中断都执行：
+
+   ```bash
+   source .venv/bin/activate
+   ./scripts/restore_self_heal_baseline.sh
+   ./scripts/reset_demo.sh
+   ```
+
+不得削弱 baseline、Failure Bundle、real Candidate、Review / Policy Gate、3/3 Verify、Write Back、AI-off rerun 或 restore 的真实证据要求。
+
+## Demo 4：从 Case 到可信执行系统
+
+将原规模化展示放在这里。正式 Suite 仍然只说 `serial`；不要声称已经有通用 parallel executor、device pool、cron daemon 或 dashboard。
+
+保持完整链路：
+
+```text
+Case → Suite → Run Plan → Evidence → Report → Failure Cause → Stability → Test Independence
 ```
 
-Fallback：如果网络或 AI 响应不可用，展示课前保存的真实 Candidate、Review、3/3 Verify 和 Write Back evidence，并明确说“这是预先保存的真实 Candidate/结果，不是假造结果”；不得临时编写一个看似合理的 locator。
+课堂展示：`cases/pay_order.yaml`、`suites/nightly.yaml`、`schedules/nightly.yaml`、脱敏真实 `evidence/round4-pass-summary.md`、本机 report / artifact，以及业务语义 Retry history。不要修改这些正式资产。
 
-观察点：Candidate 只能进入确定性 Review；unique DOM match=1；Verify=3/3；只允许写回 pay locator；固定 API facts 不变。
-
-### I–J. AI-off rerun 与 restore（LIVE 优先）
-
-脚本会在 Gate + Verify 后用正式资产执行 V2 rerun，并最终恢复 baseline、再次制造旧 locator failure。课堂必须指出：最终 rerun 不调用 AI；恢复时机是 Demo 结束或任何中断后。
+可现场执行：
 
 ```bash
+source .venv/bin/activate
+python -m experiments.failure_classification
+```
+
+Shared-state / flaky 按课堂时间和需要展示保存结果或短实验，不改变既有判据。保留课堂结论：
+
+- `Engineering acceptance PASS`
+- `Run Plan execution completed`
+- `Test Run Result FAIL`
+- 测试系统成功完成了一次失败的测试。
+
+现有脱敏真实 evidence 数字原样保留，包括 Round 4 的 `total=5、passed=4、failed=1`；不要用新运行数字替换它们。
+
+## Demo 后 Reset
+
+```bash
+source .venv/bin/activate
 ./scripts/restore_self_heal_baseline.sh
 ./scripts/reset_demo.sh
 ```
 
-Fallback：展示 `evidence/round2-pass-summary.md` 和本机真实 failure bundle；不要把 fallback 说成当前现场真机执行。
-
-## Demo 2：从一个 case 到可信执行系统（约 20 分钟）
-
-主要展示，不现场完整重跑 5 个真机 scenario。
-
-### 展示顺序
-
-1. `cases/pay_order.yaml`：固定 task。
-2. `suites/nightly.yaml`：单一 serial Suite。
-3. `schedules/nightly.yaml`：显式 serial Run Plan。
-4. `evidence/round4-pass-summary.md`：脱敏真实结果，total=5、passed=4、failed=1。
-5. 本机 `reports/<run-id>/report.md` 和 `artifacts/runs/<run-id>/cases/product_bug_inventory_not_decremented/`：展示 PRODUCT BUG facts；不从 GitHub 取原始产物。
-6. before/after commit 的 `retry_history.json`：说明业务语义 Retry。
-7. `experiments/failure_classification.py`：展示四类分类与 UNCLASSIFIED。
-8. `artifacts/round5/flaky-automation/summary.json` 与 `artifacts/history/flaky_automation.jsonl`：展示 12/6/6 和 FLAKY。
-9. `artifacts/round5/shared-state-concurrency/summary.json`：展示 shared order、worker timeline 和状态污染。
-
-### 课堂现场动作
-
-推荐 LIVE 做一个短实验：
-
-```bash
-python3 -m experiments.failure_classification
-```
-
-Fallback：展示本机已保存的 Round 5 summary。不要现场连续重跑完整 iPhone Suite。
-
-课堂判断顺序：Case → Suite → Run Plan → Evidence → Report → Failure Cause → Stability → Test Independence。
-
-## Demo 后 reset
-
-```bash
-./scripts/restore_self_heal_baseline.sh
-./scripts/reset_demo.sh
-```
-
-关闭 FastAPI/Appium/QuickTime 进程；保留本机 ignored evidence 供课后核验。不得把原始日志、截图、设备信息或 history 加入 Git。
+人工关闭 FastAPI、Appium、QuickTime；保留 ignored runtime evidence 供课后核验，不把原始日志、截图、设备信息或历史运行记录加入 Git。
