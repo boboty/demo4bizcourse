@@ -13,7 +13,8 @@ import yaml
 
 from runner.report import build_report
 from runner.suite_runner import load_suite, run_suite
-from scripts.run_pay_order_ios import check_prerequisites, lan_ip, read_case, require_ok
+from scripts.run_pay_order_ios import check_prerequisites, read_case, require_ok
+from tools.runtime import resolve_demo_base_url
 
 
 def utc_run_id() -> str:
@@ -41,7 +42,7 @@ def run_now(plan_path: Path, base_url: Optional[str] = None) -> Dict[str, Any]:
     suite = load_suite(suite_path)
     first_task = (project_root / suite["scenarios"][0]["task"]).resolve()
     case = read_case(first_task)
-    base_url = (base_url or "http://{0}:8000".format(lan_ip())).rstrip("/")
+    base_url = resolve_demo_base_url(base_url)
     require_ok(base_url + plan["preflight"]["health_endpoint"], timeout=10)
     check_prerequisites(case)
 

@@ -19,13 +19,13 @@ from scripts.run_pay_order_ios import (  # noqa: E402
     appium_capabilities,
     assert_equals,
     execute_ui,
-    lan_ip,
     read_case,
     require_ok,
     run_once,
     start_appium,
     stop_appium,
 )
+from tools.runtime import resolve_demo_base_url  # noqa: E402
 from self_heal.analyzer import generate_candidate, import_interactive_candidate  # noqa: E402
 from self_heal.candidate import RepairCandidate  # noqa: E402
 from self_heal.dom import matching_node_count  # noqa: E402
@@ -204,7 +204,7 @@ def main() -> int:
         parser.error("--failure-dir 只用于导入交互式 Codex Candidate 后继续。")
     case = read_case(args.case)
     require_old_locator(case)
-    base_url = (args.base_url or "http://{0}:8000".format(lan_ip())).rstrip("/")
+    base_url = resolve_demo_base_url(args.base_url)
     evidence_dir = new_evidence_dir()
     outcome: Dict[str, Any] = {"round": "Round 2", "result": "FAIL"}
     try:

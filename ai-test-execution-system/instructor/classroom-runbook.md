@@ -63,8 +63,8 @@ Android 只讲架构：`Android：Appium → UiAutomator2 Driver → ADB → UiA
 
    ```bash
    source .venv/bin/activate
-   IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' \
-   IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+   MAC_LAN_IP='<MAC-LAN-IP>' IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' \
+   IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' ROUND0_WAIT_FOR_ENTER=1 \
    python scripts/run_round0_ios.py
    ```
 
@@ -128,8 +128,8 @@ wrapper 会把结构化课堂 artifact 保存到被 Git 忽略的 `artifacts/run
 
 将真机 UI Self-Heal 主体放在这里，保留所有真实 evidence Gate。FastAPI 已由 Demo 2 启动并继续运行。
 
-1. **Business baseline**：新 Terminal source `.venv`，执行 `python scripts/run_pay_order_ios.py`。baseline 失败必须 STOP，不进入 Self-Heal。
-2. **V1 → V2 old locator failure**：先恢复 baseline，再用 `python scripts/run_round2_self_heal.py --stop-after-failure` 制造真实旧 locator 失败。
+1. **Business baseline**：新 Terminal source `.venv`，使用 `MAC_LAN_IP`、`IOS_UDID`、`IOS_TEAM_ID`、`IOS_WDA_BUNDLE_ID` 执行 `python scripts/run_pay_order_ios.py`。baseline 失败必须 STOP，不进入 Self-Heal；FAIL 时额外打印 current step、error、cleanup error 和 evidence 目录。
+2. **V1 → V2 old locator failure**：先恢复 baseline，再使用同一组 runtime 参数执行 `python scripts/run_round2_self_heal.py --stop-after-failure` 制造真实旧 locator 失败。
 3. **Failure Bundle**：确认真实 page source、截图、failure context 和 Appium log；再执行 `python scripts/render_round2_candidate_prompt.py <failure-context> <page-source> <screenshot>`。
 4. **real Candidate**：交互式 Codex 产生真实 Candidate；网络不可用时只能展示课前保存的真实 Candidate，不能临时编写 locator。
 5. **Review / Policy Gate**：候选只进入确定性 Review，不能直接写回正式资产。

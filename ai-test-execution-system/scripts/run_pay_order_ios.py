@@ -7,7 +7,6 @@ import argparse
 import base64
 import json
 import os
-import socket
 import subprocess
 import sys
 import time
@@ -22,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tools.api import HttpToolError, http_request, require_success
+from tools.runtime import lan_ip, resolve_demo_base_url
 from tools import ui
 from workflows.pay_order_and_verify import pay_order_and_verify
 from skills.contracts import ExecutionContext
@@ -50,15 +50,6 @@ FIXED_CLEANUP_FACTS = {
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def lan_ip() -> str:
-    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        probe.connect(("8.8.8.8", 80))
-        return probe.getsockname()[0]
-    finally:
-        probe.close()
 
 
 def request_json(
@@ -415,19 +406,25 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", type=Path, default=ROOT / "cases" / "pay_order.yaml")
     parser.add_argument("--runs", type=int, default=1, help="连续真实执行次数；稳定性门禁使用 5。")
-    parser.add_argument("--base-url", default=os.environ.get("DEMO_BASE_URL"))
+    parser.add_argument("--base-url", default=None)
     args = parser.parse_args()
     if args.runs < 1:
         parser.error("--runs 必须大于 0")
     case = read_case(args.case)
-    base_url = (args.base_url or "http://{0}:8000".format(lan_ip())).rstrip("/")
+    base_url = resolve_demo_base_url(args.base_url)
     batch_dir = latest_batch_dir()
     batch_dir.mkdir(parents=True)
     results = []
     for index in range(1, args.runs + 1):
-        record = run_once(case, base_url, batch_dir / "runs" / "run-{0:03d}".format(index))
+        run_dir = batch_dir / "runs" / "run-{0:03d}".format(index)
+        record = run_once(case, base_url, run_dir)
         results.append({"run": index, "result": record["result"], "cleanup": record.get("cleanup")})
         print("Run {0}/{1}: {2}".format(index, args.runs, record["result"]))
+        if record["result"] != "PASS":
+            print("current_step: {0}".format(record.get("current_step", "unknown")))
+            print("error: {0}".format(record.get("error", "未记录")))
+            print("cleanup_error: {0}".format(record.get("cleanup_error", "未记录")))
+            print("evidence: {0}".format(run_dir))
     batch = {"round": "Round 1", "case_id": case["case_id"], "runs": results, "all_pass": all(item["result"] == "PASS" for item in results)}
     (batch_dir / "batch.json").write_text(json.dumps(batch, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(batch, ensure_ascii=False, indent=2))

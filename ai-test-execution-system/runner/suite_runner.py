@@ -10,7 +10,8 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from runner.retry_policy import run_business_retry
-from scripts.run_pay_order_ios import lan_ip, read_case, run_once
+from scripts.run_pay_order_ios import read_case, run_once
+from tools.runtime import resolve_demo_base_url
 
 
 SUPPORTED_EXECUTORS = {"workflow", "business_retry"}
@@ -89,7 +90,7 @@ def run_suite(
     """按 YAML 声明顺序串行执行 Suite，不生成或修改 UI steps。"""
     suite = load_suite(suite_path)
     project_root = suite_path.parent.parent
-    base_url = (base_url or "http://{0}:8000".format(lan_ip())).rstrip("/")
+    base_url = resolve_demo_base_url(base_url)
     run_dir.mkdir(parents=True, exist_ok=False)
     started_at = utc_now()
     scenario_results: List[Dict[str, Any]] = []
