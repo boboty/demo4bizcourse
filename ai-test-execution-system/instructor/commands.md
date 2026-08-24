@@ -6,6 +6,8 @@
 | --- | --- | --- |
 | SETUP | `source .venv/bin/activate` | 新 Terminal 重新进入项目 `.venv` |
 | SETUP | `python -m pip install -r requirements.txt` | 首次准备课堂 Python 环境 |
+| SETUP | `python instructor/observer_server.py --open` | 课堂开始一次，启动 Test Execution Observer；Demo 1～4 共用 |
+| RESET | `python instructor/observer_server.py --reset` | 只清理 `artifacts/observer/` 时间线，不清理测试数据 |
 | GATE | `source .venv/bin/activate` + `python -m pytest` | 正式测试 Gate；不硬编码旧测试数量 |
 | GATE | `git diff --check` | 空白和 patch 门禁 |
 | RESET | `./scripts/reset_demo.sh` | 恢复 V1、normal、Product Bug off、PENDING_PAY、库存 10 |

@@ -10,8 +10,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from instructor.observer_events import publish_context_event
 from skills.assert_business_state import REQUIRED_FACTS
-from skills.contracts import ExecutionContext, assert_expected_facts
+from skills.contracts import ExecutionContext, assert_expected_facts, compare_expected_facts
 from skills.prepare_pending_order import prepare_pending_order
 from skills.reset_test_state import reset_test_state
 from tools.api import HttpResponse, http_request, require_success
@@ -49,6 +50,7 @@ def run_business_retry(
     base_url: str,
     configuration_override: Dict[str, str],
     artifact_dir: Path,
+    observer_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """执行一个 timeout 场景，最多在明确 NOT_COMMITTED 后发起一次 Retry。"""
     artifact_dir.mkdir(parents=True, exist_ok=False)
@@ -59,7 +61,14 @@ def run_business_retry(
         "retry_count": 0,
     }
     history: Dict[str, Any] = {"attempts": [], "decision": None}
-    context = ExecutionContext(base_url, case, object(), artifact_dir, record=record)
+    context = ExecutionContext(
+        base_url,
+        case,
+        object(),
+        artifact_dir,
+        record=record,
+        observer=observer_context or {},
+    )
     final_facts: Optional[Dict[str, Any]] = None
     timeout_facts: Optional[Dict[str, Any]] = None
     try:
@@ -75,6 +84,16 @@ def run_business_retry(
             raise AssertionError("timeout 场景第一次付款必须返回 HTTP 504，实际为 {0}".format(first.status_code))
         timeout_facts = _facts(base_url, context.order_id, case)
         history["attempts"].append(_attempt(1, first, timeout_facts))
+        publish_context_event(
+            context,
+            source="retry",
+            stage="payment_attempt",
+            event="payment_response",
+            status="INFO",
+            title="HTTP {0}".format(first.status_code),
+            actual=timeout_facts,
+            evidence=[str(artifact_dir / "api-facts-after-timeout.json")],
+        )
 
         try:
             assert_expected_facts(timeout_facts, NOT_COMMITTED_FACTS, "timeout 后未提交状态")
@@ -83,6 +102,20 @@ def run_business_retry(
             assert_expected_facts(timeout_facts, REQUIRED_FACTS, "timeout 后已提交状态")
             decision = "NO_RETRY_ALREADY_COMMITTED"
         history["decision"] = decision
+        decision_expected = NOT_COMMITTED_FACTS if decision == "RETRY_ALLOWED" else REQUIRED_FACTS
+        publish_context_event(
+            context,
+            source="retry",
+            stage="retry",
+            event="retry_decision",
+            status="DECISION",
+            title="Retry Decision",
+            actual=timeout_facts,
+            expected=decision_expected,
+            fact_results=compare_expected_facts(timeout_facts, decision_expected),
+            decision=decision,
+            evidence=[str(artifact_dir / "retry_history.json")],
+        )
 
         if decision == "RETRY_ALLOWED":
             # 只有确认 NOT_COMMITTED 后，才清除本次可控 transient fault 并执行唯一一次 Retry。
@@ -97,12 +130,34 @@ def run_business_retry(
             final_facts = _facts(base_url, context.order_id, case)
             assert_expected_facts(final_facts, REQUIRED_FACTS, "Retry 后业务事实")
             history["attempts"].append(_attempt(2, second, final_facts))
+            publish_context_event(
+                context,
+                source="retry",
+                stage="payment_attempt",
+                event="retry_completed",
+                status="PASS",
+                title="Retry #1",
+                actual=final_facts,
+                expected=REQUIRED_FACTS,
+                fact_results=compare_expected_facts(final_facts, REQUIRED_FACTS),
+            )
             record["retry_count"] = 1
         else:
             final_facts = timeout_facts
             record["retry_count"] = 0
             # 已提交时不再发第二次支付请求，Payment 数量保持为 1。
             assert_expected_facts(final_facts, REQUIRED_FACTS, "已提交且禁止 Retry 的业务事实")
+            publish_context_event(
+                context,
+                source="retry",
+                stage="payment_attempt",
+                event="retry_completed",
+                status="PASS",
+                title="No Retry",
+                actual=final_facts,
+                expected=REQUIRED_FACTS,
+                fact_results=compare_expected_facts(final_facts, REQUIRED_FACTS),
+            )
 
         record["api_facts"] = final_facts
         record["result"] = "PASS"
@@ -119,6 +174,18 @@ def run_business_retry(
             record["result"] = "FAIL"
         else:
             record["cleanup"] = "PASS"
+        publish_context_event(
+            context,
+            source="system",
+            stage="scenario",
+            event="scenario_completed",
+            status="PASS" if record.get("result") == "PASS" else "FAIL",
+            title="Scenario completed",
+            actual=record.get("api_facts") or record.get("api_facts_after_timeout"),
+            expected=REQUIRED_FACTS if record.get("api_facts") else None,
+            decision=history.get("decision"),
+            evidence=[str(artifact_dir)],
+        )
         record["finished_at"] = utc_now()
         (artifact_dir / "retry_history.json").write_text(
             json.dumps(history, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

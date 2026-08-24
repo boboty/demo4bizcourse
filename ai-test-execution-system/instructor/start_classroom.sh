@@ -8,7 +8,7 @@ SERVER_URL='http://127.0.0.1:8765'
 
 cd "$PROJECT_DIR"
 
-"$PYTHON_BIN" "$SCRIPT_DIR/classroom_runbook_server.py" &
+"$PYTHON_BIN" "$SCRIPT_DIR/observer_server.py" --open &
 SERVER_PID=$!
 
 cleanup() {
@@ -34,6 +34,5 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
-echo "Opening $SERVER_URL/"
-open "$SERVER_URL/"
+echo "Test Execution Observer is available at $SERVER_URL/"
 wait "$SERVER_PID"

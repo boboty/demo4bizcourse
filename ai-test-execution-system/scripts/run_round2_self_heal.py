@@ -31,6 +31,7 @@ from self_heal.candidate import RepairCandidate  # noqa: E402
 from self_heal.dom import matching_node_count  # noqa: E402
 from self_heal.reviewer import review_candidate, save_review  # noqa: E402
 from self_heal.writeback import write_back  # noqa: E402
+from instructor.observer_events import publish_event  # noqa: E402
 
 
 V2_CONFIGURATION = {"ui_version": "v2", "payment_mode": "normal", "product_bug_mode": "off"}
@@ -124,6 +125,18 @@ def capture_old_locator_failure(case: Dict[str, Any], base_url: str, evidence_di
                     record["failure_step"], record["old_locator_match_count"]
                 )
             ) from error
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="failure_bundle",
+            event="failure_bundle_ready",
+            status="FAIL",
+            title="EXPECTED_LOCATOR_FAILURE",
+            actual={"old_locator_match_count": record["old_locator_match_count"]},
+            decision=record["result"],
+            evidence=[str(failure_dir)],
+        )
     finally:
         try:
             driver.quit()
@@ -155,6 +168,13 @@ def verify_candidate(case: Dict[str, Any], candidate: RepairCandidate, base_url:
             evidence_dir / "candidate-verification" / "run-{0:03d}".format(index),
             configuration_override=V2_CONFIGURATION,
             round_name="Round 2 Candidate Verify",
+            observer_context={
+                "demo": "demo3",
+                "run_id": evidence_dir.name,
+                "scenario_id": "candidate_verify_{0}".format(index),
+                "scenario_index": index,
+                "scenario_total": runs,
+            },
         )
         # run_once 已使用原案例的固定 API assertions；这里显式记录，避免只用 UI PASS。
         results.append({
@@ -164,6 +184,17 @@ def verify_candidate(case: Dict[str, Any], candidate: RepairCandidate, base_url:
             "api_assertion": record.get("api_assertion"),
             "cleanup": record.get("cleanup"),
         })
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="verify",
+            event="candidate_verification",
+            status="PASS" if record["result"] == "PASS" else "FAIL",
+            title="TRUE DEVICE VERIFY {0} / {1}".format(index, runs),
+            decision=record["result"],
+            evidence=[str(evidence_dir / "candidate-verification" / "run-{0:03d}".format(index))],
+        )
     summary = {"runs": results, "all_pass": all(item["result"] == "PASS" for item in results)}
     save_json(evidence_dir / "candidate-verification.json", summary)
     return summary
@@ -220,10 +251,26 @@ def main() -> int:
             outcome["old_locator_failure"] = "EXPECTED_LOCATOR_FAILURE（从 failure bundle 复核）"
         else:
             # 1. 已有 Round 1 正式资产在 V1 的真实 baseline。
-            baseline = run_once(case, base_url, evidence_dir / "baseline-v1", round_name="Round 2 baseline V1")
+            baseline = run_once(
+                case,
+                base_url,
+                evidence_dir / "baseline-v1",
+                round_name="Round 2 baseline V1",
+                observer_context={"demo": "demo3", "run_id": evidence_dir.name, "scenario_id": "baseline_v1"},
+            )
             if baseline["result"] != "PASS":
                 raise RuntimeError("Round 1 baseline V1 未 PASS。")
             outcome["baseline_v1"] = "PASS"
+            publish_event(
+                source="self_heal",
+                demo="demo3",
+                run_id=evidence_dir.name,
+                stage="baseline",
+                event="baseline_v1",
+                status="PASS",
+                title="BASELINE V1",
+                decision="PASS",
+            )
 
             # 2. V2 下保持正式旧 locator，收集真实失败 bundle。
             failure = capture_old_locator_failure(case, base_url, evidence_dir, "v2-old-locator-failure")
@@ -250,6 +297,17 @@ def main() -> int:
                 candidate_path,
             )
         outcome["ai_candidate"] = "GENERATED"
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="candidate",
+            event="candidate_generated",
+            status="DECISION",
+            title="AI CANDIDATE GENERATED",
+            decision="GENERATED",
+            evidence=[str(candidate_path)],
+        )
 
         # 4. Policy Gate 不会改动案例。
         review = review_candidate(args.case, candidate, (failure_dir / "page-source.html").read_text(encoding="utf-8"))
@@ -257,16 +315,50 @@ def main() -> int:
         if review["decision"] != "APPROVED":
             raise RuntimeError("Review / Policy Gate REJECTED：{0}".format("; ".join(review["reasons"])))
         outcome["review"] = "APPROVED"
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="review",
+            event="candidate_reviewed",
+            status="PASS",
+            title="REVIEW APPROVED",
+            decision=review["decision"],
+            facts={"unique_match_count": review.get("unique_match_count")},
+            evidence=[str(evidence_dir / "review.json")],
+        )
 
         # 5. 临时内存案例的三次真实验证；正式 YAML 此时仍为 #pay-now。
         verification = verify_candidate(case, candidate, base_url, evidence_dir, runs=3)
         if not verification["all_pass"]:
             raise RuntimeError("Candidate 三次真实验证未全部 PASS。")
         outcome["candidate_verification"] = "3/3 PASS"
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="verify",
+            event="candidate_verification_completed",
+            status="PASS",
+            title="VERIFY 3 / 3 PASS",
+            decision="3/3 PASS",
+            evidence=[str(evidence_dir / "candidate-verification.json")],
+        )
 
         # 6. 仅在 Gate + Verify 成功后，单行写回，并以正式资产执行一次 V2（不调用 AI）。
         audit = write_back(args.case, candidate, review, verification, evidence_dir / "writeback-audit.json")
         outcome["writeback"] = audit["after"]
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="writeback",
+            event="writeback_completed",
+            status="PASS",
+            title="WRITE BACK DONE",
+            decision="DONE",
+            evidence=[str(evidence_dir / "writeback-audit.json")],
+        )
         written_case = read_case_after_writeback(args.case)
         rerun = run_once(
             written_case,
@@ -278,6 +370,17 @@ def main() -> int:
         if rerun["result"] != "PASS":
             raise RuntimeError("写回后的正式资产 V2 rerun 未 PASS。")
         outcome["post_writeback_rerun"] = "PASS"
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="regression",
+            event="ai_off_regression",
+            status="PASS",
+            title="AI-OFF REGRESSION",
+            decision="PASS",
+            evidence=[str(evidence_dir / "post-writeback-v2")],
+        )
 
         # 7. 执行恢复脚本的同等逻辑，并再次用真机制造旧 locator failure。
         from scripts.restore_self_heal_baseline import main as restore_main
@@ -290,6 +393,16 @@ def main() -> int:
             raise RuntimeError("baseline restore 后未能再次制造旧 locator failure。")
         require_ok(base_url + restored_case["cleanup"]["endpoint"], "POST")
         outcome["baseline_restore"] = "PASS"
+        publish_event(
+            source="self_heal",
+            demo="demo3",
+            run_id=evidence_dir.name,
+            stage="restore",
+            event="baseline_restored",
+            status="PASS",
+            title="BASELINE RESTORE",
+            decision="PASS",
+        )
         outcome["result"] = "PASS"
         write_pass_summary(PROJECT_ROOT / "evidence" / "round2-pass-summary.md", candidate, verification)
     except Exception as error:

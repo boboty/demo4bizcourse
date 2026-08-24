@@ -28,6 +28,7 @@ from skills.contracts import ExecutionContext
 from skills.prepare_pending_order import prepare_pending_order
 from skills.reset_test_state import reset_test_state
 from tools.api import http_request, require_success
+from instructor.observer_events import publish_event
 
 
 SCENARIOS = ("normal", "timeout-before", "timeout-after")
@@ -61,7 +62,22 @@ def run_normal(case: Dict[str, Any], base_url: str, artifact_dir: Path) -> Dict[
         "result": "FAIL",
         "artifact_policy": "ignore: runtime classroom evidence",
     }
-    context = ExecutionContext(base_url, case, object(), artifact_dir, record=record)
+    observer = {
+        "demo": "demo2",
+        "run_id": artifact_dir.parent.name,
+        "scenario_id": "normal",
+    }
+    context = ExecutionContext(base_url, case, object(), artifact_dir, record=record, observer=observer)
+    publish_event(
+        source="system",
+        demo="demo2",
+        run_id=observer["run_id"],
+        scenario_id="normal",
+        stage="scenario",
+        event="scenario_started",
+        status="RUNNING",
+        title="Normal payment started",
+    )
     try:
         require_success(base_url + case["preconditions"]["health_endpoint"])
         require_success(base_url + case["test_data"]["reset_endpoint"], method="POST")
@@ -74,6 +90,17 @@ def run_normal(case: Dict[str, Any], base_url: str, artifact_dir: Path) -> Dict[
         payment_url = base_url + PAYMENT_ENDPOINT.format(order_id=context.order_id)
         payment = http_request(payment_url, method="POST")
         record["payment_http_status"] = payment.status_code
+        publish_event(
+            source="api",
+            demo="demo2",
+            run_id=observer["run_id"],
+            scenario_id="normal",
+            stage="pay",
+            event="payment_response",
+            status="PASS" if payment.ok else "FAIL",
+            title="POST /pay",
+            facts={"http_status": payment.status_code},
+        )
         if not payment.ok:
             raise AssertionError("normal 场景支付请求失败：HTTP {0}".format(payment.status_code))
         facts = assert_business_state(context)["facts"]
@@ -91,6 +118,19 @@ def run_normal(case: Dict[str, Any], base_url: str, artifact_dir: Path) -> Dict[
             record["result"] = "FAIL"
         else:
             record["cleanup"] = "PASS"
+        publish_event(
+            source="system",
+            demo="demo2",
+            run_id=observer["run_id"],
+            scenario_id="normal",
+            stage="scenario",
+            event="scenario_completed",
+            status="PASS" if record.get("result") == "PASS" else "FAIL",
+            title="Normal payment completed",
+            actual=record.get("api_facts"),
+            expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
+            evidence=[str(artifact_dir)],
+        )
         write_json(artifact_dir / "result.json", record)
     return record
 
@@ -101,7 +141,38 @@ def run_timeout(
     mode = "timeout_before_commit" if scenario == "timeout-before" else "timeout_after_commit"
     configuration = dict(case["configuration"])
     configuration["payment_mode"] = mode
-    return run_business_retry(case, base_url, configuration, artifact_dir)
+    result = run_business_retry(case, base_url, configuration, artifact_dir)
+    history_path = artifact_dir / "retry_history.json"
+    history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.is_file() else {}
+    decision = history.get("decision")
+    publish_event(
+        source="retry",
+        demo="demo2",
+        run_id=artifact_dir.parent.name,
+        scenario_id=scenario,
+        stage="retry",
+        event="retry_decision",
+        status="DECISION",
+        title="Retry Decision",
+        decision=decision,
+        actual=(history.get("attempts") or [{}])[0].get("business_facts"),
+        evidence=[str(history_path)] if history_path.is_file() else None,
+    )
+    publish_event(
+        source="system",
+        demo="demo2",
+        run_id=artifact_dir.parent.name,
+        scenario_id=scenario,
+        stage="scenario",
+        event="scenario_completed",
+        status="PASS" if result.get("result") == "PASS" else "FAIL",
+        title="{0} completed".format(scenario),
+        actual=result.get("api_facts"),
+        expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
+        decision=decision,
+        evidence=[str(artifact_dir)],
+    )
+    return result
 
 
 def print_normal_result(result: Dict[str, Any], artifact_dir: Path) -> None:

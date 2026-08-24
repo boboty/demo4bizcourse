@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Execution Observer</title>
+  <style>
+    :root{--ink:#172033;--muted:#637083;--line:#dbe2eb;--soft:#f5f8fc;--blue:#155eef;--green:#087443;--red:#b42318;--amber:#9a6700}
+    *{box-sizing:border-box}body{margin:0;background:#eef2f7;color:var(--ink);font:18px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:1500px;margin:0 auto;padding:28px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 8px 24px #20314b12;margin-bottom:18px}
+    header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}h1,h2,h3{margin:0;line-height:1.15}h1{font-size:clamp(32px,4vw,54px)}h2{font-size:25px;margin-bottom:15px}h3{font-size:18px;color:var(--muted)}.subtitle{color:var(--muted);margin:8px 0 0}
+    button{border:1px solid #aebbd0;border-radius:9px;padding:9px 13px;background:#fff;color:var(--ink);font-weight:800;font-size:14px;cursor:pointer}button:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+    .current{background:#eaf1ff;border-color:#b6cbff}.eyebrow{color:var(--blue);font-weight:900;letter-spacing:.08em;font-size:14px}.action{font-size:clamp(25px,3vw,42px);font-weight:900;margin-top:8px}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:#fff;font-size:14px;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.decision{font-size:clamp(30px,4vw,52px);font-weight:950;color:var(--green);word-break:break-word}.decision.fail{color:var(--red)}.decision.info{color:var(--blue)}
+    table{border-collapse:collapse;width:100%;font-size:17px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px}th{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}.pass{color:var(--green);font-weight:900}.fail{color:var(--red);font-weight:900}.na{color:var(--muted)}
+    .evidence{display:flex;gap:8px;flex-wrap:wrap}.evidence span{background:var(--soft);border:1px solid var(--line);padding:6px 9px;border-radius:7px;font-size:14px}.timeline{display:grid;gap:6px;max-height:360px;overflow:auto}.event{display:grid;grid-template-columns:100px 100px 1fr auto;gap:10px;border-bottom:1px solid var(--line);padding:8px 0;font-size:15px}.event time,.event .source{color:var(--muted)}.event .status{font-weight:900}.analysis{background:#fffaf0;border-color:#f5d08b}.analysis dl{display:grid;grid-template-columns:190px 1fr;gap:8px 14px;margin:0}.analysis dt{color:var(--muted);font-weight:800}.analysis dd{margin:0;font-weight:800}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.event{grid-template-columns:80px 1fr}.event .source{display:none}.event .status{grid-column:2}}
+  </style>
+</head>
+<body>
+<main>
+  <section class="panel current"><header><div><div class="eyebrow">TEST EXECUTION OBSERVER</div><h1>Actions · Facts · Decisions · Evidence</h1><p class="subtitle">手机展示系统真的在动，Observer 展示系统内部已经知道了什么事实。</p></div><button id="reset" type="button">Reset Observer</button></header><div class="meta" id="meta"><span class="tag">等待事件…</span></div><div class="eyebrow" style="margin-top:22px">CURRENT ACTION</div><div class="action" id="action">等待正式测试事件</div></section>
+  <div class="grid"><section class="panel"><h2>FACTS</h2><div id="facts"><p class="na">Not available</p></div></section><section class="panel"><h2>DECISION / RESULT</h2><div id="decision" class="decision info">Not available</div><p id="decisionDetail" class="subtitle"></p></section></div>
+  <section class="panel"><h2>EVIDENCE</h2><div id="evidence" class="evidence"><span class="na">Not available</span></div></section>
+  <section class="panel analysis" id="analysisPanel" hidden><h2>AGENT ANALYSIS <small>READY</small></h2><p><a id="analysisPath" target="_blank" rel="noopener">Open Original Analysis</a></p><dl id="analysis"></dl></section>
+  <section class="panel"><h2>TIMELINE <small style="color:#637083;font-size:14px">最近 30 条关键事件</small></h2><div id="timeline" class="timeline"><p class="na">暂无事件</p></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const labels={order_status:'Order Status',payment_count:'Payment Count','payment_record.status':'Payment Status','inventory.available_quantity':'Inventory'};
+function valueAt(obj,path){return path.split('.').reduce((value,key)=>value&&typeof value==='object'?value[key]:undefined,obj)}
+function fmt(value){return value===null?'null':value===undefined?'Not available':typeof value==='object'?JSON.stringify(value):String(value)}
+function paths(expected,actual){return [...new Set([...Object.keys(expected||{}),...Object.keys(actual||{})])].filter(Boolean)}
+function renderFacts(event){const expected=event.expected||{};const actual=event.actual||event.facts||{};const results=event.fact_results||{};const keys=paths(expected,actual);if(!keys.length){$('facts').innerHTML='<p class="na">Not available</p>';return}let html='<table><thead><tr><th>Business Fact</th><th>Actual</th><th>Expected</th><th>Result</th></tr></thead><tbody>';for(const key of keys){const result=results[key];html+=`<tr><td>${labels[key]||key}</td><td>${fmt(valueAt(actual,key))}</td><td>${fmt(expected[key])}</td><td class="${result==='PASS'?'pass':result==='FAIL'?'fail':'na'}">${result||'Not available'}</td></tr>`}$('facts').innerHTML=html+'</tbody></table>'}
+function renderCurrent(event){if(!event||!event.event){$('action').textContent='等待正式测试事件';$('meta').innerHTML='<span class="tag">等待事件…</span>';return}const meta=[event.demo,event.run_id,event.scenario_id,event.scenario_index&&event.scenario_total?`Scenario ${event.scenario_index} / ${event.scenario_total}`:null,event.stage].filter(Boolean);$('meta').innerHTML=meta.map(x=>`<span class="tag">${x}</span>`).join('');$('action').textContent=event.title||event.event;const decision=event.decision||event.result||event.status||'Not available';$('decision').textContent=decision;$('decision').className='decision '+(String(decision).includes('FAIL')||event.status==='FAIL'?'fail':event.status==='INFO'?'info':'');$('decisionDetail').textContent=event.event||'';const ev=event.evidence||[];$('evidence').innerHTML=ev.length?ev.map(x=>`<span>${x}</span>`).join(''):'<span class="na">Not available</span>';renderFacts(event)}
+function renderTimeline(events){if(!events.length){$('timeline').innerHTML='<p class="na">暂无事件</p>';return}$('timeline').innerHTML=events.slice().reverse().map(e=>`<div class="event"><time>${new Date(e.timestamp).toLocaleTimeString()}</time><span class="source">${e.source||''}</span><span>${e.title||e.event||''}</span><span class="status ${e.status==='FAIL'?'fail':e.status==='PASS'?'pass':''}">${e.decision||e.status||''}</span></div>`).join('')}
+function renderAnalysis(analysis){if(!analysis){$('analysisPanel').hidden=true;return}$('analysisPanel').hidden=false;$('analysisPath').href='file://'+analysis.path;$('analysisPath').textContent='Open Original Analysis: '+analysis.path;const names={engineering_execution:'Engineering Execution',test_run_result:'Test Run Result',failure_cause:'Failure Cause',retry_decision:'Retry Decision',recommended_action:'Recommended Action'};$('analysis').innerHTML=Object.entries(analysis.fields||{}).map(([key,value])=>`<dt>${names[key]||key}</dt><dd>${value}</dd>`).join('')||'<dt>Status</dt><dd>READY</dd>'}
+async function refresh(){try{const [current,events]=await Promise.all([fetch('/api/current',{cache:'no-store'}).then(r=>r.json()),fetch('/api/events?limit=30',{cache:'no-store'}).then(r=>r.json())]);renderCurrent(current.current);renderTimeline(events.events||[]);renderAnalysis(current.agent_analysis)}catch(error){$('action').textContent='Observer 正在等待本地服务';}}
+async function resetObserver(){if(!confirm('只清除 Observer runtime？'))return;await fetch('/api/reset',{method:'POST'});await refresh()}
+$('reset').addEventListener('click',resetObserver);refresh();setInterval(refresh,600);
+</script>
+</body>
+</html>

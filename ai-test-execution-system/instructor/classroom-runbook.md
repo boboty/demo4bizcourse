@@ -26,6 +26,25 @@ Gate 只确认命令成功，不在 Runbook 中硬编码测试数量。每个后
 source .venv/bin/activate
 ```
 
+## Classroom Observer
+
+课堂开始时只启动一次旁路观察页，之后 Demo 1～4 共用同一个页面：
+
+```bash
+source .venv/bin/activate
+python instructor/observer_server.py --open
+```
+
+Observer 只展示正式系统已经产生的 Actions、Facts、Decisions、Evidence，不参与测试执行、PASS/FAIL、Retry、Failure Cause 或 Self-Heal 判断。Observer 没启动、页面挂掉或事件写入失败，都不影响正式测试。
+
+需要复位 Observer 自己的时间线时，只执行：
+
+```bash
+python instructor/observer_server.py --reset
+```
+
+该命令只删除 `artifacts/observer/`，不清理 `evidence/`、`artifacts/runs/`、`reports/`、`self_heal/` 或任何测试数据。
+
 同时保留 `./scripts/preflight_ios.sh`，并保留人工门禁：启动 Appium 时必须观察到 XCUITest Driver 真实 load 成功；出现 `Could not load driver` 立即 STOP。
 
 课堂只保留一张可选 STATIC BRIDGE 卡：
@@ -78,6 +97,8 @@ Android 只讲架构：`Android：Appium → UiAutomator2 Driver → ADB → UiA
 - Xcode Test 停止、Round0 完整、投屏确认后，才进入 Demo 2。
 - Round0 baseline 失败就 STOP，不跳到后续 UI Self-Heal。
 
+Observer 必须看到：Environment Check → Physical Device CONNECTED → WDA Session CREATED → UI Action COMPLETED → Session CLOSED。
+
 ## Demo 2：接口自动化执行
 
 Demo 1 完成后启动 FastAPI，并保持运行供 Demo 3 使用。新 Terminal 先 source：
@@ -119,6 +140,8 @@ python instructor/run_api_demo.py all
 `timeout-before` 必须现场看到：`HTTP 504`、业务 facts 未提交、`RETRY_ALLOWED`、只 Retry 一次、最终 facts PASS。
 
 `timeout-after` 必须现场看到：`HTTP 504`、业务 facts 已提交、`NO_RETRY_ALREADY_COMMITTED`、不发送第二次支付请求。
+
+Observer 必须看到：Before / Actual / Expected facts，以及正式 Retry policy 产生的 `RETRY_ALLOWED` 或 `NO_RETRY_ALREADY_COMMITTED`。
 
 wrapper 会把结构化课堂 artifact 保存到被 Git 忽略的 `artifacts/runs/api-demo/`；运行日志、请求结果和历史只作 `ignore` runtime，不提交原始运行数据。
 
@@ -256,6 +279,8 @@ PASS
 
 必须看到：`baseline_v1 PASS`（从真实 bundle 复核）、`old_locator_failure EXPECTED_LOCATOR_FAILURE`、`ai_candidate GENERATED`、Review APPROVED、Candidate verification 3/3 PASS、`post_writeback_rerun PASS`、`baseline_restore PASS`、repeat old-locator failure 和最终 `result PASS`。
 
+Observer 必须看到：Failure Bundle → Candidate → Review → Verify 3/3 → Write Back → AI-off Regression → Baseline Restore。Observer 不批准 Candidate、不写回 locator、不触发 Self-Heal。
+
 课堂核心判断：第一次证明 AI 能找到变化；第二次证明系统没有把 AI 的不确定性直接带进正式回归。
 
 ### 安全复位 / 中断恢复
@@ -293,6 +318,8 @@ Skill
 ```
 
 核心表达：传统自动化负责把测试可靠地执行完；AI 开始接管执行之后的理解、判断和处置。
+
+Observer 贯穿本 Demo，但不是第五个流程步骤；它展示 UI Result → Business Facts → Business Assertion，以及 Step 03 产生真实 `agent-analysis.md` 后的 `AGENT ANALYSIS READY`。
 
 ### 01 Existing Automation Foundation
 

@@ -20,6 +20,10 @@ SITE = ROOT / "site"
 EVIDENCE = ROOT / "evidence" / ("ios-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
 PORT = 8000
 ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from instructor.observer_events import publish_event  # noqa: E402
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *_):
@@ -27,6 +31,15 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 record = {"round": "Round 0", "platform": "iOS", "started_at": datetime.now(timezone.utc).isoformat(),
           "commands": [], "result": "FAIL"}
+
+publish_event(
+    source="system",
+    demo="demo1",
+    stage="environment",
+    event="run_started",
+    status="RUNNING",
+    title="Environment Check",
+)
 
 def run(*command):
     completed = subprocess.run(command, text=True, capture_output=True)
@@ -71,12 +84,36 @@ try:
     if run("xcodebuild", "-version").returncode:
         raise RuntimeError("需要完整 Xcode，当前开发者目录不能仅为 Command Line Tools。")
     run("appium", "--version")
+    publish_event(
+        source="system",
+        demo="demo1",
+        stage="environment",
+        event="appium_ready",
+        status="PASS",
+        title="Appium Server READY",
+    )
     drivers = run("appium", "driver", "list", "--installed")
     if "xcuitest" not in drivers.stdout + drivers.stderr:
         raise RuntimeError("未安装 Appium XCUITest Driver。")
+    publish_event(
+        source="system",
+        demo="demo1",
+        stage="environment",
+        event="xcuitest_driver_ready",
+        status="PASS",
+        title="XCUITest Driver READY",
+    )
     device_info = run("xcrun", "devicectl", "device", "info", "details", "--device", udid)
     if device_info.returncode:
         raise RuntimeError("Xcode 无法访问此 iPhone；请检查 USB 信任、Developer Mode 和连接状态。")
+    publish_event(
+        source="device",
+        demo="demo1",
+        stage="environment",
+        event="device_connected",
+        status="PASS",
+        title="Physical Device CONNECTED",
+    )
     os.chdir(SITE)
     server = ThreadingHTTPServer(("0.0.0.0", PORT), QuietHandler)
     Thread(target=server.serve_forever, daemon=True).start()
@@ -106,6 +143,14 @@ try:
     created = webdriver("POST", "/session", caps)
     session_id = created["sessionId"]
     record["appium_session"] = session_id
+    publish_event(
+        source="device",
+        demo="demo1",
+        stage="session",
+        event="wda_session_created",
+        status="PASS",
+        title="WDA Session CREATED",
+    )
     webdriver("POST", f"/session/{session_id}/url", {"url": test_url})
     button = webdriver("POST", f"/session/{session_id}/element", {"using": "css selector", "value": "#round0-action"})
     webdriver("POST", f"/session/{session_id}/element/{button[ELEMENT_KEY]}/click", {})
@@ -113,6 +158,14 @@ try:
     text = webdriver("GET", f"/session/{session_id}/element/{status[ELEMENT_KEY]}/text")
     if text != "已由 Appium 点击验证":
         raise RuntimeError(f"页面状态未变化，实际值: {text!r}")
+    publish_event(
+        source="ui",
+        demo="demo1",
+        stage="ui_action",
+        event="ui_action_completed",
+        status="PASS",
+        title="UI Action COMPLETED",
+    )
     time.sleep(1)
     (EVIDENCE / "after-click.png").write_bytes(base64.b64decode(webdriver("GET", f"/session/{session_id}/screenshot")))
     record["page_change"] = text
@@ -142,6 +195,15 @@ finally:
         server.shutdown()
         server.server_close()
     record["finished_at"] = datetime.now(timezone.utc).isoformat()
+    publish_event(
+        source="system",
+        demo="demo1",
+        stage="session",
+        event="session_closed",
+        status="PASS" if record["result"].startswith("PASS") else "FAIL",
+        title="Session CLOSED",
+        evidence=[str(EVIDENCE)],
+    )
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     (EVIDENCE / "run.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(record, ensure_ascii=False, indent=2))

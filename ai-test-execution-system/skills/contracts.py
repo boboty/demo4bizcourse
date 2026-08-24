@@ -45,6 +45,7 @@ class ExecutionContext:
     order_id: Optional[str] = None
     user: Optional[Dict[str, Any]] = None
     record: Dict[str, Any] = field(default_factory=dict)
+    observer: Dict[str, Any] = field(default_factory=dict)
 
 
 def nested_get(value: Any, dotted_path: str) -> Any:
@@ -56,12 +57,20 @@ def nested_get(value: Any, dotted_path: str) -> Any:
     return current
 
 
+def compare_expected_facts(actual: Dict[str, Any], expected: Dict[str, Any]) -> Dict[str, str]:
+    """返回正式 facts assertion 使用的逐项结果，供旁路展示复用。"""
+    return {
+        dotted_path: "PASS" if nested_get(actual, dotted_path) == wanted else "FAIL"
+        for dotted_path, wanted in expected.items()
+    }
+
+
 def assert_expected_facts(actual: Dict[str, Any], expected: Dict[str, Any], label: str) -> None:
-    mismatches = []
-    for dotted_path, wanted in expected.items():
-        got = nested_get(actual, dotted_path)
-        if got != wanted:
-            mismatches.append("{0}: 期望 {1!r}，实际 {2!r}".format(dotted_path, wanted, got))
+    mismatches = [
+        "{0}: 期望 {1!r}，实际 {2!r}".format(dotted_path, expected[dotted_path], nested_get(actual, dotted_path))
+        for dotted_path, result in compare_expected_facts(actual, expected).items()
+        if result == "FAIL"
+    ]
     if mismatches:
         raise AssertionError("{0}断言失败：{1}".format(label, "; ".join(mismatches)))
 

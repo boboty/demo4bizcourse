@@ -12,6 +12,7 @@ source .venv/bin/activate
 
 - [ ] 确认项目 `.venv` 已准备；首次准备执行 `python -m pip install -r requirements.txt`。
 - [ ] 用 `.venv` 执行 `python -m pytest` 和 `git diff --check`。
+- [ ] 课堂开始启动一次 `python instructor/observer_server.py --open`，整堂课保持 Observer 开启。
 - [ ] Xcode Personal Team 可用，确认 WDA signing freshness；重新 Build/Sign WebDriverAgent。
 - [ ] iPhone Developer Mode、USB trust、解锁状态正常。
 - [ ] 保留并完整执行 `./scripts/preflight_ios.sh`。
@@ -20,6 +21,7 @@ source .venv/bin/activate
 - [ ] Demo 2 API 三场景完整：`normal`、`timeout-before`、`timeout-after`；确认 stdout 中出现各自的 HTTP 504、业务 facts 和 Retry 判断。
 - [ ] Demo 3 Self-Heal 完整：business baseline → V1/V2 old locator failure → Failure Bundle → real Candidate → Review / Policy Gate → Verify 3/3 → Write Back → AI-off rerun → restore。
 - [ ] Demo 4 完整排练 01 Existing Automation Foundation → 02 Execute Test Run → 03A/03B/03C Codex Test Run Analysis → 04 From Prompt to Skill；不修改既有真实 evidence 数字。
+- [ ] Observer 能看到 Demo 1～4 的关键 Actions、Facts、Decisions、Evidence；Observer 不参与正式测试判断。
 - [ ] 课前可以没有历史 Round 4 Run；若使用预生成 Run 作为备用，保留其对应 report。Step 02 生成本轮 Run 后，到 Step 03 分析完成前不得清理 `artifacts/runs/<current-run>`、`reports/<current-run-id>/`，也不得整体删除 `artifacts/runs/`。
 
 首次准备示例（只在 `.venv` 尚不存在时创建）：

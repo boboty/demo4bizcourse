@@ -25,6 +25,7 @@ from tools.runtime import lan_ip, resolve_demo_base_url
 from tools import ui
 from workflows.pay_order_and_verify import pay_order_and_verify
 from skills.contracts import ExecutionContext
+from instructor.observer_events import publish_context_event
 
 
 ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
@@ -337,6 +338,7 @@ def run_once(
     evidence_dir: Path,
     configuration_override: Optional[Dict[str, str]] = None,
     round_name: str = "Round 1",
+    observer_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     evidence_dir.mkdir(parents=True, exist_ok=False)
     record: Dict[str, Any] = {
@@ -355,6 +357,15 @@ def run_once(
         driver=driver,
         evidence_dir=evidence_dir,
         record=record,
+        observer=observer_context or {},
+    )
+    publish_context_event(
+        context,
+        source="system",
+        stage="run",
+        event="scenario_started",
+        status="RUNNING",
+        title="Scenario started",
     )
     try:
         require_ok(base_url + case["preconditions"]["health_endpoint"], timeout=10)
@@ -392,6 +403,17 @@ def run_once(
                 record["cleanup_error"] = str(cleanup_error)
                 record["result"] = "FAIL"
         record["finished_at"] = utc_now()
+        publish_context_event(
+            context,
+            source="system",
+            stage="run",
+            event="scenario_completed",
+            status="PASS" if record.get("result") == "PASS" else "FAIL",
+            title="Scenario completed",
+            actual=record.get("api_facts"),
+            expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
+            evidence=[str(evidence_dir)],
+        )
         (evidence_dir / case["evidence"]["failure_context"]).write_text(
             json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )

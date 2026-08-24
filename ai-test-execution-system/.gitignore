@@ -35,3 +35,6 @@ reports/
 # Round 5 实验运行结果与跨运行历史只保留在本机。
 artifacts/round5/
 artifacts/history/
+
+# Classroom Observer runtime；只保留在本机，不提交。
+artifacts/observer/

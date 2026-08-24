@@ -5,6 +5,7 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Callable, Dict
 
+from instructor.observer_events import publish_context_event
 from skills.assert_business_state import assert_business_state
 from skills.contracts import ExecutionContext, SkillError
 from skills.login import login
@@ -29,6 +30,14 @@ def pay_order_and_verify(
     record = context.record
     record["workflow"] = NAME
     record["current_step"] = "prepare_pending_order"
+    publish_context_event(
+        context,
+        source="workflow",
+        stage=NAME,
+        event="workflow_started",
+        status="RUNNING",
+        title="Payment workflow started",
+    )
     try:
         prepare_pending_order(context)
         record["prepared_order"] = True
@@ -37,6 +46,14 @@ def pay_order_and_verify(
         device.device_health_check(device_health_check, context.case)
         record["current_step"] = "create_session"
         device.create_session(context.driver, create_capabilities(context.case))
+        publish_context_event(
+            context,
+            source="device",
+            stage="create_session",
+            event="wda_session_created",
+            status="PASS",
+            title="WDA Session Created",
+        )
         record["current_step"] = "open_url"
         page_url = urllib.parse.urljoin(
             context.base_url + "/", context.case["ui"]["url"].lstrip("/")
@@ -84,4 +101,13 @@ def pay_order_and_verify(
             record["cleanup_error"] = str(error)
             record["cleanup_failure"] = error.to_dict()
             record["result"] = "FAIL"
+        publish_context_event(
+            context,
+            source="workflow",
+            stage=NAME,
+            event="workflow_completed",
+            status="PASS" if record.get("result") == "PASS" else "FAIL",
+            title="Workflow completed",
+            evidence=[str(context.evidence_dir)],
+        )
     return record

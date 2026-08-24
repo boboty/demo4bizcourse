@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from instructor.observer_events import publish_event
 from runner.retry_policy import run_business_retry
 from scripts.run_pay_order_ios import read_case, run_once
 from tools.runtime import resolve_demo_base_url
@@ -94,27 +95,61 @@ def run_suite(
     run_dir.mkdir(parents=True, exist_ok=False)
     started_at = utc_now()
     scenario_results: List[Dict[str, Any]] = []
+    run_id = run_dir.name
+    scenario_total = len(suite["scenarios"])
+    publish_event(
+        source="system",
+        demo="demo4",
+        run_id=run_id,
+        stage="run",
+        event="run_started",
+        status="RUNNING",
+        title="Demo 4 Test Run started",
+        scenario_total=scenario_total,
+    )
 
-    for scenario in suite["scenarios"]:
+    for scenario_index, scenario in enumerate(suite["scenarios"], start=1):
         scenario_dir = run_dir / "cases" / scenario["scenario_id"]
         task_path = (project_root / scenario["task"]).resolve()
         record: Dict[str, Any]
+        scenario_case: Optional[Dict[str, Any]] = None
+        observer_context = {
+            "demo": "demo4",
+            "run_id": run_id,
+            "scenario_id": scenario["scenario_id"],
+            "scenario_index": scenario_index,
+            "scenario_total": scenario_total,
+        }
+        publish_event(
+            source="system",
+            demo="demo4",
+            run_id=run_id,
+            scenario_id=scenario["scenario_id"],
+            scenario_index=scenario_index,
+            scenario_total=scenario_total,
+            stage="scenario",
+            event="scenario_started",
+            status="RUNNING",
+            title=scenario["scenario_id"],
+        )
         try:
-            case = read_case(task_path)
+            scenario_case = read_case(task_path)
             if scenario["executor"] == "workflow":
                 record = run_once(
-                    case,
+                    scenario_case,
                     base_url,
                     scenario_dir,
                     configuration_override=scenario["configuration_override"],
                     round_name="Round 4 Suite",
+                    observer_context=observer_context,
                 )
             else:
                 record = run_business_retry(
-                    case,
+                    scenario_case,
                     base_url,
                     scenario["configuration_override"],
                     scenario_dir,
+                    observer_context=observer_context,
                 )
         except Exception as error:
             scenario_dir.mkdir(parents=True, exist_ok=True)
@@ -125,6 +160,22 @@ def run_suite(
                 "error": str(error),
                 "retry_count": 0,
             }
+        publish_event(
+            source="system",
+            demo="demo4",
+            run_id=run_id,
+            scenario_id=scenario["scenario_id"],
+            scenario_index=scenario_index,
+            scenario_total=scenario_total,
+            stage="scenario",
+            event="scenario_completed",
+            status="PASS" if record.get("result") == "PASS" else "FAIL",
+            title=scenario["scenario_id"],
+            actual=record.get("api_facts") or record.get("api_facts_after_timeout"),
+            expected=(scenario_case.get("assertions", {}).get("api_facts", {}).get("equals") if scenario_case else None),
+            decision=record.get("decision"),
+            evidence=[str(scenario_dir)],
+        )
         scenario_results.append(_write_scenario_result(scenario_dir, record, scenario, task_path))
 
     finished_at = utc_now()
@@ -148,4 +199,15 @@ def run_suite(
     }
     _write_json(run_dir / "suite.json", {"suite": suite["suite_id"], "execution_mode": suite["execution_mode"], "scenarios": suite["scenarios"]})
     _write_json(run_dir / "run.json", run_record)
+    publish_event(
+        source="system",
+        demo="demo4",
+        run_id=run_id,
+        stage="run",
+        event="run_completed",
+        status="PASS" if run_record["result"] == "PASS" else "FAIL",
+        title="Demo 4 Test Run completed",
+        scenario_total=scenario_total,
+        evidence=[str(run_dir)],
+    )
     return run_record
