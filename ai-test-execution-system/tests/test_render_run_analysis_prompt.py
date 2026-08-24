@@ -86,5 +86,5 @@ def test_demo4_runbook_has_prompt_to_skill_structure() -> None:
         assert "find_latest_complete_run.py" in content
         assert "render_run_analysis_prompt.py" in content
         assert "Agent Analysis: READY" in content
-        assert "03 From Prompt to Skill" in content or "### 03 From Prompt to Skill" in content
-        assert "不得整体删除 `artifacts/runs/`" in content
+        assert "04 From Prompt to Skill" in content or "### 04 From Prompt to Skill" in content
+        assert "不得整体删除 `artifacts/runs/`" in content or "不能整体删除 `artifacts/runs/`" in content

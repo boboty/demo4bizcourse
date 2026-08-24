@@ -277,12 +277,26 @@ source .venv/bin/activate
 顶部课堂链路：
 
 ```text
-Existing Automation → Completed Run → Agent Analysis → Deterministic Rules → Decision → Skill
+Existing Automation
+        ↓
+Execute Test Run
+        ↓
+Completed Run
+        ↓
+Agent Analysis
+        ↓
+Deterministic Rules
+        ↓
+Decision
+        ↓
+Skill
 ```
+
+核心表达：传统自动化负责把测试可靠地执行完；AI 开始接管执行之后的理解、判断和处置。
 
 ### 01 Existing Automation Foundation
 
-用 1～2 分钟展示已有 `Case`、`Suite`、`Run Plan`；它们不是 AI 发明的，而是 AI 可以读取和理解的现有基础设施。
+仍然只展示以下已有资产，1～2 分钟带过：
 
 ```bash
 open cases/pay_order.yaml
@@ -290,23 +304,66 @@ open suites/nightly.yaml
 open schedules/nightly.yaml
 ```
 
-极简说明：Case 描述一个测试怎么执行，Suite 描述这次要跑哪些测试，Run Plan 描述这一轮如何执行以及证据和报告放在哪里。正式 Suite 仍然只说 `serial`，不要声称已经有通用 parallel executor、device pool、cron daemon 或 dashboard。
+Case / Suite / Run Plan 不展开测试平台设计；正式 Suite 仍然只说 `serial`。
 
-### 02 Codex Test Run Analysis
+### 02 Execute Test Run
 
-让 Codex 读取最近一次完整 Nightly Test Run，而不是重新执行测试或修改正式资产。Prompt 会指向真实的 `run.json`、`run-plan.json`、`reports/<run-id>/report.md`、scenario result、API facts、retry history 和 evidence；也会提示 Codex 参考已有的 failure classification、retry policy、stability 确定性规则。
+Demo 3 完成后不会自动产生 Round 4 Suite Run，因此这里先真实执行正式 `schedules/nightly.yaml`，按 serial 执行 5 个 scenario，并生成本轮：
 
-02A 定位完整 Run：
+```text
+artifacts/runs/<run-id>/
+reports/<run-id>/report.md
+```
+
+课堂命令：
 
 ```bash
 source .venv/bin/activate
-RUN_DIR=$(python scripts/find_latest_complete_run.py)
+MAC_LAN_IP='<MAC-LAN-IP>' \
+IOS_UDID='<IPHONE-UDID>' \
+IOS_TEAM_ID='<APPLE-TEAM-ID>' \
+IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' \
+python instructor/run_round4_demo.py
+```
+
+课堂终端只显示：
+
+- `Run Plan: COMPLETED`
+- 真实 `Run ID`
+- `Execution Mode: serial`
+- `Scenarios: 5`
+- `Artifacts: READY`
+- `Report: READY`
+- `Ready for Agent Analysis`
+
+wrapper 会捕获正式 `run_now(...)` 的完整 JSON stdout，不把完整 JSON、passed/failed 数量、失败 scenario、error、inventory facts、Failure Cause 或 Retry Decision 打到课堂终端。此处先问：
+
+> 跑完了。现在发生了什么？
+
+即使 Test Run Result = FAIL，只要 Run Plan 正常执行、Run artifact 完整、Report 已生成，wrapper 仍返回 exit 0。这代表 Engineering execution completed successfully；runner.run_plan.main() 的既有退出码语义不变。
+
+### 03 Codex Test Run Analysis
+
+Step 02 生成本轮 Run 后，按以下三个 Gate 进入 Codex 分析。
+
+#### 03A Locate Completed Run
+
+不能使用“命令失败但仍继续打印 READY”的写法，必须使用真实 Gate：
+
+```bash
+source .venv/bin/activate
+if ! RUN_DIR=$(python scripts/find_latest_complete_run.py); then
+  echo "Run: MISSING"
+  exit 1
+fi
 RUN_ID=$(basename "$RUN_DIR")
 echo "Run: READY"
 echo "Run ID: $RUN_ID"
 ```
 
-02B 生成并复制 Codex 任务：
+没有完整 Run 时绝对不能出现 `Run: READY`。
+
+#### 03B Generate Codex Task
 
 ```bash
 source .venv/bin/activate
@@ -316,9 +373,11 @@ PYTHONPATH=. python scripts/render_run_analysis_prompt.py "$RUN_DIR" | tee "$PRO
 pbcopy < "$PROMPT_FILE"
 ```
 
-课堂动作：打开当前仓库 Codex，Cmd+V 粘贴 Prompt 并执行。Codex 直接把分析写入 `$RUN_DIR/agent-analysis.md`，不重新跑 Run，不改 Case、Suite、Run Plan、业务代码、正式 evidence 或 self-heal 资产，也不编造 evidence。
+Prompt 继续要求 Codex 读取真实的 `run.json`、`run-plan.json`、`report.md`、scenario result、API facts、retry history、evidence、`failure_classifier.py`、`retry_policy.py` 和 `stability.py`，输出真实 Run 下的 `agent-analysis.md`。
 
-02C 检查 Agent Analysis：
+Prompt 不接收 Step 02 捕获的完整 stdout；也继续禁止重新执行测试、修改正式测试资产、修改业务代码、调用 Self-Heal 或编造 Evidence。
+
+#### 03C Check Agent Analysis
 
 ```bash
 source .venv/bin/activate
@@ -327,16 +386,18 @@ ANALYSIS="$RUN_DIR/agent-analysis.md"
 test -f "$ANALYSIS" && echo "Agent Analysis: READY" && open "$ANALYSIS"
 ```
 
-必须区分 Engineering / execution 与 Test Run Result，并为失败项给出 Failure Cause、Evidence、Retry Decision、Recommended Action。课堂仍保留真实结论：
+Codex 应自己发现：
 
-- `Engineering acceptance PASS`
-- `Run Plan execution completed`
-- `Test Run Result FAIL`
-- 测试系统成功完成了一次失败的测试。
+- 有一个 FAIL
+- 产品库存业务事实异常
+- Failure Cause = PRODUCT
+- 不应该 Retry
+- Engineering execution 正常完成
+- Test Run Result FAIL
 
-现有脱敏真实 evidence 数字原样保留，包括 Round 4 的 `total=5、passed=4、failed=1`；不要把这组答案提前写进 Prompt。当前仓库没有预生成的 Agent Analysis fallback；若课堂 Codex 临时不可用，只能使用课前由真实 Run 生成并明确标记 `PREGENERATED_REAL_RESULT` 的脱敏文件，不能手工编造。
+不要在 Step 02 预先打印这些答案。课堂落点仍是：测试系统成功完成了一次失败的测试。
 
-### 03 From Prompt to Skill
+### 04 From Prompt to Skill
 
 刚才 Codex 完成了一次 Test Run Analysis。这类任务 Nightly 每天都会出现，不应该每天重新写 Prompt，而要沉淀成可复用、可验收的 `Test Run Analysis Skill`。
 
@@ -369,32 +430,26 @@ Skill 判据：
 高频复用 × 输入输出稳定 × 有明确语义 × 可以独立验收
 ```
 
-Instructor note / OPTIONAL：Failure Classification、Stability、Test Independence 仍可作为 Agent 参考的既有确定性能力；按需要现场执行 `python -m experiments.failure_classification`，或展示已有 Shared-state / flaky 实验结果。它们不再是 Step 03 的主流程，也不改变既有 Failure taxonomy 和 Stability 判据。
+Instructor note / OPTIONAL：Failure Classification、Stability、Test Independence 仍可作为 Agent 参考的既有确定性能力；按需要现场执行 `python -m experiments.failure_classification`，或展示已有 Shared-state / flaky 实验结果。它们不再是 Step 04 的主流程，也不改变既有 Failure taxonomy 和 Stability 判据。
 
 ### Demo 4 runtime 保留策略
 
-Demo 4 LIVE 依赖：
+课前可以没有历史 Round 4 Run；Demo 4 Step 02 会现场生成本轮 Run。Step 02 执行以后到 Step 03 分析完成以前，绝对不能清理本轮：
 
 ```text
-artifacts/runs/<complete-run>
-reports/<same-run-id>/report.md
+artifacts/runs/<current-run>
+reports/<current-run-id>/
 ```
 
-课堂准备或 Reset 不得整体删除 `artifacts/runs/`。可以清理：
+Demo 4 中途仍不能整体删除 `artifacts/runs/`。如果课堂准备选择预生成 Run 作为备用，可以保留，但主流程优先使用 Step 02 当前现场生成的 Run。当前仓库没有预生成的 Agent Analysis fallback，不能手工编造；未来只有真实执行 Step 02、真实 Codex 分析并脱敏保存后，才可标记 `PREGENERATED_REAL_RESULT`。
 
-- `artifacts/runs/api-demo/`
-- `artifacts/runs/interactive/`
-- Demo 1/2/3 的动态 runtime
-- 旧 Round 2 evidence
-
-必须保留至少一个完整真实 Round 4 Run，以及对应的 `reports/<same-run-id>/report.md`。Retry History 需要从真实产物定位：
+Retry History 需要从真实运行产物定位：
 
 ```bash
 find artifacts/runs -type f -name retry_history.json -print | sort
 ```
 
 从真实运行产物中选择 `timeout_before_commit` 与 `timeout_after_commit` 对应的 `retry_history.json`；需要查看时执行 `open <真实路径>`。
-
 ## Demo 后 Reset
 
 ```bash
