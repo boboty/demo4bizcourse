@@ -15,13 +15,13 @@ IOS_UDID='<udid>' IOS_TEAM_ID='<team id>' python3 scripts/run_round0_ios.py
 
 执行脚本会真实启动 Mac 静态页、以 XCUITest 创建 iPhone Safari session、点击按钮、断言页面状态变化并保存截图。QuickTime 的 iPhone 画面是否稳定显示需要人工视觉确认，具体步骤见课前文档。原始运行产物写入本机 `evidence/ios-<时间戳>/`，默认不提交；仓库只保留脱敏后的 Round 0 摘要。
 
-课堂前如果需要把 Appium 恢复为“尚未配置”的状态，执行：
+课堂最后如果需要把 Appium 恢复为“尚未配置”的状态，执行：
 
 ```bash
-./scripts/reset_appium_env.sh --global
+./scripts/reset_appium_env.sh
 ```
 
-脚本会要求输入 `RESET` 确认。默认保留 Brew、Node、Python、Xcode、Apple 签名配置、iPhone Trust / Developer Mode 和手机上的 WDA；`--global` 额外删除全局 npm Appium 与 `~/.appium`。如需连本机 WDA 构建缓存一起清理，再加 `--deep`。它只删除本机运行目录和临时产物，不删除仓库测试代码、正式 case 或脱敏的 `evidence/*-pass-summary.md`。
+脚本会要求输入 `RESET` 确认，并严格按 `XCUITest Driver → Appium` 的顺序执行 `appium driver uninstall xcuitest` 和 `npm uninstall -g appium`。如果当前没有对应环境，会显示 `SKIP`，不报错。它不清理运行数据、缓存、目录、手机上的 WDA 或任何仓库文件。
 
 `site/index.html` 还提供一个可选定位权限按钮，用于课堂证明 Safari 的系统权限弹窗不是 Web DOM；它不属于 Round 0 基础门禁。
 
