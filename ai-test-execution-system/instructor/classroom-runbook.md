@@ -158,6 +158,14 @@ Case → Suite → Run Plan → Evidence → Report → Failure Cause → Stabil
 
 课堂展示：`cases/pay_order.yaml`、`suites/nightly.yaml`、`schedules/nightly.yaml`、脱敏真实 `evidence/round4-pass-summary.md`、本机 report / artifact，以及业务语义 Retry history。不要修改这些正式资产。
 
+Retry History 真实定位：
+
+```bash
+find artifacts/runs -type f -name retry_history.json -print | sort
+```
+
+从真实运行产物中选择 `timeout_before_commit` 与 `timeout_after_commit` 对应的 `retry_history.json`；需要查看时执行 `open <真实路径>`。
+
 可现场执行：
 
 ```bash

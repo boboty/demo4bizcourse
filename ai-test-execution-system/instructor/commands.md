@@ -28,6 +28,7 @@
 | OPTIONAL | `python -m experiments.flaky_automation` | 按需要展示已有 Stability 实验 |
 | OPTIONAL | `python -m experiments.shared_state_concurrency` | 按需要展示已有 Test Independence 实验 |
 | FALLBACK | `cat evidence/round4-pass-summary.md` | 展示脱敏 Round 4 真实结果 |
+| FALLBACK / EVIDENCE | `find artifacts/runs -type f -name retry_history.json -print | sort` | 定位真实 Retry History；选择 timeout_before_commit / timeout_after_commit 对应文件 |
 | RESET | `./scripts/restore_self_heal_baseline.sh` + `./scripts/reset_demo.sh` | Demo 3 或课堂结束清理 |
 
 `instructor/run_api_demo.py` 的课堂 runtime artifact 位于被忽略的 `artifacts/runs/api-demo/`，不提交原始运行数据。Fallback 只使用课前保存的真实结果，不能临时编写 Candidate 或改写结果数字。
