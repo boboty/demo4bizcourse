@@ -19,7 +19,8 @@ source .venv/bin/activate
 - [ ] 确认 Round0 期间没有提前启动 FastAPI 或独立 Appium；Round0 会占用 8000 和 4723。
 - [ ] Demo 2 API 三场景完整：`normal`、`timeout-before`、`timeout-after`；确认 stdout 中出现各自的 HTTP 504、业务 facts 和 Retry 判断。
 - [ ] Demo 3 Self-Heal 完整：business baseline → V1/V2 old locator failure → Failure Bundle → real Candidate → Review / Policy Gate → Verify 3/3 → Write Back → AI-off rerun → restore。
-- [ ] Demo 4 的脱敏 evidence、report 和 artifact 可打开；不修改既有真实 evidence 数字。
+- [ ] Demo 4 完整排练 01 Existing Automation Foundation → 02A/02B/02C Codex Test Run Analysis → 03 From Prompt to Skill；脱敏 evidence、report 和 artifact 可打开，不修改既有真实 evidence 数字。
+- [ ] Demo 4 LIVE 至少保留一个完整真实 `artifacts/runs/<complete-run>` 及对应 `reports/<same-run-id>/report.md`；不得整体删除 `artifacts/runs/`，只清理 `api-demo/`、`interactive/`、Demo 1/2/3 动态 runtime 和旧 Round 2 evidence。
 
 首次准备示例（只在 `.venv` 尚不存在时创建）：
 

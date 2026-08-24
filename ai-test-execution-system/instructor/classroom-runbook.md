@@ -272,41 +272,128 @@ source .venv/bin/activate
 
 不得削弱 baseline、Failure Bundle、Interactive Candidate、Review / Policy Gate、3/3 Verify、Write Back、AI-off rerun、restore 或 repeat-failure 的真实证据要求。
 
-## Demo 4：从 Case 到可信执行系统
+## Demo 4：让 AI 接管测试运行后的判断
 
-将原规模化展示放在这里。正式 Suite 仍然只说 `serial`；不要声称已经有通用 parallel executor、device pool、cron daemon 或 dashboard。
-
-保持完整链路：
+顶部课堂链路：
 
 ```text
-Case → Suite → Run Plan → Evidence → Report → Failure Cause → Stability → Test Independence
+Existing Automation → Completed Run → Agent Analysis → Deterministic Rules → Decision → Skill
 ```
 
-课堂展示：`cases/pay_order.yaml`、`suites/nightly.yaml`、`schedules/nightly.yaml`、脱敏真实 `evidence/round4-pass-summary.md`、本机 report / artifact，以及业务语义 Retry history。不要修改这些正式资产。
+### 01 Existing Automation Foundation
 
-Retry History 真实定位：
+用 1～2 分钟展示已有 `Case`、`Suite`、`Run Plan`；它们不是 AI 发明的，而是 AI 可以读取和理解的现有基础设施。
 
 ```bash
-find artifacts/runs -type f -name retry_history.json -print | sort
+open cases/pay_order.yaml
+open suites/nightly.yaml
+open schedules/nightly.yaml
 ```
 
-从真实运行产物中选择 `timeout_before_commit` 与 `timeout_after_commit` 对应的 `retry_history.json`；需要查看时执行 `open <真实路径>`。
+极简说明：Case 描述一个测试怎么执行，Suite 描述这次要跑哪些测试，Run Plan 描述这一轮如何执行以及证据和报告放在哪里。正式 Suite 仍然只说 `serial`，不要声称已经有通用 parallel executor、device pool、cron daemon 或 dashboard。
 
-可现场执行：
+### 02 Codex Test Run Analysis
+
+让 Codex 读取最近一次完整 Nightly Test Run，而不是重新执行测试或修改正式资产。Prompt 会指向真实的 `run.json`、`run-plan.json`、`reports/<run-id>/report.md`、scenario result、API facts、retry history 和 evidence；也会提示 Codex 参考已有的 failure classification、retry policy、stability 确定性规则。
+
+02A 定位完整 Run：
 
 ```bash
 source .venv/bin/activate
-python -m experiments.failure_classification
+RUN_DIR=$(python scripts/find_latest_complete_run.py)
+RUN_ID=$(basename "$RUN_DIR")
+echo "Run: READY"
+echo "Run ID: $RUN_ID"
 ```
 
-Shared-state / flaky 按课堂时间和需要展示保存结果或短实验，不改变既有判据。保留课堂结论：
+02B 生成并复制 Codex 任务：
+
+```bash
+source .venv/bin/activate
+RUN_DIR=$(python scripts/find_latest_complete_run.py)
+PROMPT_FILE="/tmp/test-run-analysis-prompt.txt"
+PYTHONPATH=. python scripts/render_run_analysis_prompt.py "$RUN_DIR" | tee "$PROMPT_FILE"
+pbcopy < "$PROMPT_FILE"
+```
+
+课堂动作：打开当前仓库 Codex，Cmd+V 粘贴 Prompt 并执行。Codex 直接把分析写入 `$RUN_DIR/agent-analysis.md`，不重新跑 Run，不改 Case、Suite、Run Plan、业务代码、正式 evidence 或 self-heal 资产，也不编造 evidence。
+
+02C 检查 Agent Analysis：
+
+```bash
+source .venv/bin/activate
+RUN_DIR=$(python scripts/find_latest_complete_run.py)
+ANALYSIS="$RUN_DIR/agent-analysis.md"
+test -f "$ANALYSIS" && echo "Agent Analysis: READY" && open "$ANALYSIS"
+```
+
+必须区分 Engineering / execution 与 Test Run Result，并为失败项给出 Failure Cause、Evidence、Retry Decision、Recommended Action。课堂仍保留真实结论：
 
 - `Engineering acceptance PASS`
 - `Run Plan execution completed`
 - `Test Run Result FAIL`
 - 测试系统成功完成了一次失败的测试。
 
-现有脱敏真实 evidence 数字原样保留，包括 Round 4 的 `total=5、passed=4、failed=1`；不要用新运行数字替换它们。
+现有脱敏真实 evidence 数字原样保留，包括 Round 4 的 `total=5、passed=4、failed=1`；不要把这组答案提前写进 Prompt。当前仓库没有预生成的 Agent Analysis fallback；若课堂 Codex 临时不可用，只能使用课前由真实 Run 生成并明确标记 `PREGENERATED_REAL_RESULT` 的脱敏文件，不能手工编造。
+
+### 03 From Prompt to Skill
+
+刚才 Codex 完成了一次 Test Run Analysis。这类任务 Nightly 每天都会出现，不应该每天重新写 Prompt，而要沉淀成可复用、可验收的 `Test Run Analysis Skill`。
+
+```text
+Test Run Analysis Skill
+
+Input:
+- run_id
+
+Output:
+- Run Status
+- Failed Scenarios
+- Failure Cause
+- Retry Decision
+- Stability
+- Evidence
+- Recommended Action
+```
+
+关系说明：
+
+- `Tool` = 原子能力，例如 `read_run / read_evidence / classify_failure / query_retry_history / query_stability`。
+- `Skill` = 有明确业务语义、可复用、可验收的一类能力。
+- `Workflow` = 固定顺序组合多个能力。
+- `Agent` = 根据上下文决定调用哪个 Tool / Skill / Workflow。
+
+Skill 判据：
+
+```text
+高频复用 × 输入输出稳定 × 有明确语义 × 可以独立验收
+```
+
+Instructor note / OPTIONAL：Failure Classification、Stability、Test Independence 仍可作为 Agent 参考的既有确定性能力；按需要现场执行 `python -m experiments.failure_classification`，或展示已有 Shared-state / flaky 实验结果。它们不再是 Step 03 的主流程，也不改变既有 Failure taxonomy 和 Stability 判据。
+
+### Demo 4 runtime 保留策略
+
+Demo 4 LIVE 依赖：
+
+```text
+artifacts/runs/<complete-run>
+reports/<same-run-id>/report.md
+```
+
+课堂准备或 Reset 不得整体删除 `artifacts/runs/`。可以清理：
+
+- `artifacts/runs/api-demo/`
+- `artifacts/runs/interactive/`
+- Demo 1/2/3 的动态 runtime
+- 旧 Round 2 evidence
+
+必须保留至少一个完整真实 Round 4 Run，以及对应的 `reports/<same-run-id>/report.md`。Retry History 需要从真实产物定位：
+
+```bash
+find artifacts/runs -type f -name retry_history.json -print | sort
+```
+
+从真实运行产物中选择 `timeout_before_commit` 与 `timeout_after_commit` 对应的 `retry_history.json`；需要查看时执行 `open <真实路径>`。
 
 ## Demo 后 Reset
 
@@ -316,4 +403,4 @@ source .venv/bin/activate
 ./scripts/reset_demo.sh
 ```
 
-人工关闭 FastAPI、Appium、QuickTime；保留 ignored runtime evidence 供课后核验，不把原始日志、截图、设备信息或历史运行记录加入 Git。
+人工关闭 FastAPI、Appium、QuickTime；保留完整 Round 4 Run 和对应 report 供课后核验。只清理明确允许的 API Demo、interactive、Demo1/2/3 动态 runtime 与旧 Round2 evidence，不把原始日志、截图、设备信息或历史运行记录加入 Git。

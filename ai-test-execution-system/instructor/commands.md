@@ -26,11 +26,18 @@
 | LIVE | `FAILDIR=$(find evidence -maxdepth 2 -type d -name 'v2-old-locator-failure' -print | sort | tail -1); PROMPT_FILE="/tmp/round2-candidate-prompt.txt"; python scripts/render_round2_candidate_prompt.py "$FAILDIR/failure-context.json" "$FAILDIR/page-source.html" "$FAILDIR/failure-screenshot.png" | tee "$PROMPT_FILE"; pbcopy < "$PROMPT_FILE"` | Demo 3 03A Generate Codex Task：生成并复制受限 Prompt；Codex 自行读取 Failure Bundle 并写 Candidate |
 | LIVE | `CANDIDATE="artifacts/runs/interactive/round2-candidate.json"; test -f "$CANDIDATE" && echo "Candidate: READY"; python -m json.tool "$CANDIDATE"` | Demo 3 03B Check Candidate：只检查 Candidate READY 和 JSON 格式，不搬运 Codex 输出 |
 | LIVE/FALLBACK | `FAILDIR=$(find evidence -maxdepth 2 -type d -name 'v2-old-locator-failure' -print | sort | tail -1); CANDIDATE="artifacts/runs/interactive/round2-candidate.json"; MAC_LAN_IP='<MAC-LAN-IP>' IOS_UDID='<IPHONE-UDID>' IOS_TEAM_ID='<APPLE-TEAM-ID>' IOS_WDA_BUNDLE_ID='<PERSONAL-WDA-BUNDLE-ID>' python scripts/run_round2_self_heal.py --failure-dir "$FAILDIR" --interactive-candidate "$CANDIDATE"` | Demo 3 04：Review、Verify 3/3、Write Back、AI-off rerun、restore、repeat failure |
-| LIVE | `python -m experiments.failure_classification` | Demo 4 Failure Cause 短实验 |
-| OPTIONAL | `python -m experiments.flaky_automation` | 按需要展示已有 Stability 实验 |
-| OPTIONAL | `python -m experiments.shared_state_concurrency` | 按需要展示已有 Test Independence 实验 |
-| FALLBACK | `cat evidence/round4-pass-summary.md` | 展示脱敏 Round 4 真实结果 |
+| STATIC_ASSET | `open cases/pay_order.yaml` + `open suites/nightly.yaml` + `open schedules/nightly.yaml` | Demo 4 01 Existing Automation Foundation；只展示已有 Case / Suite / Run Plan，正式 Suite 仍是 serial |
+| LIVE | `RUN_DIR=$(python scripts/find_latest_complete_run.py); RUN_ID=$(basename "$RUN_DIR"); echo "Run: READY"; echo "Run ID: $RUN_ID"` | Demo 4 02A：定位至少包含完整真实证据和对应 report 的 Run |
+| LIVE | `RUN_DIR=$(python scripts/find_latest_complete_run.py); PROMPT_FILE="/tmp/test-run-analysis-prompt.txt"; PYTHONPATH=. python scripts/render_run_analysis_prompt.py "$RUN_DIR" > "$PROMPT_FILE" && cat "$PROMPT_FILE" && pbcopy < "$PROMPT_FILE"` | Demo 4 02B：生成并复制 Codex Test Run Analysis Prompt |
+| LIVE | `RUN_DIR=$(python scripts/find_latest_complete_run.py); ANALYSIS="$RUN_DIR/agent-analysis.md"; test -f "$ANALYSIS" && echo "Agent Analysis: READY" && open "$ANALYSIS"` | Demo 4 02C：检查真实 Agent Analysis 输出 |
+| OPTIONAL / INSTRUCTOR NOTE | `python -m experiments.failure_classification` | Demo 4 03 之外的可选 Failure Classification 实验；不是主流程 |
+| OPTIONAL / INSTRUCTOR NOTE | `python -m experiments.flaky_automation` | 按需要展示已有 Stability 实验；不是主流程 |
+| OPTIONAL / INSTRUCTOR NOTE | `python -m experiments.shared_state_concurrency` | 按需要展示已有 Test Independence 实验；不是主流程 |
 | FALLBACK / EVIDENCE | `find artifacts/runs -type f -name retry_history.json -print | sort` | 定位真实 Retry History；选择 timeout_before_commit / timeout_after_commit 对应文件 |
 | RESET | `./scripts/restore_self_heal_baseline.sh` + `./scripts/reset_demo.sh` | 安全复位 / 中断恢复；不是 AI-off rerun evidence，也不是 Self-Heal 主链 |
 
-`instructor/run_api_demo.py` 的课堂 runtime artifact 位于被忽略的 `artifacts/runs/api-demo/`，不提交原始运行数据。Fallback 只使用课前保存的真实结果，不能临时编写 Candidate 或改写结果数字。
+Demo 4 的主结构是 `01 Existing Automation Foundation` → `02 Codex Test Run Analysis` → `03 From Prompt to Skill`。Tool 是原子能力，Skill 是有明确业务语义、可复用、可独立验收的一类能力，Workflow 是固定顺序组合，Agent 根据上下文选择调用对象。Skill 判据是：高频复用 × 输入输出稳定 × 有明确语义 × 可以独立验收。
+
+Demo 4 LIVE 依赖 `artifacts/runs/<complete-run>` 和 `reports/<same-run-id>/report.md`。不得整体删除 `artifacts/runs/`；只可清理 `artifacts/runs/api-demo/`、`artifacts/runs/interactive/`、Demo 1/2/3 动态 runtime 与旧 Round 2 evidence，并至少保留一个完整真实 Round 4 Run 及对应 report。当前仓库没有预生成的 Agent Analysis fallback，不能手工编造结果。
+
+`instructor/run_api_demo.py` 的课堂 runtime artifact 位于被忽略的 `artifacts/runs/api-demo/`，不提交原始运行数据。

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import sys
 from pathlib import Path
 from typing import Any, Dict
 
@@ -46,11 +47,13 @@ def is_complete_run(run_dir: Path, reports_root: Path) -> bool:
 def find_latest_complete_run(project_root: Path) -> Path:
     artifacts_root = project_root / "artifacts" / "runs"
     reports_root = project_root / "reports"
+    if not artifacts_root.is_dir():
+        raise FileNotFoundError("No complete Run available for Demo4")
     candidates = sorted((item for item in artifacts_root.iterdir() if item.is_dir()), reverse=True)
     for run_dir in candidates:
         if is_complete_run(run_dir, reports_root):
             return run_dir.resolve()
-    raise FileNotFoundError("没有找到包含完整 run.json、run-plan.json、scenario results 和 report.md 的 Run。")
+    raise FileNotFoundError("No complete Run available for Demo4")
 
 
 def main() -> int:
@@ -60,7 +63,11 @@ def main() -> int:
     parser.add_argument("--shell", action="store_true", help="输出可由当前 shell eval 的 RUN_* 变量。")
     args = parser.parse_args()
     project_root = args.project_root.resolve()
-    run_dir = find_latest_complete_run(project_root)
+    try:
+        run_dir = find_latest_complete_run(project_root)
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
     run_id = run_dir.name
     report_path = project_root / "reports" / run_id / "report.md"
     if args.as_json:
