@@ -109,5 +109,6 @@ def pay_order_and_verify(
             status="PASS" if record.get("result") == "PASS" else "FAIL",
             title="Workflow completed",
             evidence=[str(context.evidence_dir)],
+            update_current=False,
         )
     return record

@@ -413,6 +413,7 @@ def run_once(
             actual=record.get("api_facts"),
             expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
             evidence=[str(evidence_dir)],
+            update_current=False,
         )
         (evidence_dir / case["evidence"]["failure_context"]).write_text(
             json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

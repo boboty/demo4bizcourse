@@ -74,6 +74,7 @@ def publish_event(
     fact_results: Optional[Dict[str, str]] = None,
     decision: Optional[str] = None,
     evidence: Optional[Iterable[str]] = None,
+    update_current: bool = True,
 ) -> None:
     """发布一个展示事件；所有异常都 fail-open。"""
 
@@ -101,7 +102,8 @@ def publish_event(
         }
         with _WRITE_LOCK:
             _append_event(EVENTS_PATH, payload)
-            _atomic_write(CURRENT_PATH, payload)
+            if update_current:
+                _atomic_write(CURRENT_PATH, payload)
     except Exception:
         return
 
@@ -120,6 +122,7 @@ def publish_context_event(
     fact_results: Optional[Dict[str, str]] = None,
     decision: Optional[str] = None,
     evidence: Optional[Iterable[str]] = None,
+    update_current: bool = True,
 ) -> None:
     metadata = getattr(context, "observer", {}) or {}
     publish_event(
@@ -134,6 +137,7 @@ def publish_context_event(
         fact_results=fact_results,
         decision=decision,
         evidence=evidence,
+        update_current=update_current,
         **{key: metadata.get(key) for key in (
             "demo", "run_id", "scenario_id", "scenario_index", "scenario_total"
         )},

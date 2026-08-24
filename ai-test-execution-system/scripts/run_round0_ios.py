@@ -90,7 +90,7 @@ try:
         stage="environment",
         event="appium_ready",
         status="PASS",
-        title="Appium Server READY",
+        title="Appium CLI READY",
     )
     drivers = run("appium", "driver", "list", "--installed")
     if "xcuitest" not in drivers.stdout + drivers.stderr:
@@ -133,6 +133,14 @@ try:
             time.sleep(1)
     else:
         raise RuntimeError("Appium 未能在 4723 端口启动。")
+    publish_event(
+        source="system",
+        demo="demo1",
+        stage="environment",
+        event="appium_server_ready",
+        status="PASS",
+        title="Appium Server READY",
+    )
     caps = {"capabilities": {"alwaysMatch": {"platformName": "iOS", "browserName": "Safari",
             "appium:automationName": "XCUITest", "appium:udid": udid,
             "appium:xcodeOrgId": team_id, "appium:xcodeSigningId": "Apple Development",
@@ -203,6 +211,7 @@ finally:
         status="PASS" if record["result"].startswith("PASS") else "FAIL",
         title="Session CLOSED",
         evidence=[str(EVIDENCE)],
+        update_current=False,
     )
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     (EVIDENCE / "run.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")

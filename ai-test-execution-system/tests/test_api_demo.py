@@ -48,8 +48,9 @@ def test_api_demo_timeout_modes_delegate_to_business_retry_policy(monkeypatch, t
     case = read_case(ROOT / "cases" / "pay_order.yaml")
     captured = {}
 
-    def fake_retry(case_arg, base_url, configuration, artifact_dir):
+    def fake_retry(case_arg, base_url, configuration, artifact_dir, observer_context=None):
         captured["configuration"] = configuration
+        captured["observer_context"] = observer_context
         artifact_dir.mkdir(parents=True, exist_ok=True)
         history = {
             "decision": "RETRY_ALLOWED",
@@ -63,3 +64,8 @@ def test_api_demo_timeout_modes_delegate_to_business_retry_policy(monkeypatch, t
 
     assert result["result"] == "PASS"
     assert captured["configuration"]["payment_mode"] == "timeout_before_commit"
+    assert captured["observer_context"] == {
+        "demo": "demo2",
+        "run_id": (tmp_path / "before").parent.name,
+        "scenario_id": "timeout-before",
+    }

@@ -175,6 +175,7 @@ def run_suite(
             expected=(scenario_case.get("assertions", {}).get("api_facts", {}).get("equals") if scenario_case else None),
             decision=record.get("decision"),
             evidence=[str(scenario_dir)],
+            update_current=False,
         )
         scenario_results.append(_write_scenario_result(scenario_dir, record, scenario, task_path))
 
@@ -209,5 +210,6 @@ def run_suite(
         title="Demo 4 Test Run completed",
         scenario_total=scenario_total,
         evidence=[str(run_dir)],
+        update_current=False,
     )
     return run_record

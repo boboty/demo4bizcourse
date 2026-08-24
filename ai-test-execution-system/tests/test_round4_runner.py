@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from instructor import observer_events
 from runner.report import build_report
 from runner.retry_policy import run_business_retry
 from runner.run_plan import load_plan
@@ -33,10 +34,23 @@ def _fake_case():
     return read_case(ROOT / "cases" / "pay_order.yaml")
 
 
+def _observer_runtime(monkeypatch, tmp_path: Path) -> Path:
+    root = tmp_path / "observer"
+    monkeypatch.setattr(observer_events, "OBSERVER_ROOT", root)
+    monkeypatch.setattr(observer_events, "CURRENT_PATH", root / "current.json")
+    monkeypatch.setattr(observer_events, "EVENTS_PATH", root / "events.jsonl")
+    return root
+
+
+def _observer_events(root: Path):
+    return [json.loads(line) for line in (root / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+
+
 def test_timeout_before_commit_allows_exactly_one_retry_after_facts(monkeypatch, tmp_path: Path) -> None:
     import runner.retry_policy as module
 
     case = _fake_case()
+    observer_root = _observer_runtime(monkeypatch, tmp_path)
     calls = []
     facts = [
         {
@@ -78,18 +92,37 @@ def test_timeout_before_commit_allows_exactly_one_retry_after_facts(monkeypatch,
         "http://demo",
         {"ui_version": "v1", "payment_mode": "timeout_before_commit", "product_bug_mode": "off"},
         tmp_path / "before",
+        observer_context={
+            "demo": "demo2",
+            "run_id": "run-before",
+            "scenario_id": "timeout-before",
+        },
     )
     history = json.loads((tmp_path / "before" / "retry_history.json").read_text(encoding="utf-8"))
     assert result["result"] == "PASS"
     assert history["decision"] == "RETRY_ALLOWED"
     assert [attempt["http_status"] for attempt in history["attempts"]] == [504, 200]
     assert result["retry_count"] == 1
+    events = _observer_events(observer_root)
+    relevant = [event for event in events if event.get("event") in {
+        "payment_response", "facts_after_timeout", "retry_decision", "retry_completed"
+    }]
+    assert {event["title"] for event in relevant} >= {
+        "HTTP 504", "Facts after timeout", "Retry Decision", "Retry #1"
+    }
+    assert all(
+        (event.get("demo"), event.get("run_id"), event.get("scenario_id"))
+        == ("demo2", "run-before", "timeout-before")
+        for event in relevant
+    )
+    assert next(event for event in relevant if event["event"] == "retry_decision")["decision"] == "RETRY_ALLOWED"
 
 
 def test_timeout_after_commit_forbids_retry_and_keeps_one_payment(monkeypatch, tmp_path: Path) -> None:
     import runner.retry_policy as module
 
     case = _fake_case()
+    observer_root = _observer_runtime(monkeypatch, tmp_path)
     calls = []
     committed = {
         "order_status": "PAID",
@@ -108,12 +141,30 @@ def test_timeout_after_commit_forbids_retry_and_keeps_one_payment(monkeypatch, t
         "http://demo",
         {"ui_version": "v1", "payment_mode": "timeout_after_commit", "product_bug_mode": "off"},
         tmp_path / "after",
+        observer_context={
+            "demo": "demo2",
+            "run_id": "run-after",
+            "scenario_id": "timeout-after",
+        },
     )
     history = json.loads((tmp_path / "after" / "retry_history.json").read_text(encoding="utf-8"))
     assert result["result"] == "PASS"
     assert history["decision"] == "NO_RETRY_ALREADY_COMMITTED"
     assert len(calls) == 1
     assert result["api_facts"]["payment_count"] == 1
+    events = _observer_events(observer_root)
+    relevant = [event for event in events if event.get("event") in {
+        "payment_response", "facts_after_timeout", "retry_decision", "retry_completed"
+    }]
+    assert {event["title"] for event in relevant} >= {
+        "HTTP 504", "Facts after timeout", "Retry Decision", "No Retry"
+    }
+    assert all(
+        (event.get("demo"), event.get("run_id"), event.get("scenario_id"))
+        == ("demo2", "run-after", "timeout-after")
+        for event in relevant
+    )
+    assert next(event for event in relevant if event["event"] == "retry_decision")["decision"] == "NO_RETRY_ALREADY_COMMITTED"
 
 
 def test_report_counts_scenarios_from_result_artifacts(tmp_path: Path) -> None:

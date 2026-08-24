@@ -94,6 +94,16 @@ def run_business_retry(
             actual=timeout_facts,
             evidence=[str(artifact_dir / "api-facts-after-timeout.json")],
         )
+        publish_context_event(
+            context,
+            source="retry",
+            stage="facts",
+            event="facts_after_timeout",
+            status="INFO",
+            title="Facts after timeout",
+            actual=timeout_facts,
+            evidence=[str(artifact_dir / "api-facts-after-timeout.json")],
+        )
 
         try:
             assert_expected_facts(timeout_facts, NOT_COMMITTED_FACTS, "timeout 后未提交状态")
@@ -185,6 +195,7 @@ def run_business_retry(
             expected=REQUIRED_FACTS if record.get("api_facts") else None,
             decision=history.get("decision"),
             evidence=[str(artifact_dir)],
+            update_current=False,
         )
         record["finished_at"] = utc_now()
         (artifact_dir / "retry_history.json").write_text(

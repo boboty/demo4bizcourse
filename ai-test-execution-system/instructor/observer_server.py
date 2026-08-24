@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import threading
 import webbrowser
@@ -27,11 +28,24 @@ HOST = "127.0.0.1"
 PORT = 8765
 
 
-def _analysis_payload(current: dict) -> dict:
+def _current_analysis_path(current: dict) -> Optional[Path]:
     run_id = current.get("run_id")
-    if not run_id:
+    if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", run_id):
+        return None
+    runs_root = (ROOT / "artifacts" / "runs").resolve()
+    analysis_path = (runs_root / run_id / "agent-analysis.md").resolve()
+    if analysis_path.parent.parent != runs_root or analysis_path.name != "agent-analysis.md":
+        return None
+    try:
+        return analysis_path if analysis_path.is_file() else None
+    except OSError:
+        return None
+
+
+def _analysis_payload(current: dict) -> dict:
+    analysis_path = _current_analysis_path(current)
+    if analysis_path is None:
         return {}
-    analysis_path = ROOT / "artifacts" / "runs" / str(run_id) / "agent-analysis.md"
     try:
         content = analysis_path.read_text(encoding="utf-8")
     except OSError:
@@ -49,8 +63,45 @@ def _analysis_payload(current: dict) -> dict:
         for label, key in labels.items():
             prefix = "- " + label + ":"
             if stripped.startswith(prefix):
-                fields[key] = stripped[len(prefix):].strip()
-    return {"status": "READY", "path": str(analysis_path), "fields": fields}
+                fields[key] = stripped[len(prefix):].strip() or "Not available"
+    failed_scenarios = []
+    in_failed_scenarios = False
+    scenario = None
+    scenario_labels = {
+        "Scenario": "scenario",
+        "Failure Cause": "failure_cause",
+        "Retry Decision": "retry_decision",
+        "Recommended Action": "recommended_action",
+        "Evidence": "evidence",
+    }
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            in_failed_scenarios = stripped == "## Failed Scenarios"
+            if scenario is not None:
+                failed_scenarios.append(scenario)
+                scenario = None
+            continue
+        if not in_failed_scenarios or not stripped.startswith("- "):
+            continue
+        label, separator, value = stripped[2:].partition(":")
+        if not separator or label not in scenario_labels:
+            continue
+        key = scenario_labels[label]
+        if key == "scenario":
+            if scenario is not None:
+                failed_scenarios.append(scenario)
+            scenario = {field: "Not available" for field in scenario_labels.values()}
+        if scenario is not None:
+            scenario[key] = value.strip() or "Not available"
+    if scenario is not None:
+        failed_scenarios.append(scenario)
+    return {
+        "status": "READY",
+        "url": "/analysis",
+        "fields": fields,
+        "failed_scenarios": failed_scenarios,
+    }
 
 
 def observer_payload() -> dict:
@@ -100,6 +151,18 @@ class ObserverHandler(BaseHTTPRequestHandler):
                 self.send_bytes(b"Runbook HTML is unavailable.\n", "text/plain; charset=utf-8", 500)
                 return
             self.send_bytes(body, "text/html; charset=utf-8")
+            return
+        if parsed.path == "/analysis":
+            analysis_path = _current_analysis_path(read_current())
+            if analysis_path is None:
+                self.send_bytes(b"Analysis is unavailable.\n", "text/plain; charset=utf-8", 404)
+                return
+            try:
+                body = analysis_path.read_bytes()
+            except OSError:
+                self.send_bytes(b"Analysis is unavailable.\n", "text/plain; charset=utf-8", 404)
+                return
+            self.send_bytes(body, "text/markdown; charset=utf-8")
             return
         if parsed.path == "/api/current":
             self.send_json(observer_payload())

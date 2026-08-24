@@ -36,6 +36,7 @@ def reset_test_state(context: ExecutionContext) -> Dict[str, Any]:
             actual=facts,
             expected=expected,
             fact_results=compare_expected_facts(facts, expected),
+            update_current=False,
         )
         return {"cleanup": "PASS", "order_id": cleanup_order_id, "facts": facts}
     except Exception as error:
@@ -50,6 +51,7 @@ def reset_test_state(context: ExecutionContext) -> Dict[str, Any]:
             actual=facts or None,
             expected=expected or None,
             fact_results=compare_expected_facts(facts, expected) if facts else None,
+            update_current=False,
         )
         raise skill_error(NAME, "RESET_TEST_STATE_FAILED", error, {}) from error
 

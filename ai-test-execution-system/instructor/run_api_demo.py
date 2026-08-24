@@ -130,6 +130,7 @@ def run_normal(case: Dict[str, Any], base_url: str, artifact_dir: Path) -> Dict[
             actual=record.get("api_facts"),
             expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
             evidence=[str(artifact_dir)],
+            update_current=False,
         )
         write_json(artifact_dir / "result.json", record)
     return record
@@ -141,23 +142,16 @@ def run_timeout(
     mode = "timeout_before_commit" if scenario == "timeout-before" else "timeout_after_commit"
     configuration = dict(case["configuration"])
     configuration["payment_mode"] = mode
-    result = run_business_retry(case, base_url, configuration, artifact_dir)
+    observer_context = {
+        "demo": "demo2",
+        "run_id": artifact_dir.parent.name,
+        "scenario_id": scenario,
+    }
+    result = run_business_retry(
+        case, base_url, configuration, artifact_dir, observer_context=observer_context
+    )
     history_path = artifact_dir / "retry_history.json"
     history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.is_file() else {}
-    decision = history.get("decision")
-    publish_event(
-        source="retry",
-        demo="demo2",
-        run_id=artifact_dir.parent.name,
-        scenario_id=scenario,
-        stage="retry",
-        event="retry_decision",
-        status="DECISION",
-        title="Retry Decision",
-        decision=decision,
-        actual=(history.get("attempts") or [{}])[0].get("business_facts"),
-        evidence=[str(history_path)] if history_path.is_file() else None,
-    )
     publish_event(
         source="system",
         demo="demo2",
@@ -169,8 +163,9 @@ def run_timeout(
         title="{0} completed".format(scenario),
         actual=result.get("api_facts"),
         expected=case.get("assertions", {}).get("api_facts", {}).get("equals"),
-        decision=decision,
+        decision=history.get("decision"),
         evidence=[str(artifact_dir)],
+        update_current=False,
     )
     return result
 
