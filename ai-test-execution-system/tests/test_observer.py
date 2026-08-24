@@ -166,6 +166,17 @@ def test_observer_sources_do_not_copy_required_business_facts() -> None:
     assert "file://" not in (root / "instructor/observer.html").read_text(encoding="utf-8")
 
 
+def test_observer_timeline_supports_history_inspection_without_overwriting_live_view() -> None:
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "instructor/observer.html").read_text(encoding="utf-8")
+    assert "INSPECTING HISTORY" in source
+    assert 'id="backLive"' in source
+    assert "renderCurrent(event)" in source
+    assert "class=\"event${sameEvent(e,selectedEvent)?' selected':''}\"" in source
+    assert "if(viewMode==='LIVE')renderCurrent(latestCurrent)" in source
+    assert "function backToLive()" in source
+
+
 def test_demo1_distinguishes_appium_cli_and_server_readiness() -> None:
     root = Path(__file__).resolve().parents[1]
     source = (root / "scripts/run_round0_ios.py").read_text(encoding="utf-8")
