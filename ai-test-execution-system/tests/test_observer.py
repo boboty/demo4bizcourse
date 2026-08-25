@@ -177,6 +177,16 @@ def test_observer_timeline_supports_history_inspection_without_overwriting_live_
     assert "function backToLive()" in source
 
 
+def test_observer_page_uses_chinese_labels_and_explanations() -> None:
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "instructor/observer.html").read_text(encoding="utf-8")
+    assert "<title>测试执行观察台</title>" in source
+    assert "业务事实" in source
+    assert "实际值与预期值的对比" in source
+    assert "打开分析原文" in source
+    assert "Open Original Analysis" not in source
+
+
 def test_demo1_distinguishes_appium_cli_and_server_readiness() -> None:
     root = Path(__file__).resolve().parents[1]
     source = (root / "scripts/run_round0_ios.py").read_text(encoding="utf-8")
