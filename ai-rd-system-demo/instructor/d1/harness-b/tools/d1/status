@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+baseline="${D1_BASELINE:?D1_BASELINE is set by the Harness B launcher}"
+diff -ru --exclude '.pytest_cache' --exclude '__pycache__' --exclude '.d1-harness' "$baseline" . || true

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' 'Project map (generated from the visible repository):'
+find app -type f -name '*.py' | sort
+find tests -type f -name 'test_*.py' | sort
+printf '%s\n' 'Entrypoints:'
+rg -n '^app = FastAPI|^@app\.' app/main.py

@@ -3,5 +3,8 @@ __pycache__/
 .pytest_cache/
 *.pyc
 instructor/captures/*.patch
+instructor/d1/results/
+workspaces/d1-harness-a/
+workspaces/d1-harness-b/
 validation/actual.json
 validation/report.md

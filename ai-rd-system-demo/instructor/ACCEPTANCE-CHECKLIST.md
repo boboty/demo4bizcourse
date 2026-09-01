@@ -6,6 +6,13 @@
 - [ ] 每个 Demo 都能用一句承重判断收口。
 - [ ] 所有操作有 reset / deterministic fallback。
 
+## D1｜同模型、同任务、两个 Harness
+- [ ] 使用 `scripts/d1_run.sh a` 和 `scripts/d1_run.sh b`，两次只从同一个 `instructor/d1/task.txt` 读取任务。
+- [ ] A/B 的 manifest 中模型、推理档位、任务哈希与数据哈希相同；两次均由 `reset_d1.sh` 从同一冻结 baseline 创建。
+- [ ] A 是标准 CLI/终端环境；B 只多出无业务规则的项目地图、计划、开发测试和 diff 工具。
+- [ ] `workspaces/d1-harness-a` 与 `workspaces/d1-harness-b` 中不包含验收脚本、Golden、参考实现或边界白名单。
+- [ ] 讲师使用 `scripts/d1_compare.sh` 展示统一轨迹、开发测试、独立验收与越界修改证据，不预设任一 Harness 的结果。
+
 ## Demo 1
 - [ ] CNN 页面提前打开并验证可用。
 - [ ] 准备 2–3 个容易产生歧义的数字写法。

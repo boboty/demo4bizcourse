@@ -17,6 +17,20 @@ scripts/                     reset / restore / diff 脚本
 
 `demo12-financing` 自带独立 `AGENTS.md`，不包含 Demo 任务文本、Spec、验收脚本、Golden 或参考实现。Demo 1 的一句话和 Demo 2 的完整 Spec 只从 `instructor/DEMO-RUNBOOK.md` 或 HTML Runbook 复制。
 
+## D1｜同模型、同任务、两个 Harness
+
+D1 是独立于既有 Demo 1/2（任务文本对照）的严格 Harness A/B 实验：两个隔离工作区从同一融资 baseline 重置、启动器只读取同一句任务，并由 workspace 外同一验收器裁决。课堂入口见 [instructor/D1-RUNBOOK.md](instructor/D1-RUNBOOK.md)：
+
+```bash
+export D1_MODEL='gpt-5.6-luna'
+export D1_REASONING_EFFORT='high'
+./scripts/d1_run.sh a
+./scripts/d1_run.sh b
+./scripts/d1_compare.sh
+```
+
+`scripts/d1_verify_setup.py` 不调用模型，可用于课前验证 reset、源码控制变量与验收隔离。
+
 ## 环境
 
 全课统一使用仓库根目录 `ai-rd-system-demo/.venv` 和 Python 3.12；不为 workspace 创建独立 venv，也不污染系统 Python。首次准备：

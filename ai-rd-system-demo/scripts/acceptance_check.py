@@ -163,9 +163,21 @@ def main() -> int:
     direct_task_marker = "给融资申请列表增加客户名称和融资状态" + "筛选，并支持导出。"
     direct_task_locations = {str(path.relative_to(ROOT)) for path, text in all_repo_text if direct_task_marker in text}
     check(
-        "Demo1 Direct Task only lives in Runbook files",
-        direct_task_locations == {"instructor/DEMO-RUNBOOK.md", "instructor/DEMO-RUNBOOK.html"},
+        "Direct Task sources are limited to Runbooks and D1 task source",
+        direct_task_locations == {
+            "instructor/DEMO-RUNBOOK.md",
+            "instructor/DEMO-RUNBOOK.html",
+            "instructor/D1-RUNBOOK.md",
+            "instructor/d1/task.txt",
+        },
         ", ".join(sorted(direct_task_locations)),
+    )
+
+    d1_setup = run([sys.executable, str(ROOT / "scripts/d1_verify_setup.py")], ROOT)
+    check(
+        "D1 reset, control variables, isolation and independent acceptance setup",
+        d1_setup.returncode == 0,
+        d1_setup.stdout.strip().splitlines()[-1] if d1_setup.stdout else d1_setup.stderr.strip(),
     )
     html_runbook = (ROOT / "instructor/DEMO-RUNBOOK.html").read_text(encoding="utf-8")
     check(
