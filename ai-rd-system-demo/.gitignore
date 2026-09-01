@@ -4,7 +4,8 @@ __pycache__/
 *.pyc
 instructor/captures/*.patch
 instructor/d1/results/
-workspaces/d1-harness-a/
-workspaces/d1-harness-b/
+workspaces/d1-level1/
+workspaces/d1-level2/
+workspaces/d1-level3/
 validation/actual.json
 validation/report.md

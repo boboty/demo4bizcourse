@@ -17,19 +17,19 @@ scripts/                     reset / restore / diff 脚本
 
 `demo12-financing` 自带独立 `AGENTS.md`，不包含 Demo 任务文本、Spec、验收脚本、Golden 或参考实现。Demo 1 的一句话和 Demo 2 的完整 Spec 只从 `instructor/DEMO-RUNBOOK.md` 或 HTML Runbook 复制。
 
-## D1｜同模型、同任务、两个 Harness
+## D1｜工程环境如何改变 AI 开发
 
-D1 是独立于既有 Demo 1/2（任务文本对照）的严格 Harness A/B 实验：两个隔离工作区从同一融资 baseline 重置、启动器只读取同一句任务，并由 workspace 外同一验收器裁决。课堂入口见 [instructor/D1-RUNBOOK.md](instructor/D1-RUNBOOK.md)：
+D1 从同一个融资申请任务出发，逐级增加 Plan、项目记忆、代码规范和开发侧自检要求。课堂只使用已经登录的 Codex / Plus 环境；模型和 provider 是课前环境，不是 D1 的比较变量。完整课堂入口见 [instructor/D1-RUNBOOK.md](instructor/D1-RUNBOOK.md)。
 
 ```bash
-export D1_MODEL='gpt-5.6-luna'
-export D1_REASONING_EFFORT='high'
-./scripts/d1_run.sh a
-./scripts/d1_run.sh b
+./scripts/d1_plan.sh level1
+./scripts/d1_plan.sh level2
+./scripts/d1_plan.sh level3
+./scripts/d1_execute.sh level3
 ./scripts/d1_compare.sh
 ```
 
-`scripts/d1_verify_setup.py` 不调用模型，可用于课前验证 reset、源码控制变量与验收隔离；A 需要可调用 Responses API 的 `OPENAI_API_KEY`，B 需要已登录 Codex CLI。
+课前可运行 `scripts/d1_verify_setup.py` 做不调用模型的 reset、环境资产和 watchdog 预检。
 
 ## 环境
 

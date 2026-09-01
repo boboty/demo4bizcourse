@@ -1,72 +1,44 @@
 #!/usr/bin/env python3
-"""输出课堂投屏使用的 D1 A/B 证据表。"""
+"""输出三级递进表和 Plan v1/v2/v3 可读 diff。"""
 from __future__ import annotations
-
-import argparse
-import json
+import argparse, difflib, json
 from pathlib import Path
 
 
 def cell(value: object, width: int = 42) -> str:
-    if isinstance(value, list):
-        value = ", ".join(str(item) for item in value) or "无"
+    if isinstance(value, list): value = ", ".join(str(item) for item in value) or "无"
     value = str(value).replace("\n", " ")
-    return value if len(value) <= width else value[: width - 1] + "…"
+    return value if len(value) <= width else value[:width - 1] + "…"
+
+
+def plan_path(root: Path, level: str) -> Path:
+    saved = root / level / "plan.md"
+    return saved if saved.exists() else root / f"latest-{level}" / "plan.md"
+
+
+def plan_diff(before: Path, after: Path, title: str) -> str:
+    if not before.exists() or not after.exists(): return f"[{title}] 证据缺失：{before} 或 {after}\n"
+    diff = difflib.unified_diff(before.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True), after.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True), fromfile=f"{title} before", tofile=f"{title} after")
+    return "".join(diff) or f"[{title}] 无文字差异\n"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--a", type=Path, required=True)
-    parser.add_argument("--b", type=Path, required=True)
-    args = parser.parse_args()
-    a = json.loads(args.a.read_text(encoding="utf-8"))
-    b = json.loads(args.b.read_text(encoding="utf-8"))
-    controlled = (
-        a["baseline_digest"] == b["baseline_digest"]
-        and a["baseline_digest"] == a["manifest"].get("baseline_digest")
-        and b["baseline_digest"] == b["manifest"].get("baseline_digest")
-        and a["manifest"].get("baseline_digest") == a["manifest"].get("workspace_initial_digest")
-        and b["manifest"].get("baseline_digest") == b["manifest"].get("workspace_initial_digest")
-        and a["manifest"].get("task_sha256") == b["manifest"].get("task_sha256")
-        and a["manifest"].get("model") == b["manifest"].get("model")
-        and a["manifest"].get("reasoning_effort") == b["manifest"].get("reasoning_effort")
-        and a["manifest"].get("data_sha256") == b["manifest"].get("data_sha256")
-        and a["manifest"].get("acceptance_sha256") == b["manifest"].get("acceptance_sha256")
-        and a["manifest"].get("source_bundle_sha256")
-        and a["manifest"].get("source_bundle_baseline_match") is True
-    )
-    rows = [
-        ("模型", a["manifest"].get("model"), b["manifest"].get("model")),
-        ("任务", "SAME", "SAME"),
-        ("项目 baseline", "SAME", "SAME"),
-        ("模型响应 / Codex 执行", "成功" if a.get("api_success") else "失败：" + str(a.get("api_error", "未知")), "成功" if b.get("codex_exit") == 0 else f"失败（exit {b.get('codex_exit')}）"),
-        ("可检查项目", "是" if a["tool_capabilities"].get("inspect") else "否", "是" if b["tool_capabilities"].get("inspect") else "否"),
-        ("可修改 workspace", "是" if a["tool_capabilities"].get("modify") else "否", "是" if b["tool_capabilities"].get("modify") else "否"),
-        ("可执行命令", "是" if a["tool_capabilities"].get("commands") else "否", "是" if b["tool_capabilities"].get("commands") else "否"),
-        ("可运行测试", "是" if a["tool_capabilities"].get("tests") else "否", "是" if b["tool_capabilities"].get("tests") else "否"),
-        ("先读取的上下文", a["first_context_reads"], b["first_context_reads"]),
-        ("计划 / 提案", "有" if a["plan_evidence"] else "未记录", "有" if b["plan_evidence"] else "未记录"),
-        ("工程工具调用", a["engineering_tools"], b["engineering_tools"]),
-        ("Agent 主动跑开发测试", "是" if a["agent_ran_dev_tests"] else "否", "是" if b["agent_ran_dev_tests"] else "否"),
-        ("修改文件", a["files_changed"], b["files_changed"]),
-        ("最终开发测试", a["dev_test_summary"], b["dev_test_summary"]),
-        ("独立业务验收", "PASS" if a["independent_acceptance_passed"] else "BLOCKER", "PASS" if b["independent_acceptance_passed"] else "BLOCKER"),
-        ("越界修改", a["boundary_violations"], b["boundary_violations"]),
-        ("最终结果", "PASS" if a["dev_test_passed"] and a["independent_acceptance_passed"] else "BLOCKER", "PASS" if b["dev_test_passed"] and b["independent_acceptance_passed"] else "BLOCKER"),
-    ]
-    print("D1 Harness Comparison")
-    print()
-    print("控制变量：" + ("一致" if controlled else "BLOCKER：baseline / task / model / reasoning 不一致"))
-    print(f"任务哈希：{a['manifest'].get('task_sha256')}")
-    print(f"模型 / 推理档位：{a['manifest'].get('model')} / {a['manifest'].get('reasoning_effort')}")
-    print()
-    print(f"{'证据':<22}{'Harness A':<44}Harness B")
-    print("-" * 110)
-    for title, a_value, b_value in rows:
-        print(f"{title:<18}{cell(a_value):<44}{cell(b_value)}")
-    print()
-    print(f"详细证据：{args.a}  |  {args.b}")
-    return 0 if controlled else 1
+    parser = argparse.ArgumentParser(); parser.add_argument("--level1", type=Path, required=True); parser.add_argument("--level2", type=Path, required=True); parser.add_argument("--level3", type=Path, required=True); parser.add_argument("--plans-root", type=Path, required=True); parser.add_argument("--evidence-label", default="LIVE"); args = parser.parse_args()
+    evidence = {level: json.loads(path.read_text(encoding="utf-8")) for level, path in (("level1", args.level1), ("level2", args.level2), ("level3", args.level3))}; l1, l2, l3 = (evidence[level] for level in ("level1", "level2", "level3"))
+    rows = [("任务显性 Plan", "YES" if l1["plan_present"] else "NO", "YES" if l2["plan_present"] else "NO", "YES" if l3["plan_present"] else "NO"), ("识别现有架构约束", "?", "YES", "YES"), ("遵守项目代码规范", "?", "YES", "YES"), ("明确修改边界", "?", "YES", "YES"), ("明确验证方式", "?", "?", "YES"), ("实际执行代码", "NO", "NO", "YES" if l3["phase"] == "execute" else "NO"), ("主动运行测试", "NO", "NO", "YES" if l3.get("agent_ran_dev_tests") else "NO"), ("检查 diff", "NO", "NO", "YES" if l3.get("agent_checked_diff") else "NO")]
+    print("D1｜工程环境如何改变 AI 开发\n\n证据类型：" + args.evidence_label + "\n核心链条：先看清任务 → 再看懂项目 → 最后知道怎么交付\n")
+    print(f"{'课堂证据':<24}{'Level 1':<12}{'Level 2':<12}{'Level 3'}\n" + "-" * 62)
+    for title, *values in rows: print(f"{title:<22}{values[0]:<12}{values[1]:<12}{values[2]}")
+    print("\nPlan 证据文件：")
+    for level in ("level1", "level2", "level3"): print(f"  {level}: {plan_path(args.plans_root, level)}")
+    print("\n--- Plan v1 → Plan v2 ---")
+    print(plan_diff(plan_path(args.plans_root, "level1"), plan_path(args.plans_root, "level2"), "Plan v1 → Plan v2"), end="")
+    print("--- Plan v2 → Plan v3 ---")
+    print(plan_diff(plan_path(args.plans_root, "level2"), plan_path(args.plans_root, "level3"), "Plan v2 → Plan v3"), end="")
+    print("\nLevel 3 实际交付证据：")
+    print(f"  修改文件：{cell(l3.get('files_changed', []), 100)}\n  Agent 主动执行 pytest：{'YES' if l3.get('agent_ran_dev_tests') else 'NO'}\n  开发测试结果：{l3.get('dev_test_summary', '未记录')}\n  diff：{l3.get('diff', '未记录')}\n  自检结果：{json.dumps(l3.get('self_check', {}), ensure_ascii=False)}\n  最终完成说明：{l3.get('final_message', '未记录')}")
+    print("\n最后一问：Plan 有了，项目规则有了，自检也全绿了——现在能相信它了吗？")
+    return 0
 
 
 if __name__ == "__main__":

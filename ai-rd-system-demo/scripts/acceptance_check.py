@@ -175,7 +175,7 @@ def main() -> int:
 
     d1_setup = run([sys.executable, str(ROOT / "scripts/d1_verify_setup.py")], ROOT)
     check(
-        "D1 reset, control variables, isolation and independent acceptance setup",
+        "D1 reset, level environment, isolation and retained QA setup",
         d1_setup.returncode == 0,
         d1_setup.stdout.strip().splitlines()[-1] if d1_setup.stdout else d1_setup.stderr.strip(),
     )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """D1 的工作区外业务验收器。
 
-这个文件只由讲师侧脚本调用，绝不复制到 A/B 执行工作区。
+这个文件只由讲师侧脚本调用，绝不复制到 D1 执行 workspace。
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ ALLOWED_CHANGED_FILES = {
     "docs/api.md",
     "tests/test_financing_baseline.py",
 }
-IGNORED_PARTS = {".pytest_cache", "__pycache__", ".d1-harness"}
+IGNORED_PARTS = {".pytest_cache", "__pycache__", ".d1-runtime"}
 
 
 def source_files(root: Path) -> dict[str, bytes]:

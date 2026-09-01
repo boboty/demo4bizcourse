@@ -6,12 +6,14 @@
 - [ ] 每个 Demo 都能用一句承重判断收口。
 - [ ] 所有操作有 reset / deterministic fallback。
 
-## D1｜同模型、同任务、两个 Harness
-- [ ] 使用 `scripts/d1_run.sh a` 和 `scripts/d1_run.sh b`，两次只从同一个 `instructor/d1/task.txt` 读取任务。
-- [ ] A/B 的 manifest 中模型、推理档位、任务哈希与数据哈希相同；两次均由 `reset_d1.sh` 从同一冻结 baseline 创建。
-- [ ] A 使用 Responses API 且 `tools=[]`，只读 source bundle；B 使用原生 Codex Coding Harness，不复制 D1 helper 文件。
-- [ ] A/B 工作区均不包含验收脚本、Golden、参考实现或边界白名单。
-- [ ] 讲师使用 `scripts/d1_compare.sh` 展示统一轨迹、开发测试、独立验收与越界修改证据，不预设任一 Harness 的结果。
+## D1｜工程环境如何改变 AI 开发
+- [ ] Level 1/2/3 都从同一个 `instructor/d1/task.txt` 和冻结融资 baseline 开始。
+- [ ] Level 1 只有只读 Plan；Level 2 额外加载真实项目记忆和代码规范；Level 3 再加载开发侧自检要求。
+- [ ] Level 1/2 不修改代码、不运行开发测试；Level 3 保存 Plan v3 后才执行真实开发任务。
+- [ ] 每一级保存 Plan、trace、manifest；Level 3 还保存实际修改文件、Agent 主动测试、测试结果、diff 和自检结果。
+- [ ] 课堂使用 `scripts/d1_compare.sh` 展示三级递进表和 Plan v1/v2/v3 可读 diff，不输出 winner 或把独立验收作为高潮。
+- [ ] 任一级 Codex 超过默认 180 秒时结果标记为 `TIMEOUT`，trace、stderr、manifest、diff 和 elapsed 均保留。
+- [ ] 只有三级 live 证据都完整时才运行 `scripts/d1_save_fallback.sh`；`scripts/d1_compare.sh saved` 必须明确显示 `SAVED_EVIDENCE`。
 
 ## Demo 1
 - [ ] CNN 页面提前打开并验证可用。

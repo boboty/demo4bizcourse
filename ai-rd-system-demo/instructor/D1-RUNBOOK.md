@@ -1,49 +1,125 @@
-# D1｜同模型、同任务、两个 Harness 对照实验
+# D1｜工程环境如何改变 AI 开发
 
-这个实验只证明一件事：模型、任务和业务工程都不变时，模型被放进的工程工作环境会改变其研发行为与可验证结果。它不是工具强弱、Prompt 长短、UI 或速度的比较。
+D1 不比较工具包装，也不比较模型/provider。课堂只使用当前已经登录的 Codex / Plus 环境；模型和 provider 属于课前环境，不属于演示内容。
 
-## 受控变量
+核心课堂链条：**先看清任务 → 再看懂项目 → 最后知道怎么交付。**
 
-- 相同融资申请 baseline：`instructor/baselines/demo12-financing`。
-- 相同业务数据、相同一句任务、相同模型和推理档位。
-- 相同开发侧测试命令和同一个工作区外独立验收器。
-- 每次运行先由 reset 从该 baseline 创建两个互不共享文件的工作区。
+## 课前准备
 
-固定任务文本（A/B 一字不变）：
+在 `ai-rd-system-demo/` 根目录执行：
+
+```bash
+.venv/bin/python scripts/acceptance_check.py
+(cd instructor/baselines/demo12-financing && ../../../.venv/bin/python -m pytest -q)
+./scripts/d1_verify_setup.py
+```
+
+只需确认 Codex 已登录并可运行 `codex`。不需要设置额外 API key、endpoint、模型或 provider 变量；脚本直接使用当前 Codex 配置。默认单阶段 watchdog 上限为 180 秒，如需课前彩排可临时设置 `D1_TIMEOUT_SECONDS=60`，这不是课堂变量。
+
+固定任务只有一份：
 
 > 给融资申请列表增加客户名称和融资状态筛选，并支持导出。
 
-## 两个 Harness
+每一级都从 `instructor/baselines/demo12-financing` 重置。独立验收器仍保留在 `instructor/d1/independent_acceptance.py`，只作为讲师课前 QA 或第三讲资产；D1 课堂不调用它。
 
-**Harness A：Generic Model / Chat Harness。** 通过标准库调用 Responses API，`tools=[]`，不给 shell、文件写入、pytest 或 terminal。模型从确定性 `source_bundle.json` 阅读冻结源码，只输出分析、计划和 patch 建议，不写回工作区。
+## Level 1｜Task + Plan
 
-**Harness B：Coding Harness。** 使用原生 Codex Coding Harness 读取真实 workspace、搜索、修改、运行命令、测试和查看 diff；不复制任何 D1 专用提示或 helper 文件。
-
-两边使用同一模型、推理档位、任务文本、业务数据、冻结 baseline 和 workspace 外独立验收器。A 额外记录 source bundle hash；B 记录 reset 后 workspace hash；对照脚本会校验二者对应同一 baseline。两边的工具能力有意不同，这是本实验唯一主要变量。
-
-## 课堂执行
-
-从 `ai-rd-system-demo/` 根目录执行。首次只需确认已登录 Codex；无需在课堂安装 Python 包或访问 PyPI。
+课堂只观察任务进入 Plan 后，模型会主动暴露哪些理解、假设、文件和风险：
 
 ```bash
-# 1. 明确锁定本场的模型和推理档位（两次必须相同）
-export D1_MODEL='gpt-5.6-luna'
-export D1_REASONING_EFFORT='high'
+./scripts/d1_plan.sh level1
+```
 
-# 2. 依次运行 A、B；脚本自己 reset、投喂完全相同的一句话并捕获证据
-./scripts/d1_run.sh a
-./scripts/d1_run.sh b
+脚本以只读 sandbox 启动 Codex，不修改代码、不执行实现、不运行 pytest，保存：
 
-# 3. 一条命令投屏对照证据
+- `instructor/d1/results/latest-level1/plan.md`：Plan v1；
+- `plan.trace.jsonl`、`plan.stderr`、`plan-status.json`：轨迹、错误和 watchdog 证据；
+- `manifest.json`：任务哈希、baseline 数据哈希和运行信息。
+
+课堂证明：**Plan 把原本藏在执行过程里的任务理解提前暴露出来。**
+
+## Level 2｜Plan + 项目环境
+
+从相同任务重新开始：
+
+```bash
+./scripts/d1_plan.sh level2
+```
+
+workspace 额外加载两项由冻结 baseline 真实整理出的环境资产：
+
+- `PROJECT-MEMORY.md`：repository 先按 `X-User` 建立 tenant 权限范围；service 承载列表业务；已有 `ExportQueue` 但尚无融资导出 HTTP 路由；分页契约和现有测试位置；
+- `CODING-STANDARDS.md`：API 层负责参数/协议，筛选进入既有 service，优先复用公共模块，保持权限/分页兼容，不引入新依赖，不做无关重构。
+
+Codex 仍只读检查并保存 `latest-level2/plan.md`（Plan v2），不修改代码、不运行 pytest。课堂使用 `scripts/d1_compare.sh` 查看 `Plan v1 → Plan v2`：观察哪些内容从临场猜测变成了明确的模块、权限、分页、队列和文件边界决策。
+
+## Level 3｜Plan + 项目环境 + 自检要求
+
+先生成 Plan v3：
+
+```bash
+./scripts/d1_plan.sh level3
+```
+
+Level 3 在 Level 2 基础上增加 `SELF-CHECK.md`，要求开发侧明确检查客户名称筛选、状态筛选、组合筛选、空结果、权限、已有异步导出队列、筛选/权限上下文、pytest、`git diff --check`、`git diff --stat`、完整 diff、修改边界和最终完成说明。这里是开发侧自检，不是独立验收，更不提前使用 Golden Case。
+
+确认大家看完 Plan v3 后，才执行真实开发：
+
+```bash
+./scripts/d1_execute.sh level3
+```
+
+这一步沿用刚才的 `workspaces/d1-level3`，使用 workspace-write sandbox，要求 Codex 按 Plan v3 开发并执行自检。保存：
+
+- `plan.md`：Plan v3；
+- `execute.trace.jsonl`、`execute.stderr`、`execute-status.json`：开发轨迹与状态；
+- `final.md`：Agent 最终完成说明；
+- `workspace.diff`：冻结 baseline 与实际 workspace 的可读 diff；
+- `result.json`：实际修改文件、Agent 主动测试、测试结果和自检结果。
+
+证据采集会额外运行一次 pytest 作为讲师侧开发后复核，并与 trace 中 Agent 主动运行的 pytest 分开记录；它不运行独立验收器。若测试失败，应从 trace 和最终说明确认已修复并重跑。
+
+## 三级证据对照
+
+三级都完成后执行：
+
+```bash
 ./scripts/d1_compare.sh
 ```
 
-A 的源码上下文存为运行目录内的 `source_bundle.json`，不进入用户任务 input；B 只使用 reset 后的真实 workspace。若 A 的 API key 或模型权限不可用，脚本仍会保存失败响应和 manifest，compare 会明确显示失败，不得降级为 Coding Harness。
+输出不再有 winner，而是：
 
-## 如何展示
+```text
+D1｜工程环境如何改变 AI 开发
 
-`d1_compare.sh` 会在一张表中展示：模型、任务、baseline、是否可检查/修改/执行、上下文来源、计划/提案、修改文件、测试、独立业务验收和最终结论。详细原始证据在 `instructor/d1/results/`：A 的 source bundle、Responses raw response 和提案；B 的 CLI JSONL trace、manifest 和结构化结果。
+                         Level 1    Level 2    Level 3
+任务显性 Plan               YES        YES        YES
+识别现有架构约束             ?          YES        YES
+遵守项目代码规范             ?          YES        YES
+明确修改边界                 ?          YES        YES
+明确验证方式                 ?           ?         YES
+实际执行代码                 NO          NO         YES
+主动运行测试                 NO          NO         YES
+检查 diff                    NO          NO         YES
+```
 
-独立验收器在 `instructor/d1/independent_acceptance.py`，不会复制进 A/B 工作区；它覆盖客户名模糊筛选、状态精确筛选、单/多条件、空结果、权限范围、异步导出及其筛选/权限 payload、严格字段和前端能力，并同时检查修改边界。
+并自动输出 Plan v1/v2/v3 文件、`Plan v1 → Plan v2` 与 `Plan v2 → Plan v3` unified diff，以及 Level 3 的实际修改文件、Agent 测试、测试结果、diff、自检和完成说明。
 
-实验结果不是预设 A 必败或 B 必胜。表格只呈现本次运行的行为与事实；两组都失败、都通过或呈现不同改动路径，都是可讨论的真实证据。
+若现场需要最近一次完整证据：
+
+```bash
+./scripts/d1_save_fallback.sh
+./scripts/d1_compare.sh saved
+```
+
+快照只接受三级均完成且 Level 3 已执行真实开发与自检的运行；`saved` 会明确标注 `SAVED_EVIDENCE`。Codex 超时则保留已有 trace、stderr、manifest、diff 和 elapsed。
+
+## D1 收口与第三讲边界
+
+D1 只收口到开发侧自检，不展示独立验收器，不把 Golden Case 放进课堂高潮，也不替第三讲回答产品行为是否真的可信。
+
+最后一问：
+
+> Plan 有了，项目规则有了，自检也全绿了——现在能相信它了吗？
+
+第三讲回答这个问题。D1 证明的是：环境逐级增加后，原来依赖模型临场猜测的东西，逐渐变成稳定的工程输入。
