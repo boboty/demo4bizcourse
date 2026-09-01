@@ -5,7 +5,7 @@ import json, subprocess, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASELINE = ROOT / "instructor/baselines/demo12-financing"
+BASELINE = ROOT / "instructor/baselines/d1-financing-minimal"
 ENVIRONMENT = ROOT / "instructor/d1/environment"
 problems: list[str] = []
 
@@ -31,6 +31,13 @@ def main() -> int:
         clean = subprocess.run(["git", "-C", str(workspace), "diff", "--exit-code"], capture_output=True, check=False).returncode == 0
         check(f"{level} starts with clean workspace git state", clean)
     check("Level 1 has no project environment", not (levels["level1"] / "PROJECT-MEMORY.md").exists())
+    check(
+        "Level 1 AGENTS only keeps workspace isolation rule",
+        (levels["level1"] / "AGENTS.md").read_text(encoding="utf-8")
+        == (BASELINE / "AGENTS.md").read_text(encoding="utf-8")
+        and "pytest" not in (levels["level1"] / "AGENTS.md").read_text(encoding="utf-8")
+        and "规范" not in (levels["level1"] / "AGENTS.md").read_text(encoding="utf-8"),
+    )
     check("Level 2 loads project memory and coding standards", all((levels["level2"] / name).read_bytes() == (ENVIRONMENT / source).read_bytes() for name, source in (("PROJECT-MEMORY.md", "project-memory.md"), ("CODING-STANDARDS.md", "coding-standards.md"))))
     check("Level 3 adds self-check requirements", (levels["level3"] / "SELF-CHECK.md").read_bytes() == (ENVIRONMENT / "self-check.md").read_bytes())
     workspace_text = "\n".join(p.read_text(encoding="utf-8", errors="replace") for w in levels.values() for p in w.rglob("*") if p.is_file() and ".git" not in p.parts)

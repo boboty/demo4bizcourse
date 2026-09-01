@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE = ROOT / "instructor/baselines/demo12-financing"
+BASELINE = ROOT / "instructor/baselines/d1-financing-minimal"
 IGNORED_PARTS = {".git", ".pytest_cache", "__pycache__"}
 EXPECTED_CHANGED_FILES = {"app/main.py", "app/financing/service.py", "static/index.html", "docs/api.md", "tests/test_financing_baseline.py"}
 

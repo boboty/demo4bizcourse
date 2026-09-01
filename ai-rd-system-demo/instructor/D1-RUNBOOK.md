@@ -20,7 +20,7 @@ D1 不比较工具包装，也不比较模型/provider。课堂只使用当前�
 
 > 给融资申请列表增加客户名称和融资状态筛选，并支持导出。
 
-每一级都从 `instructor/baselines/demo12-financing` 重置。独立验收器仍保留在 `instructor/d1/independent_acceptance.py`，只作为讲师课前 QA 或第三讲资产；D1 课堂不调用它。
+旧 Demo 继续使用 `instructor/baselines/demo12-financing`；D1 每一级从专用的 `instructor/baselines/d1-financing-minimal` 重置。Level 1 的 `AGENTS.md` 只保留 workspace 隔离规则，不继承旧 Demo 的代码规范、自检或 pytest 要求。独立验收器仍保留在 `instructor/d1/independent_acceptance.py`，只作为讲师课前 QA 或第三讲资产；D1 课堂不调用它。
 
 ## Level 1｜Task + Plan
 
@@ -88,6 +88,8 @@ Level 3 在 Level 2 基础上增加 `SELF-CHECK.md`，要求开发侧明确检�
 ```
 
 输出不再有 winner，而是：
+
+下面只示意表格结构；每个单元格的实际值由 Plan、trace 和 workspace evidence 动态比较得出，不预设三级一定出现某种结果。
 
 ```text
 D1｜工程环境如何改变 AI 开发

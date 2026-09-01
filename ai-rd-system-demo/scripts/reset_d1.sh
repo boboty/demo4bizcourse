@@ -8,7 +8,7 @@ case "$level" in
 esac
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-baseline="$repo_root/instructor/baselines/demo12-financing"
+baseline="$repo_root/instructor/baselines/d1-financing-minimal"
 
 reset_one() {
   local current_level="$1"
