@@ -28,8 +28,7 @@ def source_files(root: Path) -> dict[str, bytes]:
     files: dict[str, bytes] = {}
     for path in root.rglob("*"):
         relative = path.relative_to(root)
-        is_harness_asset = relative == Path("D1-HARNESS.md") or relative.parts[:2] == ("tools", "d1")
-        if path.is_file() and not IGNORED_PARTS.intersection(path.parts) and not is_harness_asset:
+        if path.is_file() and not IGNORED_PARTS.intersection(path.parts):
             files[str(relative)] = path.read_bytes()
     return files
 

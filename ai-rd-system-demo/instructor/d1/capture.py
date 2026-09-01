@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import json
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +13,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / "instructor" / "baselines" / "demo12-financing"
 IGNORED_PARTS = {".pytest_cache", "__pycache__", ".d1-harness"}
-TEST_MARKERS = ("pytest", "tools/d1/check", "d1 check")
+TEST_MARKERS = ("pytest",)
 READ_MARKERS = ("rg ", "find ", "ls", "sed ", "cat ", "head ", "tree")
 WRITE_MARKERS = ("apply_patch", ">", "tee ", "cp ", "mv ", "rm ", "python -c")
 
@@ -23,8 +22,7 @@ def source_files(root: Path) -> dict[str, bytes]:
     files = {}
     for path in root.rglob("*"):
         relative = path.relative_to(root)
-        is_harness_asset = relative == Path("D1-HARNESS.md") or relative.parts[:2] == ("tools", "d1")
-        if path.is_file() and not IGNORED_PARTS.intersection(path.parts) and not is_harness_asset:
+        if path.is_file() and not IGNORED_PARTS.intersection(path.parts):
             files[str(relative)] = path.read_bytes()
     return files
 
@@ -99,6 +97,7 @@ def main() -> int:
     parser.add_argument("--trace", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--runner-exit", type=int, default=0)
     args = parser.parse_args()
 
     workspace = args.workspace.resolve()
@@ -124,7 +123,7 @@ def main() -> int:
         acceptance_result = {"passed": False, "problems": ["验收器未产生 JSON"], "changed_files": [], "boundary_violations": []}
     changed = acceptance_result.get("changed_files", [])
     reads = brief(commands, lambda command: any(marker in command for marker in READ_MARKERS) and not any(marker in command for marker in WRITE_MARKERS))
-    plan_markers = ("plan", "计划", "tools/d1/plan", "d1 plan")
+    plan_markers = ("plan", "计划")
     has_plan = any(marker in command.lower() for command in commands for marker in plan_markers) or any(marker in final_message.lower() for marker in plan_markers)
     agent_test = any(marker in command for command in commands for marker in TEST_MARKERS)
     result = {
@@ -135,6 +134,7 @@ def main() -> int:
         "first_context_reads": reads,
         "plan_evidence": has_plan,
         "engineering_tools": brief(commands, lambda command: True, limit=8),
+        "tool_capabilities": {"inspect": True, "modify": True, "commands": True, "tests": True},
         "agent_ran_dev_tests": agent_test,
         "files_changed": changed,
         "dev_test_passed": test.returncode == 0,
@@ -144,6 +144,7 @@ def main() -> int:
         "boundary_violations": acceptance_result.get("boundary_violations", []),
         "final_message": final_message,
         "trace": str(args.trace),
+        "codex_exit": args.runner_exit,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

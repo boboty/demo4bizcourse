@@ -32,10 +32,20 @@ def main() -> int:
         and a["manifest"].get("reasoning_effort") == b["manifest"].get("reasoning_effort")
         and a["manifest"].get("data_sha256") == b["manifest"].get("data_sha256")
         and a["manifest"].get("acceptance_sha256") == b["manifest"].get("acceptance_sha256")
+        and a["manifest"].get("source_bundle_sha256")
+        and a["manifest"].get("source_bundle_baseline_match") is True
     )
     rows = [
+        ("模型", a["manifest"].get("model"), b["manifest"].get("model")),
+        ("任务", "SAME", "SAME"),
+        ("项目 baseline", "SAME", "SAME"),
+        ("模型响应 / Codex 执行", "成功" if a.get("api_success") else "失败：" + str(a.get("api_error", "未知")), "成功" if b.get("codex_exit") == 0 else f"失败（exit {b.get('codex_exit')}）"),
+        ("可检查项目", "是" if a["tool_capabilities"].get("inspect") else "否", "是" if b["tool_capabilities"].get("inspect") else "否"),
+        ("可修改 workspace", "是" if a["tool_capabilities"].get("modify") else "否", "是" if b["tool_capabilities"].get("modify") else "否"),
+        ("可执行命令", "是" if a["tool_capabilities"].get("commands") else "否", "是" if b["tool_capabilities"].get("commands") else "否"),
+        ("可运行测试", "是" if a["tool_capabilities"].get("tests") else "否", "是" if b["tool_capabilities"].get("tests") else "否"),
         ("先读取的上下文", a["first_context_reads"], b["first_context_reads"]),
-        ("计划证据", "有" if a["plan_evidence"] else "未记录", "有" if b["plan_evidence"] else "未记录"),
+        ("计划 / 提案", "有" if a["plan_evidence"] else "未记录", "有" if b["plan_evidence"] else "未记录"),
         ("工程工具调用", a["engineering_tools"], b["engineering_tools"]),
         ("Agent 主动跑开发测试", "是" if a["agent_ran_dev_tests"] else "否", "是" if b["agent_ran_dev_tests"] else "否"),
         ("修改文件", a["files_changed"], b["files_changed"]),

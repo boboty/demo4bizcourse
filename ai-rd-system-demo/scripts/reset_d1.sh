@@ -15,10 +15,6 @@ reset_one() {
   local workspace="$repo_root/workspaces/d1-harness-$harness"
   mkdir -p "$workspace"
   rsync -a --delete --exclude '.pytest_cache/' --exclude '__pycache__/' "$baseline/" "$workspace/"
-  if [[ "$harness" == "b" ]]; then
-    rsync -a "$repo_root/instructor/d1/harness-b/" "$workspace/"
-    chmod +x "$workspace/tools/d1/context" "$workspace/tools/d1/plan" "$workspace/tools/d1/check" "$workspace/tools/d1/status"
-  fi
   echo "reset d1-harness-$harness"
 }
 

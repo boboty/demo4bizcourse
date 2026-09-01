@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 
@@ -26,8 +24,7 @@ def files(root: Path) -> dict[str, bytes]:
     result: dict[str, bytes] = {}
     for path in root.rglob("*"):
         relative = path.relative_to(root)
-        is_harness_asset = relative == Path("D1-HARNESS.md") or relative.parts[:2] == ("tools", "d1")
-        if path.is_file() and not IGNORED.intersection(path.parts) and not is_harness_asset:
+        if path.is_file() and not IGNORED.intersection(path.parts):
             result[str(relative)] = path.read_bytes()
     return result
 
@@ -55,12 +52,7 @@ def main() -> int:
     task = (ROOT / "instructor" / "d1" / "task.txt").read_text(encoding="utf-8").strip()
     task_leaks = [token for token in (task, "independent_acceptance", "task_a_acceptance") if token in workspace_text]
     check("D1 workspaces do not contain task or acceptance implementation", not task_leaks, ", ".join(task_leaks))
-    b_harness_files = [b / "D1-HARNESS.md", *(b / "tools/d1" / name for name in ("context", "plan", "check", "status"))]
-    b_text = "\n".join(path.read_text(encoding="utf-8") for path in b_harness_files)
-    forbidden = ["independent_acceptance", "导出字段严格正确", "华星", "南湾", "customer_name", "APPROVED"]
-    leaks = [token for token in forbidden if token in b_text]
-    check("Harness B does not contain task-specific rules or answers", not leaks, ", ".join(leaks))
-    check("Harness B contains only generic workbench tools", all((b / "tools/d1" / name).is_file() for name in ("context", "plan", "check", "status")))
+    check("Harness B has no extra helper treatment", digest(b) == digest(BASELINE))
     reference = ROOT / "instructor" / "baselines" / "demo12-reference"
     acceptance = subprocess.run(
         [str(ROOT / ".venv/bin/python"), str(ROOT / "instructor/d1/independent_acceptance.py"), "--workspace", str(reference), "--json"],

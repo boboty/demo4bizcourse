@@ -15,11 +15,11 @@
 
 ## 两个 Harness
 
-**Harness A：裸执行 Harness。** 只提供 Codex CLI 的标准文件与终端能力；Agent 自己发现项目结构、组织步骤、运行检查和控制改动范围。
+**Harness A：Generic Model / Chat Harness。** 通过标准库调用 Responses API，`tools=[]`，不给 shell、文件写入、pytest 或 terminal。模型从确定性 `source_bundle.json` 阅读冻结源码，只输出分析、计划和 patch 建议，不写回工作区。
 
-**Harness B：工程工作台 Harness。** 保留与 A 完全相同的业务源码、`AGENTS.md` 和任务文本，但额外提供非业务化的工作台工具：项目结构索引、计划记录、开发测试快捷命令和 baseline diff。工具不包含接口规则、验收条件、答案或参考实现；它改变的是环境内的上下文组织和执行/验证能力，而不是交给模型的业务 Prompt。
+**Harness B：Coding Harness。** 使用原生 Codex Coding Harness 读取真实 workspace、搜索、修改、运行命令、测试和查看 diff；不复制任何 D1 专用提示或 helper 文件。
 
-两边都使用同一个 `codex exec`、同一模型、同一推理档位、相同 `workspace-write` 沙箱和相同自动审批配置。每次运行的 `manifest.json` 会记录 task、数据、冻结 baseline 和 reset 后工作区的哈希，以及模型和档位；对照脚本会先校验它们一致。
+两边使用同一模型、推理档位、任务文本、业务数据、冻结 baseline 和 workspace 外独立验收器。A 额外记录 source bundle hash；B 记录 reset 后 workspace hash；对照脚本会校验二者对应同一 baseline。两边的工具能力有意不同，这是本实验唯一主要变量。
 
 ## 课堂执行
 
@@ -30,7 +30,7 @@
 export D1_MODEL='gpt-5.6-luna'
 export D1_REASONING_EFFORT='high'
 
-# 2. 依次运行 A、B；脚本自己 reset、投喂完全相同的一句话并捕获 JSONL 工具轨迹
+# 2. 依次运行 A、B；脚本自己 reset、投喂完全相同的一句话并捕获证据
 ./scripts/d1_run.sh a
 ./scripts/d1_run.sh b
 
@@ -38,11 +38,11 @@ export D1_REASONING_EFFORT='high'
 ./scripts/d1_compare.sh
 ```
 
-如果要由讲师手动操作而不启动模型，先运行 `./scripts/reset_d1.sh both`，再分别从 `workspaces/d1-harness-a` 和 `workspaces/d1-harness-b` 启动相同模型/档位的 Codex，并**只**粘贴上面的固定任务。完成后以各自 trace 和 manifest 运行 `instructor/d1/capture.py`；常规课堂优先使用 `d1_run.sh`，因为它能消除手工粘贴、模型参数和日志采集的偏差。
+A 的源码上下文存为运行目录内的 `source_bundle.json`，不进入用户任务 input；B 只使用 reset 后的真实 workspace。若 A 的 API key 或模型权限不可用，脚本仍会保存失败响应和 manifest，compare 会明确显示失败，不得降级为 Coding Harness。
 
 ## 如何展示
 
-`d1_compare.sh` 会在一张表中展示：首次读取的上下文、计划证据、工程工具调用、Agent 是否主动运行开发测试、修改文件、最终开发测试、独立业务验收、越界修改和最终结论。详细原始证据在 `instructor/d1/results/`：每次的 CLI JSONL trace、运行 manifest 和结构化结果。
+`d1_compare.sh` 会在一张表中展示：模型、任务、baseline、是否可检查/修改/执行、上下文来源、计划/提案、修改文件、测试、独立业务验收和最终结论。详细原始证据在 `instructor/d1/results/`：A 的 source bundle、Responses raw response 和提案；B 的 CLI JSONL trace、manifest 和结构化结果。
 
 独立验收器在 `instructor/d1/independent_acceptance.py`，不会复制进 A/B 工作区；它覆盖客户名模糊筛选、状态精确筛选、单/多条件、空结果、权限范围、异步导出及其筛选/权限 payload、严格字段和前端能力，并同时检查修改边界。
 

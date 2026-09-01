@@ -29,7 +29,7 @@ export D1_REASONING_EFFORT='high'
 ./scripts/d1_compare.sh
 ```
 
-`scripts/d1_verify_setup.py` 不调用模型，可用于课前验证 reset、源码控制变量与验收隔离。
+`scripts/d1_verify_setup.py` 不调用模型，可用于课前验证 reset、源码控制变量与验收隔离；A 需要可调用 Responses API 的 `OPENAI_API_KEY`，B 需要已登录 Codex CLI。
 
 ## 环境
 
