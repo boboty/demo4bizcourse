@@ -75,13 +75,10 @@ def test_nested_prompt_tokens_details_are_read():
 @pytest.mark.parametrize(
     "usage, expected",
     [
-        # DeepSeek-style cache accounting.
         ({"prompt_tokens": 100, "completion_tokens": 5, "prompt_cache_hit_tokens": 80},
          (100, 5, 80)),
-        # Anthropic-style naming on a gateway that exposes it.
         ({"input_tokens": 90, "output_tokens": 4, "cache_read_input_tokens": 32},
          (90, 4, 32)),
-        # No cache accounting at all: null, not zero.
         ({"prompt_tokens": 10, "completion_tokens": 2}, (10, 2, None)),
         ({}, (None, None, None)),
         (None, (None, None, None)),
@@ -128,10 +125,10 @@ def test_network_failure_is_wrapped():
         provider.complete([{"role": "user", "content": "hi"}])
 
 
-def test_unconfigured_provider_refuses_rather_than_guessing():
+def test_unconfigured_provider_refuses_without_api_key():
     provider = OpenAICompatibleProvider(ProviderConfig())
     assert provider.configured is False
-    with pytest.raises(ProviderError, match="LLM_BASE_URL"):
+    with pytest.raises(ProviderError, match="LLM_API_KEY"):
         provider.complete([{"role": "user", "content": "hi"}])
 
 
