@@ -1,0 +1,9 @@
+# Local secrets/config for this demo. Keep examples tracked.
+.env
+.env.*
+!.env.example
+
+# Also ignore nested env files anywhere under token-task-lab.
+**/.env
+**/.env.*
+!**/.env.example
