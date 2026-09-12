@@ -13,6 +13,15 @@
 
 不在课堂临时切换 base URL 或模型，避免实验条件变化。
 
+`.env` 会自动加载。首次准备只需要：
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入 LLM_API_KEY
+```
+
+以后直接启动即可，不需要再 `export`，也不需要 `uvicorn --env-file`。
+
 ## 课堂位置
 
 ### Demo 1｜第二讲“四问”之后
@@ -67,10 +76,9 @@
 
 ## 课前准备
 
-课堂默认回放已验证记录。上课前跑一次：
+课堂默认回放已验证记录。`.env` 已经填好 API Key 后，上课前直接跑：
 
 ```bash
-export LLM_API_KEY="你的 DeepSeek API Key"
 python scripts/record_runs.py        # 真实执行 A/B/C/D，写入 runs/
 ```
 
@@ -96,6 +104,7 @@ python scripts/record_runs.py        # 真实执行 A/B/C/D，写入 runs/
 课前确认：
 
 - [ ] Provider 固定显示 `https://api.deepseek.com` / `deepseek-flash`，只需 API Key
+- [ ] `.env` 已自动加载，不需要额外 `export`
 - [ ] Demo 1 主区域展示的是本次运行的实际结果，不是基准区的预设答案
 - [ ] 现场如果把输入改成别的城市，基准区提示「已不适用」且不再被念出来
 - [ ] Demo 1 收起运行背面时，HTML 里也不含 Token 数字
