@@ -10,8 +10,11 @@
 - Base URL：`https://api.deepseek.com`
 - Model：`deepseek-flash`
 - 课堂唯一必填：`LLM_API_KEY`
+- 固定实验条件：每个请求都带 `thinking: {"type": "disabled"}`
 
-不在课堂临时切换 base URL 或模型，避免实验条件变化。
+不在课堂临时切换 base URL、模型或 thinking，避免实验条件变化。四档统一关闭 thinking：
+reasoning tokens 计入输出预算且随档位波动，开着会让 A/B/C/D 的差额里混进「这次想了多久」，
+而不是应用结构本身的差别。运行背面会显示 `thinking=disabled`，回放时可直接核对。
 
 `.env` 会自动加载。首次准备只需要：
 

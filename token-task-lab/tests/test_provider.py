@@ -149,3 +149,80 @@ def test_model_override_reaches_the_request_body():
 
     provider_for(handler).complete([{"role": "user", "content": "hi"}], model="strong-model")
     assert seen["model"] == "strong-model"
+
+
+# ---------------------------------------------------------------- thinking off
+
+
+def recording_provider(bodies: list[dict]) -> OpenAICompatibleProvider:
+    """把每个真实 HTTP request body 原样收下来，供 wire-level 断言用。"""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        bodies.append(json.loads(request.content))
+        return text_reply()(request)
+
+    return provider_for(handler)
+
+
+def test_thinking_is_disabled_at_the_wire_level():
+    bodies: list[dict] = []
+    recording_provider(bodies).complete([{"role": "user", "content": "hi"}])
+
+    assert bodies[0]["thinking"] == {"type": "disabled"}
+
+
+def test_thinking_does_not_disturb_the_rest_of_the_request_body():
+    bodies: list[dict] = []
+    recording_provider(bodies).complete([{"role": "user", "content": "hi"}])
+    body = bodies[0]
+
+    # 上限没被顺手调大，模型与消息也没被动过。
+    assert body["max_tokens"] == CONFIG.max_tokens == 900
+    assert body["model"] == "test-model"
+    assert body["messages"] == [{"role": "user", "content": "hi"}]
+    assert body["temperature"] == CONFIG.temperature
+
+
+def test_every_abcd_model_call_carries_thinking_disabled():
+    """四个档位走同一条 complete()：每一次真实请求都必须带同一个实验条件。"""
+    from app.engine import MODE_RUNNERS, MODES, RunEngine
+    from app.scenarios import get_scenario
+
+    expected = {"A": (1, 0), "B": (1, 3), "C": (5, 3), "D": (7, 6)}
+    scenario = get_scenario("tianjin-freight")
+    assert set(MODE_RUNNERS) == set(MODES) == set(expected)
+
+    for mode, (model_calls, tool_calls) in expected.items():
+        bodies: list[dict] = []
+        engine = RunEngine(recording_provider(bodies), CONFIG)
+        record = engine.execute(
+            scenario=scenario, mode=mode, request_text=scenario.request_text
+        )
+
+        # 调用次数保持 1/1/5/7 与 0/3/3/6。
+        assert (record.usage.model_calls, record.usage.tool_calls) == (model_calls, tool_calls)
+        assert len(bodies) == model_calls
+        # 每一次真实请求都带 thinking=disabled，没有按档位的例外。
+        assert [body["thinking"] for body in bodies] == [{"type": "disabled"}] * model_calls
+        # 上限在所有档位都还是 900。
+        assert {body["max_tokens"] for body in bodies} == {900}
+
+
+def test_the_run_record_carries_the_experiment_condition(monkeypatch):
+    """回放时要能看出这组数字是在什么条件下跑出来的。"""
+    from app.engine import MODES, RunEngine
+    from app.scenarios import get_scenario
+
+    scenario = get_scenario("tianjin-freight")
+    for mode in MODES:
+        bodies: list[dict] = []
+        record = RunEngine(recording_provider(bodies), CONFIG).execute(
+            scenario=scenario, mode=mode, request_text=scenario.request_text
+        )
+
+        assert record.provider is not None
+        assert record.provider["thinking"] == "disabled"
+        # 记录里的条件与真正发出去的请求一致。
+        assert all(body["thinking"]["type"] == record.provider["thinking"] for body in bodies)

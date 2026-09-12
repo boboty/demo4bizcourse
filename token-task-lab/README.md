@@ -46,8 +46,16 @@
 - Base URL：`https://api.deepseek.com`
 - Model：`deepseek-flash`
 - 课堂唯一必填：`LLM_API_KEY`
+- 固定实验条件：请求体一律带 `thinking: {"type": "disabled"}`
 
-Base URL 和模型写死在 `app/config.py`，不在课堂临时切换。
+Base URL、模型和 thinking 写死在 `app/config.py`，不在课堂临时切换，也不按档位区分。
+
+**为什么四个档位都关掉 thinking。** DeepSeek 的 reasoning tokens 计入 `completion_tokens`，
+会挤占 `max_tokens=900` 的预算，而且它随档位与步骤剧烈波动。开着它，A/B/C/D 的差额里就混进了
+「模型这次想了多久」这一项，量到的就不再是应用结构本身的差别。关闭后输出预算只用于交付文本，
+档位之间的差额才可归因于上下文与步骤结构。
+
+每次运行的记录里都有 `provider.thinking`，回放时能确认这组数字是在什么条件下跑出来的。
 
 ## 运行
 

@@ -84,6 +84,10 @@
 
 不要把任何密钥提交进仓库。
 
+课堂固定实验条件：每个 Chat Completion 请求体都带 `thinking: {"type": "disabled"}`，
+A/B/C/D 一视同仁，不按档位区分。reasoning tokens 计入输出预算且随档位波动，开着它会把
+「模型这次想了多久」混进档位差额。该条件写进 run record 的 `provider`，回放时可核对。
+
 ## 运行记录
 
 每次运行生成 `run_id`，记录原始请求、scenario、mode、steps、usage、输出与异常。课堂默认回放已验证记录；现场真机运行只是增强。

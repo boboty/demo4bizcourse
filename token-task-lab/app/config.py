@@ -28,6 +28,16 @@ load_dotenv(ROOT / ".env", override=False)
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-flash"
 
+# 课堂固定实验条件：A/B/C/D 一律显式关闭 thinking。
+#
+# reasoning tokens 计入 completion_tokens，会挤占 max_tokens 预算，而且它随档位
+# 与步骤剧烈波动——同一件事，A 档可能一路空转到上限。那样量到的就不是「应用结构
+# 带来的 Token 差异」，而是「模型这次想了多久」。关闭它，输出预算才只用于交付文本，
+# 档位之间的差额才可归因于上下文与步骤结构。
+#
+# 这是一个写死的实验条件，不是课堂调节项：不按档位区分，也不从环境变量读取。
+THINKING_MODE = "disabled"
+
 TRUTHY = {"1", "true", "yes", "on"}
 
 
@@ -78,7 +88,11 @@ class ProviderConfig:
         return [] if self.api_key else ["LLM_API_KEY"]
 
     def public(self) -> dict:
-        """Config safe to hand to the browser — deliberately omits the key."""
+        """Config safe to hand to the browser — deliberately omits the key.
+
+        ``thinking`` is recorded with every run so a replayed record says which
+        experiment condition produced its numbers, not just which model.
+        """
         return {
             "base_url": self.base_url,
             "model": self.model,
@@ -87,6 +101,7 @@ class ProviderConfig:
             "configured": self.configured,
             "missing_settings": self.missing_settings,
             "timeout_s": self.timeout_s,
+            "thinking": THINKING_MODE,
         }
 
 

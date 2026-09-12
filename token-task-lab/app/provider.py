@@ -16,7 +16,7 @@ from typing import Any, Iterable
 
 import httpx
 
-from .config import ProviderConfig
+from .config import THINKING_MODE, ProviderConfig
 from .models import TRUNCATING_FINISH_REASONS
 
 
@@ -148,7 +148,11 @@ class OpenAICompatibleProvider:
             "model": model or self.config.model,
             "messages": messages,
             "temperature": self.config.temperature if temperature is None else temperature,
+            # 900 保持不变：收紧输出靠提示词里的字数上限，不靠调大这个硬上限。
             "max_tokens": self.config.max_tokens if max_tokens is None else max_tokens,
+            # 课堂固定实验条件，A/B/C/D 走的是同一条 complete()，所以四个档位
+            # 一定带上同一个值；这里没有按档位分支的可能。
+            "thinking": {"type": THINKING_MODE},
         }
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",

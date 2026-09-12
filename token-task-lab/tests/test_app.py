@@ -148,6 +148,23 @@ def test_a_live_run_is_saved_and_replays_identically(monkeypatch, isolated_env):
     assert replayed["back"] == payload["back"]
 
 
+def test_the_experiment_condition_survives_save_and_replay(monkeypatch, isolated_env):
+    """回放一份记录时，要能看出它是在 thinking=disabled 下跑出来的。"""
+    use_fake_provider(monkeypatch)
+    payload = post_run("C")
+    run_id = payload["front"]["run_id"]
+
+    stored = RunStore(isolated_env / "runs").get(run_id)
+    assert stored is not None and stored.provider is not None
+    assert stored.provider["thinking"] == "disabled"
+
+    replayed = client.get(f"/api/runs/{run_id}").json()
+    assert replayed["back"]["provider"]["thinking"] == "disabled"
+    assert json.loads((isolated_env / "runs" / f"{run_id}.json").read_text("utf-8"))[
+        "provider"
+    ]["thinking"] == "disabled"
+
+
 def test_recorded_runs_are_listed_with_their_totals(monkeypatch):
     use_fake_provider(monkeypatch)
     first = post_run("A")["front"]["run_id"]

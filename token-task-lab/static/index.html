@@ -454,6 +454,8 @@ function renderBack(back) {
     + `记录时间：${esc(back.created_at)}<br>`
     + `provider：${esc(provider.base_url || '未配置')} · 模型：${esc(provider.model || '—')}`
     + `${back.mode === 'D' && provider.strong_model ? ' · 强模型：' + esc(provider.strong_model) : ''}`
+    // 实验条件跟着记录一起回放：四档一律 thinking=disabled。
+    + `${provider.thinking ? ' · thinking=' + esc(provider.thinking) : ''}`
     + saved;
 
   $('totals').innerHTML = totalsHTML(back);

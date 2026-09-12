@@ -139,7 +139,9 @@ async function refresh(){
   try{
     const h=await j('/api/health');const p=h.provider||{};
     status($('sProvider'),h.provider_ready?'可用':'未配置',h.provider_ready?'good':'warn');
-    status($('sModel'),p.model||'—',p.model==='deepseek-flash'?'good':'warn');
+    // 实验条件一起显示：四档统一 thinking=disabled，课堂前后都能核对。
+    status($('sModel'),`${p.model||'—'} · thinking=${p.thinking||'—'}`,
+      p.model==='deepseek-flash'&&p.thinking==='disabled'?'good':'warn');
     // Token 计量完整 ≠ 输出完整：两个数字都报，冻结要求两者同时成立。
     const ready=h.classroom_ready_runs??0,freeze=h.freeze_ready_runs??0;
     status($('sReady'),`${ready} / ${freeze}`,(freeze>0&&freeze===ready)?'good':'warn');
