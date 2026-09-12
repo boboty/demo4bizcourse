@@ -1,0 +1,226 @@
+{
+  "run_id": "56cb5e6e-4cfa-4034-981e-360fa1ed4dde",
+  "created_at": "2026-09-12T04:32:03+00:00",
+  "experiment_id": "93e96adb-8d17-481f-a334-3172ccef07f1",
+  "scenario": "tianjin-freight",
+  "scenario_name": "天津货代询价",
+  "mode": "B",
+  "mode_label": "B 全量上下文",
+  "request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "scenario_request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "task": "根据客户询价识别已知与缺失条件，取回可核验的船期/报价事实，形成候选方案；事实不足时明确停在待业务资料或人工确认，不得编造船期、运价或舱位承诺。",
+  "known": [
+    "起运港：天津新港",
+    "目的港：釜山",
+    "箱型箱量：20GP × 2",
+    "货好时间：下周三（客户口径）"
+  ],
+  "missing": [
+    "可核验的有效船期",
+    "有效报价资料（运价、附加费、有效期）",
+    "舱位确认"
+  ],
+  "next_actions": [
+    "向承运人或订舱平台按航次取回真实船期",
+    "取回承运人报价单，确认有效期与附加费",
+    "向船公司/订舱口实时确认可用舱位",
+    "由业务人员完成报价确认与舱位承诺"
+  ],
+  "human_gates": [
+    "报价确认",
+    "舱位承诺"
+  ],
+  "dependencies": [
+    {
+      "kind": "tool",
+      "name": "sailing_schedule",
+      "title": "查询船期",
+      "description": "按起运港/目的港/箱型取回船期；此处返回教学构造结构，未经验证。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
+    },
+    {
+      "kind": "tool",
+      "name": "rate_card",
+      "title": "查询运价",
+      "description": "取回承运人报价；本地无可核验报价资料。",
+      "available": false,
+      "verified": false,
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
+    },
+    {
+      "kind": "tool",
+      "name": "space_check",
+      "title": "确认舱位",
+      "description": "确认可用舱位；需由船公司/订舱口实时确认。",
+      "available": false,
+      "verified": false,
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
+    },
+    {
+      "kind": "material",
+      "name": "sailing_schedule",
+      "title": "船期资料来源说明",
+      "description": "以下内容为课堂教学构造的示例结构，不是承运人发布的真实船期，不得作为业务事实使用。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    },
+    {
+      "kind": "material",
+      "name": "rate_source",
+      "title": "报价资料来源说明",
+      "description": "本场景可用的报价来源：承运人报价单、订舱平台有效期运价。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    },
+    {
+      "kind": "material",
+      "name": "customer_profile",
+      "title": "客户与业务口径",
+      "description": "客户为长期合作货代客户，询价口径为「船期 + 价格」。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    }
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "装载当前可用业务资料",
+      "phase": "context",
+      "status": "ok",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 3,
+      "tools": [
+        "sailing_schedule",
+        "rate_card",
+        "space_check"
+      ],
+      "facts": [
+        {
+          "name": "sailing_schedule",
+          "title": "查询船期",
+          "state": "unverified",
+          "state_label": "有结果但未核验",
+          "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
+        },
+        {
+          "name": "rate_card",
+          "title": "查询运价",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
+        },
+        {
+          "name": "space_check",
+          "title": "确认舱位",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
+        }
+      ],
+      "latency_ms": 0,
+      "result": null,
+      "detail": "查询船期=有结果但未核验、查询运价=无结果、确认舱位=无结果",
+      "usage_raw": null,
+      "finish_reason": null,
+      "truncated": false
+    },
+    {
+      "step": 2,
+      "action": "基于全量上下文生成可交付结果",
+      "phase": "answer",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 999,
+      "output_tokens": 251,
+      "cached_tokens": 0,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1981,
+      "result": "**结论：目前无法提供可核验的船期与运价，需补充资料后由业务人员确认。**\n\n**候选方案**\n- 天津新港 → 釜山，2×20GP，下周三货好，目标航次为下周初/周中班期。\n- 船期、运价、舱位均暂无可用核验来源，暂不能给出具体船名、航次、ETD/ETA 或价格。\n\n**缺失条件**\n1. 真实船期：需从承运人船期表或订舱平台按航次实时取回。\n2. 运价：需取得承运人报价单或订舱平台有效期运价，并确认有效期及附加费。\n3. 舱位：需向船公司/订舱口实时确认，不能预先承诺。\n\n**下一步动作**\n- 请确认：起运港具体码头、目的港、箱型箱量、货好时间、品名、是否指定承运人/直航或中转、付款方式。\n- 我方将据此取回真实船期与运价，并同步申请舱位。\n- 舱位与报价均以业务人员最终确认为准。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 999,
+        "completion_tokens": 251,
+        "total_tokens": 1250,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 999
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    }
+  ],
+  "usage": {
+    "model_calls": 1,
+    "tool_calls": 3,
+    "input_tokens": 999,
+    "output_tokens": 251,
+    "cached_tokens": 0,
+    "total_tokens": 1250,
+    "latency_ms": 1981
+  },
+  "output": "**结论：目前无法提供可核验的船期与运价，需补充资料后由业务人员确认。**\n\n**候选方案**\n- 天津新港 → 釜山，2×20GP，下周三货好，目标航次为下周初/周中班期。\n- 船期、运价、舱位均暂无可用核验来源，暂不能给出具体船名、航次、ETD/ETA 或价格。\n\n**缺失条件**\n1. 真实船期：需从承运人船期表或订舱平台按航次实时取回。\n2. 运价：需取得承运人报价单或订舱平台有效期运价，并确认有效期及附加费。\n3. 舱位：需向船公司/订舱口实时确认，不能预先承诺。\n\n**下一步动作**\n- 请确认：起运港具体码头、目的港、箱型箱量、货好时间、品名、是否指定承运人/直航或中转、付款方式。\n- 我方将据此取回真实船期与运价，并同步申请舱位。\n- 舱位与报价均以业务人员最终确认为准。",
+  "run_status": "ok",
+  "evidence_level": "live",
+  "token_evidence": "measured",
+  "output_evidence": "complete",
+  "truncated_steps": [],
+  "provider": {
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "strong_model": null,
+    "model_for_strong_steps": "deepseek-flash",
+    "configured": true,
+    "missing_settings": [],
+    "timeout_s": 60.0,
+    "thinking": "disabled"
+  },
+  "claim_audit": {
+    "method": "keyword_heuristic",
+    "disclaimer": "关键词启发式扫描，不是事实核验；只用于课堂定位，不作为结论。",
+    "price_mentions": [],
+    "schedule_mentions": [
+      "周三",
+      "航次",
+      "船名",
+      "航次",
+      "ETD",
+      "ETA",
+      "航次"
+    ],
+    "verdict": "contains_concrete_commitments"
+  },
+  "notes": [
+    "B 档一次性把当前可用资料全部塞进上下文：任务是同一件，输入量随资料量线性增长。"
+  ],
+  "error": null
+}

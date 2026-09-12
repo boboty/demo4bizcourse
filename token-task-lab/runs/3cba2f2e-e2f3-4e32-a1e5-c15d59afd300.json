@@ -1,0 +1,435 @@
+{
+  "run_id": "3cba2f2e-e2f3-4e32-a1e5-c15d59afd300",
+  "created_at": "2026-09-12T04:32:12+00:00",
+  "experiment_id": "93e96adb-8d17-481f-a334-3172ccef07f1",
+  "scenario": "tianjin-freight",
+  "scenario_name": "天津货代询价",
+  "mode": "D",
+  "mode_label": "D 低效版本",
+  "request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "scenario_request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "task": "根据客户询价识别已知与缺失条件，取回可核验的船期/报价事实，形成候选方案；事实不足时明确停在待业务资料或人工确认，不得编造船期、运价或舱位承诺。",
+  "known": [
+    "起运港：天津新港",
+    "目的港：釜山",
+    "箱型箱量：20GP × 2",
+    "货好时间：下周三（客户口径）"
+  ],
+  "missing": [
+    "可核验的有效船期",
+    "有效报价资料（运价、附加费、有效期）",
+    "舱位确认"
+  ],
+  "next_actions": [
+    "向承运人或订舱平台按航次取回真实船期",
+    "取回承运人报价单，确认有效期与附加费",
+    "向船公司/订舱口实时确认可用舱位",
+    "由业务人员完成报价确认与舱位承诺"
+  ],
+  "human_gates": [
+    "报价确认",
+    "舱位承诺"
+  ],
+  "dependencies": [
+    {
+      "kind": "tool",
+      "name": "sailing_schedule",
+      "title": "查询船期",
+      "description": "按起运港/目的港/箱型取回船期；此处返回教学构造结构，未经验证。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
+    },
+    {
+      "kind": "tool",
+      "name": "rate_card",
+      "title": "查询运价",
+      "description": "取回承运人报价；本地无可核验报价资料。",
+      "available": false,
+      "verified": false,
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
+    },
+    {
+      "kind": "tool",
+      "name": "space_check",
+      "title": "确认舱位",
+      "description": "确认可用舱位；需由船公司/订舱口实时确认。",
+      "available": false,
+      "verified": false,
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
+    },
+    {
+      "kind": "material",
+      "name": "sailing_schedule",
+      "title": "船期资料来源说明",
+      "description": "以下内容为课堂教学构造的示例结构，不是承运人发布的真实船期，不得作为业务事实使用。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    },
+    {
+      "kind": "material",
+      "name": "rate_source",
+      "title": "报价资料来源说明",
+      "description": "本场景可用的报价来源：承运人报价单、订舱平台有效期运价。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    },
+    {
+      "kind": "material",
+      "name": "customer_profile",
+      "title": "客户与业务口径",
+      "description": "客户为长期合作货代客户，询价口径为「船期 + 价格」。",
+      "available": true,
+      "verified": false,
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
+    }
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "重复装载业务资料（第 1 次）",
+      "phase": "d-context-1",
+      "status": "blocked",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 3,
+      "tools": [
+        "sailing_schedule",
+        "rate_card",
+        "space_check"
+      ],
+      "facts": [
+        {
+          "name": "sailing_schedule",
+          "title": "查询船期",
+          "state": "unverified",
+          "state_label": "有结果但未核验",
+          "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
+        },
+        {
+          "name": "rate_card",
+          "title": "查询运价",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
+        },
+        {
+          "name": "space_check",
+          "title": "确认舱位",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
+        }
+      ],
+      "latency_ms": 0,
+      "result": null,
+      "detail": "未取得可核验事实：查询船期、查询运价、确认舱位",
+      "usage_raw": null,
+      "finish_reason": null,
+      "truncated": false
+    },
+    {
+      "step": 2,
+      "action": "重复装载业务资料（第 2 次，与第 1 次内容完全相同）",
+      "phase": "d-context-2",
+      "status": "ok",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 3,
+      "tools": [
+        "sailing_schedule",
+        "rate_card",
+        "space_check"
+      ],
+      "facts": [
+        {
+          "name": "sailing_schedule",
+          "title": "查询船期",
+          "state": "unverified",
+          "state_label": "有结果但未核验",
+          "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
+        },
+        {
+          "name": "rate_card",
+          "title": "查询运价",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
+        },
+        {
+          "name": "space_check",
+          "title": "确认舱位",
+          "state": "missing",
+          "state_label": "无结果",
+          "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
+        }
+      ],
+      "latency_ms": 0,
+      "result": null,
+      "detail": "查询船期=有结果但未核验、查询运价=无结果、确认舱位=无结果",
+      "usage_raw": null,
+      "finish_reason": null,
+      "truncated": false
+    },
+    {
+      "step": 3,
+      "action": "解析客户需求（上下文重复粘贴 3 份）",
+      "phase": "d-parse-1",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 1919,
+      "output_tokens": 168,
+      "cached_tokens": 256,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1023,
+      "result": "**结构化需求**\n- 起运港：天津新港\n- 目的港：釜山\n- 箱型箱量：2×20GP\n- 货好时间：下周三\n- 询价口径：船期 + 价格\n\n**结论**\n当前无可核验船期与运价，暂不能给出候选方案。\n\n**缺失条件**\n- 真实船期：待业务资料\n- 运价：待业务资料\n- 舱位：人工确认点\n\n**下一步**\n1. 从承运人官网/订舱平台按航次取回天津新港—釜山船期。\n2. 由业务人员取得有效期运价并确认附加费。\n3. 舱位向船公司/订舱口实时确认，不得预先承诺。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 1919,
+        "completion_tokens": 168,
+        "total_tokens": 2087,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 1663
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 4,
+      "action": "重复解析同一需求（与上一步等价）",
+      "phase": "d-parse-2",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 1919,
+      "output_tokens": 238,
+      "cached_tokens": 1664,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1556,
+      "result": "**结构化需求**\n- 起运港：天津新港\n- 目的港：釜山\n- 箱型箱量：2×20GP\n- 货好时间：下周三\n- 询价口径：船期 + 价格\n\n**结论**\n当前无可核验船期与运价，无法给出具体船名航次、ETD/ETA或报价数字。\n\n**候选方案**\n- 船期：待业务资料（需从承运人船期表或订舱平台按航次实时取回）\n- 运价：待业务资料（需从承运人报价单或订舱平台有效期运价取得）\n- 舱位：人工确认点，不承诺\n\n**缺失条件**\n- 真实船期来源未接入\n- 有效运价来源未接入\n- 舱位需实时确认\n\n**下一步动作**\n1. 业务人员按航次取回天津新港—釜山船期\n2. 取得2×20GP有效运价并确认附加费与有效期\n3. 向船公司/订舱口确认舱位后回复客户",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 1919,
+        "completion_tokens": 238,
+        "total_tokens": 2157,
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 255
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 5,
+      "action": "用更强模型重复同一判断",
+      "phase": "d-judge-strong",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 2057,
+      "output_tokens": 163,
+      "cached_tokens": 0,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1389,
+      "result": "**结论**\n天津新港→釜山、2×20GP，货好下周三：当前无可核验船期与运价，不能形成可交付候选方案。\n\n**候选方案**\n暂无。船期、运价均待业务资料，不得引用教学示例结构。\n\n**必须停下来的人工确认点**\n1. 船期：待业务资料，需从承运人官网/订舱平台按航次取回。\n2. 运价：待业务资料，需业务人员取得有效期运价并确认附加费。\n3. 舱位：人工确认点，须向船公司/订舱口实时确认，不得预先承诺。\n\n**下一步**\n先取回真实船期与有效期运价，再确认舱位，之后方可出候选方案。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 2057,
+        "completion_tokens": 163,
+        "total_tokens": 2220,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2057
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 6,
+      "action": "重复执行同一判断（与上一步等价）",
+      "phase": "d-judge-dup",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 2057,
+      "output_tokens": 152,
+      "cached_tokens": 1920,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 971,
+      "result": "**结论**\n天津新港—釜山、2×20GP，货好下周三。当前无任何可核验船期与运价，不能形成候选方案，需停在人工确认点。\n\n**缺失条件**\n- 船期：待业务资料\n- 运价：待业务资料\n- 舱位：人工确认点\n\n**下一步**\n1. 业务人员从承运人官网/订舱平台按航次取回天津新港—釜山真实船期。\n2. 取得有效期运价并确认附加费。\n3. 舱位向船公司/订舱口实时确认，不得预先承诺。\n\n**人工确认点**\n报价确认、舱位承诺均由业务人员执行。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 2057,
+        "completion_tokens": 152,
+        "total_tokens": 2209,
+        "prompt_tokens_details": {
+          "cached_tokens": 1920
+        },
+        "prompt_cache_hit_tokens": 1920,
+        "prompt_cache_miss_tokens": 137
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 7,
+      "action": "重复校验（第 1 次）",
+      "phase": "d-verify-1",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 2079,
+      "output_tokens": 155,
+      "cached_tokens": 0,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1731,
+      "result": "**结论**\n天津新港→釜山、2×20GP，货好下周三：当前无可核验船期与运价，不能形成可交付候选方案。\n\n**候选方案**\n暂无。船期、运价均待业务资料。\n\n**人工确认点**\n1. 船期：待业务资料，需从承运人官网/订舱平台按航次取回。\n2. 运价：待业务资料，需业务人员取得有效期运价并确认附加费。\n3. 舱位：人工确认点，须向船公司/订舱口实时确认，不得预先承诺。\n\n**下一步**\n先取回真实船期与有效期运价，再确认舱位，之后方可出候选方案。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 2079,
+        "completion_tokens": 155,
+        "total_tokens": 2234,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2079
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 8,
+      "action": "重复校验（第 2 次，与第 1 次完全相同）",
+      "phase": "d-verify-2",
+      "status": "ok",
+      "model": "deepseek-flash",
+      "input_tokens": 2079,
+      "output_tokens": 155,
+      "cached_tokens": 1920,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 913,
+      "result": "**结论**\n天津新港→釜山、2×20GP，货好下周三：当前无可核验船期与运价，不能形成可交付候选方案。\n\n**候选方案**\n暂无。船期、运价均待业务资料。\n\n**人工确认点**\n1. 船期：待业务资料，需从承运人官网/订舱平台按航次取回。\n2. 运价：待业务资料，需业务人员取得有效期运价并确认附加费。\n3. 舱位：人工确认点，须向船公司/订舱口实时确认，不得预先承诺。\n\n**下一步**\n先取回真实船期与有效期运价，再确认舱位，之后方可出候选方案。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 2079,
+        "completion_tokens": 155,
+        "total_tokens": 2234,
+        "prompt_tokens_details": {
+          "cached_tokens": 1920
+        },
+        "prompt_cache_hit_tokens": 1920,
+        "prompt_cache_miss_tokens": 159
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    },
+    {
+      "step": 9,
+      "action": "形成可交付结果与停止点",
+      "phase": "d-deliver",
+      "status": "waiting_human",
+      "model": "deepseek-flash",
+      "input_tokens": 387,
+      "output_tokens": 192,
+      "cached_tokens": 0,
+      "tool_calls": 0,
+      "tools": [],
+      "facts": null,
+      "latency_ms": 1297,
+      "result": "**结论**\n天津新港→釜山、2×20GP、货好下周三：目前无可核验船期与运价，暂不能形成可交付候选方案。\n\n**缺失条件**\n1. 船期：待业务资料。\n2. 运价：待业务资料，含附加费与有效期。\n3. 舱位：未确认，不得预先承诺。\n\n**下一步动作**\n1. 按目标航次从承运人官网/订舱平台取回真实船期。\n2. 由业务人员取得有效期内运价并确认附加费。\n3. 向船公司/订舱口实时确认舱位。\n4. 上述资料齐备后，再形成候选方案并对外报价。\n\n**人工确认点**\n1. 船期确认：人工。\n2. 运价及附加费确认：人工。\n3. 舱位确认：人工，不得承诺。",
+      "detail": null,
+      "usage_raw": {
+        "prompt_tokens": 387,
+        "completion_tokens": 192,
+        "total_tokens": 579,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 387
+      },
+      "finish_reason": "stop",
+      "truncated": false
+    }
+  ],
+  "usage": {
+    "model_calls": 7,
+    "tool_calls": 6,
+    "input_tokens": 12497,
+    "output_tokens": 1223,
+    "cached_tokens": 5760,
+    "total_tokens": 13720,
+    "latency_ms": 8880
+  },
+  "output": "**结论**\n天津新港→釜山、2×20GP、货好下周三：目前无可核验船期与运价，暂不能形成可交付候选方案。\n\n**缺失条件**\n1. 船期：待业务资料。\n2. 运价：待业务资料，含附加费与有效期。\n3. 舱位：未确认，不得预先承诺。\n\n**下一步动作**\n1. 按目标航次从承运人官网/订舱平台取回真实船期。\n2. 由业务人员取得有效期内运价并确认附加费。\n3. 向船公司/订舱口实时确认舱位。\n4. 上述资料齐备后，再形成候选方案并对外报价。\n\n**人工确认点**\n1. 船期确认：人工。\n2. 运价及附加费确认：人工。\n3. 舱位确认：人工，不得承诺。",
+  "run_status": "waiting_human",
+  "evidence_level": "live",
+  "token_evidence": "measured",
+  "output_evidence": "complete",
+  "truncated_steps": [],
+  "provider": {
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "strong_model": null,
+    "model_for_strong_steps": "deepseek-flash",
+    "configured": true,
+    "missing_settings": [],
+    "timeout_s": 60.0,
+    "thinking": "disabled"
+  },
+  "claim_audit": {
+    "method": "keyword_heuristic",
+    "disclaimer": "关键词启发式扫描，不是事实核验；只用于课堂定位，不作为结论。",
+    "price_mentions": [],
+    "schedule_mentions": [
+      "周三",
+      "航次"
+    ],
+    "verdict": "contains_concrete_commitments"
+  },
+  "notes": [
+    "未配置 LLM_STRONG_MODEL：本步回退到同一模型，「不必要的强模型」这一项不成立，D 档的额外消耗全部来自重复上下文与重复步骤。",
+    "D 档与 C 档业务目标相同，但真实执行了 3 份重复上下文、一次重复的资料装载、一次重复解析、一次重复判断与一次重复校验。对比 C 档的模型调用、工具调用与输入 Token，差额即为可解释的低效消耗。"
+  ],
+  "error": null
+}
