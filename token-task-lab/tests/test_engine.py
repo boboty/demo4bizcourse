@@ -6,6 +6,7 @@ import pytest
 
 from app.config import ProviderConfig
 from app.engine import MODES, RunEngine
+from app.provider import ProviderResult
 from app.scenarios import get_scenario
 from tests.conftest import FakeProvider
 
@@ -230,6 +231,110 @@ def test_a_failed_call_is_recorded_without_inventing_numbers(provider_config):
 def test_unknown_mode_is_a_key_error_not_a_silent_default(provider_config):
     with pytest.raises(KeyError):
         run(FakeProvider(), provider_config, "Z")
+
+
+# ------------------------------------------- C 交付不得丢失客户已经给出的条件
+#
+# 「没有可核验来源就写待业务资料」这条规则只适用于外部业务事实。客户自己说过的
+# 起运港、目的港、箱型箱量是任务输入，校验与交付都不得把它们改写成待确认；一旦
+# 交付步骤只拿到校验稿，这些条件就会随校验的改写一起消失。下面几条钉住这一点。
+
+
+def test_deliver_gets_the_raw_request_the_parse_and_the_check(provider_config):
+    """最终交付必须同时拿到客户原话、已解析需求、已校验结果三者。"""
+    provider = FakeProvider()
+    run(provider, provider_config, "C")
+
+    # C 档调用顺序：parse=1, gaps=2, judge=3, verify=4, deliver=5。
+    deliver_prompt = provider.requests[4]["messages"][-1]["content"]
+    assert SCENARIO.request_text in deliver_prompt  # 客户原话
+    assert "回答1" in deliver_prompt  # 已解析需求 parsed
+    assert "回答4" in deliver_prompt  # 已校验结果 checked
+
+
+def test_deliver_keeps_every_condition_the_customer_already_stated(provider_config):
+    provider = FakeProvider()
+    run(provider, provider_config, "C")
+
+    deliver_prompt = provider.requests[4]["messages"][-1]["content"]
+    for condition in ("天津新港", "釜山", "20GP", "下周三"):
+        assert condition in deliver_prompt
+    # 「下周三」按客户口径保留；只有落到具体日期时才提示待确认。
+    assert "具体日期待确认" in deliver_prompt
+
+
+def test_deliver_separates_customer_inputs_from_external_business_facts(provider_config):
+    provider = FakeProvider()
+    run(provider, provider_config, "C")
+    deliver_prompt = provider.requests[4]["messages"][-1]["content"]
+
+    assert "客户明确陈述的任务输入" in deliver_prompt
+    assert "外部业务事实" in deliver_prompt
+    # 客户输入不要求来源核验，且不得被改写；外部事实没有来源就只能待业务资料。
+    assert "不得改写成「待确认」" in deliver_prompt
+    assert "待业务资料" in deliver_prompt
+
+
+def test_the_check_step_is_also_told_not_to_strip_customer_inputs(provider_config):
+    """校验步骤是改写发生的地方，它同样要知道客户陈述的条件不属于改写范围。"""
+    provider = FakeProvider()
+    run(provider, provider_config, "C")
+
+    verify_prompt = provider.requests[3]["messages"][-1]["content"]
+    assert "客户明确陈述的任务输入" in verify_prompt
+    assert "必须原样保留" in verify_prompt
+
+
+class LosingVerifyProvider(FakeProvider):
+    """一个把客户已知条件也改写成「待确认」的校验步骤。
+
+    最坏情况被真实地造出来：交付步骤如果只继承校验稿，客户的港口与箱量就会丢。
+    """
+
+    def complete(self, messages, *, model=None, temperature=None, max_tokens=None):
+        if "待校验草稿" not in messages[-1]["content"]:
+            return super().complete(messages, model=model)
+        self.requests.append({"messages": messages, "model": model})
+        prompt_tokens = sum(len(m["content"]) for m in messages) // 4
+        return ProviderResult(
+            text="起运港：待确认；目的港：待确认；箱型箱量：待确认；运价：待业务资料。",
+            model=model or self.model,
+            input_tokens=prompt_tokens,
+            output_tokens=20,
+            cached_tokens=None,
+            latency_ms=7,
+            usage_raw={"prompt_tokens": prompt_tokens, "completion_tokens": 20},
+            finish_reason="stop",
+        )
+
+
+def test_deliver_still_has_the_customer_inputs_after_the_check_step_lost_them(
+    provider_config,
+):
+    provider = LosingVerifyProvider()
+    record = run(provider, provider_config, "C")
+
+    assert record.run_status == "waiting_human"
+    deliver_prompt = provider.requests[-1]["messages"][-1]["content"]
+    # 上游确实把客户条件抹掉了……
+    assert "起运港：待确认" in deliver_prompt
+    # ……但交付步骤手里还有客户原话，所以这些条件没有跟着丢。
+    for condition in ("天津新港", "釜山", "20GP", "下周三"):
+        assert condition in deliver_prompt
+
+
+def test_mode_d_deliver_carries_the_same_customer_inputs_as_c(provider_config):
+    """D 档业务目标与 C 档相同，交付口径不能因为「低效版」就变窄。"""
+    provider = FakeProvider()
+    run(provider, provider_config, "D")
+
+    # D 档调用顺序：parse ×2、judge-strong、judge-dup、verify ×2、deliver。
+    deliver_prompt = provider.requests[-1]["messages"][-1]["content"]
+    assert SCENARIO.request_text in deliver_prompt  # 客户原话
+    assert "回答1" in deliver_prompt  # 已解析需求
+    assert "回答6" in deliver_prompt  # 第二次校验的结果 = 已校验内容
+    for condition in ("天津新港", "釜山", "20GP", "下周三"):
+        assert condition in deliver_prompt
 
 
 # ---------------------------------------------------------------- claim audit

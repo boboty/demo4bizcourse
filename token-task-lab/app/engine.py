@@ -72,6 +72,22 @@ def _budget(instruction: str, limit: int) -> str:
     return f"{instruction}\n{_CONCISE}总字数不超过 {limit} 字。"
 
 
+# 两类信息必须分开对待，否则「没有可核验来源就写待业务资料」这条规则会被无差别
+# 执行，把客户自己已经说清楚的港口、箱型箱量一起抹掉——校验步骤一旦这么改写，
+# 后面只拿到校验稿的交付步骤就再也拿不回这些条件。客户说过的任务是任务的输入，
+# 不是等待外部核验的事实。
+CUSTOMER_INPUT_RULE = (
+    "两类信息必须分开处理：\n"
+    "（一）客户明确陈述的任务输入（起运港、目的港、箱型箱量、货好时间等）："
+    "是客户给出的条件，直接按客户口径保留，不需要承运人或其他外部来源核验，"
+    "不得改写成「待确认」或「待业务资料」。\n"
+    "（二）外部业务事实（真实船期、运价、附加费、舱位等）：必须有可核验来源；"
+    "没有来源的一律写「待业务资料 / 人工确认」，不得给数字或作承诺。\n"
+    "客户只给了相对时间（如「下周三」）时，按客户口径保留即可；"
+    "确实需要落到具体日期时，只能写「具体日期待确认」。"
+)
+
+
 class StepFailure(RuntimeError):
     """A model call failed; the record keeps every step that succeeded."""
 
@@ -375,9 +391,10 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
             f"待校验草稿：\n{judgment}\n\n"
             f"事实依据：\n{fact_block}\n\n"
             + _budget(
+                f"{CUSTOMER_INPUT_RULE}\n"
                 "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，"
-                "一律改为「待业务资料 / 人工确认」。只输出修订后的草稿，"
-                "不要逐条解释改动过程。",
+                "一律改为「待业务资料 / 人工确认」；客户已经明确陈述的任务输入"
+                "不在其列，必须原样保留。只输出修订后的草稿，不要逐条解释改动过程。",
                 BUDGET_VERIFY,
             )
         ),
@@ -388,10 +405,14 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
         action="形成可交付结果与停止点",
         status="waiting_human",
         user=(
+            f"客户原话：\n{ctx.request_text}\n\n"
+            f"已解析需求：\n{parsed}\n\n"
             f"已校验内容：\n{checked}\n\n"
             + _budget(
+                f"{CUSTOMER_INPUT_RULE}\n"
                 "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，"
-                "最后列出人工确认点。",
+                "最后列出人工确认点。客户已经明确给出的条件必须原样保留，"
+                "不得因为「没有来源核验」就把它们改写成待确认。",
                 BUDGET_DELIVER,
             )
         ),
@@ -482,8 +503,10 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
         f"待校验草稿：\n{strong}\n\n"
         f"事实依据：\n{heavy_context}\n\n"
         + _budget(
+            f"{CUSTOMER_INPUT_RULE}\n"
             "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，"
-            "一律改为「待业务资料 / 人工确认」。只输出修订后的草稿。",
+            "一律改为「待业务资料 / 人工确认」；客户已经明确陈述的任务输入"
+            "不在其列，必须原样保留。只输出修订后的草稿。",
             BUDGET_VERIFY,
         )
     )
@@ -499,10 +522,14 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
         action="形成可交付结果与停止点",
         status="waiting_human",
         user=(
+            f"客户原话：\n{ctx.request_text}\n\n"
+            f"已解析需求：\n{parsed}\n\n"
             f"已校验内容：\n{checked}\n\n"
             + _budget(
+                f"{CUSTOMER_INPUT_RULE}\n"
                 "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，"
-                "最后列出人工确认点。",
+                "最后列出人工确认点。客户已经明确给出的条件必须原样保留，"
+                "不得因为「没有来源核验」就把它们改写成待确认。",
                 BUDGET_DELIVER,
             )
         ),
