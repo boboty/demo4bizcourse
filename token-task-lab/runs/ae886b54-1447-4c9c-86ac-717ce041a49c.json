@@ -1,11 +1,13 @@
 {
-  "run_id": "57027be2-5264-4f01-b833-a5b8c51b7e56",
-  "created_at": "2026-09-12T03:08:49+00:00",
+  "run_id": "ae886b54-1447-4c9c-86ac-717ce041a49c",
+  "created_at": "2026-09-12T03:29:16+00:00",
+  "experiment_id": null,
   "scenario": "tianjin-freight",
   "scenario_name": "天津货代询价",
   "mode": "C",
   "mode_label": "C 任务链",
   "request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "scenario_request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
   "task": "根据客户询价识别已知与缺失条件，取回可核验的船期/报价事实，形成候选方案；事实不足时明确停在待业务资料或人工确认，不得编造船期、运价或舱位承诺。",
   "known": [
     "起运港：天津新港",
@@ -36,7 +38,10 @@
       "description": "按起运港/目的港/箱型取回船期；此处返回教学构造结构，未经验证。",
       "available": true,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。"
     },
     {
       "kind": "tool",
@@ -45,7 +50,10 @@
       "description": "取回承运人报价；本地无可核验报价资料。",
       "available": false,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "本地没有可核验的报价资料，运价必须由业务人员另行取得。"
     },
     {
       "kind": "tool",
@@ -54,7 +62,10 @@
       "description": "确认可用舱位；需由船公司/订舱口实时确认。",
       "available": false,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "missing",
+      "fact_state_label": "无结果",
+      "provenance": "teaching_fixture",
+      "note": "舱位只能由船公司/订舱口实时确认，模型不能代为承诺。"
     },
     {
       "kind": "material",
@@ -63,7 +74,10 @@
       "description": "以下内容为课堂教学构造的示例结构，不是承运人发布的真实船期，不得作为业务事实使用。",
       "available": true,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
     },
     {
       "kind": "material",
@@ -72,7 +86,10 @@
       "description": "本场景可用的报价来源：承运人报价单、订舱平台有效期运价。",
       "available": true,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
     },
     {
       "kind": "material",
@@ -81,7 +98,10 @@
       "description": "客户为长期合作货代客户，询价口径为「船期 + 价格」。",
       "available": true,
       "verified": false,
-      "provenance": "teaching_fixture"
+      "fact_state": "unverified",
+      "fact_state_label": "有结果但未核验",
+      "provenance": "teaching_fixture",
+      "note": "场景声明的资料，未接入真实来源"
     }
   ],
   "steps": [
@@ -96,6 +116,7 @@
       "cached_tokens": null,
       "tool_calls": 0,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -112,6 +133,7 @@
       "cached_tokens": null,
       "tool_calls": 0,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -128,6 +150,7 @@
       "cached_tokens": null,
       "tool_calls": 3,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -144,6 +167,7 @@
       "cached_tokens": null,
       "tool_calls": 0,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -160,6 +184,7 @@
       "cached_tokens": null,
       "tool_calls": 0,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -176,6 +201,7 @@
       "cached_tokens": null,
       "tool_calls": 0,
       "tools": [],
+      "facts": null,
       "latency_ms": null,
       "result": null,
       "detail": "未执行：本次没有可用的 provider",
@@ -194,6 +220,7 @@
   "output": null,
   "run_status": "not_executed",
   "evidence_level": "structure_only",
+  "token_evidence": "not_executed",
   "provider": {
     "base_url": "",
     "model": "",

@@ -119,9 +119,12 @@ def test_demo_1_payload_carries_no_token_or_step_fields(monkeypatch):
     serialised = json.dumps(front, ensure_ascii=False)
     for forbidden in ("input_tokens", "output_tokens", "cached_tokens", "usage", "latency_ms"):
         assert forbidden not in serialised
-    # But Demo 1 does get the business structure it is supposed to show.
-    assert front["known"] and front["missing"] and front["human_gates"]
-    assert front["next_actions"] and front["dependencies"]
+    # But Demo 1 does get the business structure it is supposed to show — the
+    # preset baseline (labelled as such) plus this run's own observations.
+    assert front["baseline"]["known"] and front["baseline"]["missing"]
+    assert front["baseline"]["human_gates"] and front["baseline"]["next_actions"]
+    assert front["dependencies"]
+    assert front["observations"]
 
 
 def test_demo_2_payload_carries_the_numbers(monkeypatch):

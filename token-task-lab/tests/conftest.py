@@ -62,7 +62,9 @@ class FakeProvider:
         prompt_chars = sum(len(m["content"]) for m in messages)
         prompt_tokens = prompt_chars // 4
         return ProviderResult(
-            text=f"草稿 {index}",
+            # Identifiable per call, so a test can prove which step's output
+            # ended up where on the Demo 1 page.
+            text=f"回答{index}",
             model=model or self.model,
             input_tokens=prompt_tokens,
             output_tokens=20,

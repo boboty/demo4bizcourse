@@ -22,6 +22,7 @@ from uuid import uuid4
 
 from .config import ProviderConfig
 from .models import (
+    FACT_STATE_LABELS,
     ClaimAudit,
     RunRecord,
     StepRecord,
@@ -181,7 +182,11 @@ class RunContext:
         return result.text
 
     def call_tools(self, names, *, phase: str, action: str) -> list[ToolCall]:
-        """Invoke tools and record the batch as one step with no model call."""
+        """Invoke tools and record the batch as one step with no model call.
+
+        The step carries each tool's fact state, so "we got something back" and
+        "we got something usable" stay distinguishable in the record.
+        """
         calls = self.toolbox.call_many(list(names))
         self.steps.append(
             StepRecord(
@@ -191,8 +196,11 @@ class RunContext:
                 status="ok",
                 tool_calls=len(calls),
                 tools=[call.name for call in calls],
+                facts=[call.to_fact_state() for call in calls],
                 latency_ms=0,
-                detail="、".join(f"{call.title}={'有结果' if call.available else '无结果'}" for call in calls),
+                detail="、".join(
+                    f"{call.title}={FACT_STATE_LABELS[call.fact_state]}" for call in calls
+                ),
             )
         )
         return calls
@@ -209,7 +217,20 @@ class RunContext:
 
 
 def _fact_block(ctx: RunContext, calls: list[ToolCall]) -> str:
-    return ctx.toolbox.render(calls)
+    """Tool results plus an explicit statement of which ones are usable.
+
+    Without this the model sees a schedule payload and treats it as a fact; the
+    state line is what keeps 有结果 and 能用 apart in the prompt too, not just
+    in the record.
+    """
+    if not calls:
+        return ctx.toolbox.render(calls)
+    lines = "\n".join(
+        f"- {call.title}：{FACT_STATE_LABELS[call.fact_state]}"
+        + (f"（{call.state_note}）" if call.state_note else "")
+        for call in calls
+    )
+    return f"工具结果状态：\n{lines}\n\n{ctx.toolbox.render(calls)}"
 
 
 def run_mode_a(ctx: RunContext) -> tuple[str, str]:
@@ -274,14 +295,18 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
     fact_calls = ctx.call_tools(
         scenario.fact_tools, phase="facts", action="获取可核验业务事实"
     )
-    missing = ctx.toolbox.missing_facts()
-    if missing:
+    unusable = ctx.toolbox.unusable_facts()
+    if unusable:
+        # 「拿到了」和「能用」是两回事：未核验的教学构造数据同样不能让这一步成立。
         ctx.patch_last_step(
             status="blocked",
-            detail="未取回：" + "、".join(spec.title for spec in missing),
+            detail=(
+                "未取得可核验事实：" + "、".join(spec.title for spec in unusable)
+                + f"（共 {len(scenario.fact_tools)} 项）"
+            ),
         )
     else:
-        ctx.patch_last_step(detail="全部事实来源已取回")
+        ctx.patch_last_step(detail="全部事实来源均已核验")
     fact_block = _fact_block(ctx, fact_calls)
 
     judgment = ctx.ask(
@@ -334,6 +359,13 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
     first = ctx.call_tools(
         scenario.fact_tools, phase="d-context-1", action="重复装载业务资料（第 1 次）"
     )
+    unusable = ctx.toolbox.unusable_facts()
+    if unusable:
+        # 业务结果与 C 档一致：拿到的东西不能当事实用。低效的是过程，不是结论。
+        ctx.patch_last_step(
+            status="blocked",
+            detail="未取得可核验事实：" + "、".join(spec.title for spec in unusable),
+        )
     second = ctx.call_tools(
         scenario.fact_tools,
         phase="d-context-2",
@@ -520,20 +552,49 @@ def aggregate(steps: list[StepRecord]) -> UsageSummary:
     )
 
 
+def token_evidence_for(steps: list[StepRecord]) -> str:
+    """Did the provider actually report token usage for the calls it served?
+
+    A run that really called a model but got no `usage` back is still a real
+    run — it just is not a Token teaching record, and the two must not be
+    counted as the same thing when the instructor prepares the class.
+    """
+    model_steps = [step for step in steps if step.model]
+    if not model_steps:
+        return "not_executed"
+    measured = sum(
+        1
+        for step in model_steps
+        if step.input_tokens is not None and step.output_tokens is not None
+    )
+    if measured == len(model_steps):
+        return "measured"
+    return "partial" if measured else "not_reported"
+
+
 class RunEngine:
     def __init__(self, provider: OpenAICompatibleProvider, config: ProviderConfig):
         self.provider = provider
         self.config = config
 
-    def execute(self, *, scenario: Scenario, mode: str, request_text: str) -> RunRecord:
+    def execute(
+        self,
+        *,
+        scenario: Scenario,
+        mode: str,
+        request_text: str,
+        experiment_id: str | None = None,
+    ) -> RunRecord:
         identity = {
             "run_id": str(uuid4()),
             "created_at": utc_now_iso(),
+            "experiment_id": experiment_id,
             "scenario": scenario.key,
             "scenario_name": scenario.name,
             "mode": mode,
             "mode_label": MODE_LABELS[mode],
             "request_text": request_text,
+            "scenario_request_text": scenario.request_text,
             "task": scenario.task,
             "known": list(scenario.known),
             "missing": list(scenario.missing),
@@ -551,6 +612,7 @@ class RunEngine:
                 usage=aggregate(steps),
                 run_status="not_executed",
                 evidence_level="structure_only",
+                token_evidence="not_executed",
                 notes=[
                     "未配置 provider（缺少 "
                     + "、".join(self.config.missing_settings)
@@ -572,16 +634,39 @@ class RunEngine:
         try:
             output, run_status = MODE_RUNNERS[mode](ctx)
         except StepFailure as failure:
-            return RunRecord(
-                **identity,
-                steps=ctx.steps,
-                usage=aggregate(ctx.steps),
-                run_status="error",
-                evidence_level="live",
-                notes=ctx.notes,
-                error=str(failure),
+            return self._live_record(
+                identity, ctx, run_status="error", error=str(failure)
             )
 
+        return self._live_record(
+            identity,
+            ctx,
+            run_status=run_status,
+            output=output,
+            claim_audit=audit_claims(output),
+        )
+
+    def _live_record(
+        self,
+        identity: dict,
+        ctx: RunContext,
+        *,
+        run_status: str,
+        output: str | None = None,
+        claim_audit: ClaimAudit | None = None,
+        error: str | None = None,
+    ) -> RunRecord:
+        notes = list(ctx.notes)
+        token_evidence = token_evidence_for(ctx.steps)
+        if token_evidence == "not_reported":
+            notes.append(
+                "provider 没有返回 usage：这次是真实模型调用，但没有 Token 读数，"
+                "不能作为 Token 实验记录使用。"
+            )
+        elif token_evidence == "partial":
+            notes.append(
+                "只有部分模型调用返回了 usage：Token 合计不完整，只能作为参考。"
+            )
         return RunRecord(
             **identity,
             steps=ctx.steps,
@@ -589,6 +674,8 @@ class RunEngine:
             output=output,
             run_status=run_status,
             evidence_level="live",
-            claim_audit=audit_claims(output),
-            notes=ctx.notes,
+            token_evidence=token_evidence,
+            claim_audit=claim_audit,
+            notes=notes,
+            error=error,
         )

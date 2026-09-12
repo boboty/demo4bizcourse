@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
+from .models import FACT_STATE_LABELS, FactState
 from .scenarios.base import Scenario, ToolSpec
 
 
@@ -22,6 +23,28 @@ class ToolCall:
     verified: bool
     provenance: str
     payload: dict
+    state_note: str | None = None
+
+    @property
+    def fact_state(self) -> str:
+        if not self.available:
+            return "missing"
+        if not self.verified:
+            return "unverified"
+        return "verified"
+
+    @property
+    def usable_as_fact(self) -> bool:
+        return self.fact_state == "verified"
+
+    def to_fact_state(self) -> FactState:
+        return FactState(
+            name=self.name,
+            title=self.title,
+            state=self.fact_state,
+            state_label=FACT_STATE_LABELS[self.fact_state],
+            note=self.state_note,
+        )
 
     def to_dict(self) -> dict:
         return {
@@ -29,7 +52,9 @@ class ToolCall:
             "title": self.title,
             "available": self.available,
             "verified": self.verified,
+            "fact_state": self.fact_state,
             "provenance": self.provenance,
+            "note": self.state_note,
             "payload": self.payload,
         }
 
@@ -54,6 +79,7 @@ class ToolBox:
             verified=spec.verified,
             provenance=spec.provenance,
             payload=spec.payload,
+            state_note=spec.state_note,
         )
         self.calls.append(call)
         return call
@@ -61,18 +87,23 @@ class ToolBox:
     def call_many(self, names: tuple[str, ...] | list[str]) -> list[ToolCall]:
         return [self.call(name) for name in names]
 
-    def missing_facts(self) -> list[ToolSpec]:
-        """Called tools that came back without a usable business fact."""
+    def unusable_facts(self) -> list[ToolSpec]:
+        """Called tools whose result cannot be used as a business fact.
+
+        Both "no result" and "a result nobody can vouch for" leave the step
+        short. Treating an unverified fixture as a obtained fact is exactly the
+        mistake the step name 获取可核验业务事实 exists to prevent.
+        """
         seen: set[str] = set()
-        missing: list[ToolSpec] = []
+        unusable: list[ToolSpec] = []
         for call in self.calls:
-            if call.available or call.name in seen:
+            if call.usable_as_fact or call.name in seen:
                 continue
             seen.add(call.name)
             spec = self.scenario.tool(call.name)
             if spec is not None:
-                missing.append(spec)
-        return missing
+                unusable.append(spec)
+        return unusable
 
     def render(self, calls: list[ToolCall] | None = None) -> str:
         """Tool output as the model sees it — provenance labels included.

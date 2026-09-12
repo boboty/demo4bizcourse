@@ -106,6 +106,10 @@ TIANJIN_FREIGHT = Scenario(
             ),
         ),
     ),
+    # 注意这里有三种结果，不是两种：
+    #   船期 = 有结果但未核验（teaching_fixture，不能当业务事实用）
+    #   运价 = 无结果
+    #   舱位 = 无结果
     tools=(
         ToolSpec(
             name="sailing_schedule",
@@ -114,6 +118,7 @@ TIANJIN_FREIGHT = Scenario(
             payload=SAILING_SCHEDULE_PAYLOAD,
             available=True,
             verified=False,
+            state_note="取回的是教学构造结构（teaching_fixture），没有承运人来源，不能作为业务事实使用。",
         ),
         ToolSpec(
             name="rate_card",
@@ -122,6 +127,7 @@ TIANJIN_FREIGHT = Scenario(
             payload=RATE_CARD_PAYLOAD,
             available=False,
             verified=False,
+            state_note="本地没有可核验的报价资料，运价必须由业务人员另行取得。",
         ),
         ToolSpec(
             name="space_check",
@@ -130,6 +136,7 @@ TIANJIN_FREIGHT = Scenario(
             payload=SPACE_CHECK_PAYLOAD,
             available=False,
             verified=False,
+            state_note="舱位只能由船公司/订舱口实时确认，模型不能代为承诺。",
         ),
     ),
     fact_tools=("sailing_schedule", "rate_card", "space_check"),

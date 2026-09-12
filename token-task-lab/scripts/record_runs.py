@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -64,16 +65,25 @@ def main() -> int:
     request_text = args.request_text.strip() or scenario.request_text
     engine = RunEngine(provider=OpenAICompatibleProvider(config), config=config)
     store = RunStore(runs_dir())
+    # 同一次执行的四档共用一个 experiment_id：课堂上可以说清这是同一件任务、同一批实验。
+    experiment_id = str(uuid4())
 
-    print(f"provider : {config.base_url}  model={config.model}"
+    print(f"provider      : {config.base_url}  model={config.model}"
           f"  strong={config.strong_model or '(未配置，D 档回退同一模型)'}")
-    print(f"scenario : {scenario.key}  输出目录：{store.root}\n")
+    print(f"scenario      : {scenario.key}  输出目录：{store.root}")
+    print(f"experiment_id : {experiment_id}\n")
 
     rows = []
     failures = []
+    unmeasured = []
     for mode in modes:
         print(f"运行 {mode} ...", end=" ", flush=True)
-        record = engine.execute(scenario=scenario, mode=mode, request_text=request_text)
+        record = engine.execute(
+            scenario=scenario,
+            mode=mode,
+            request_text=request_text,
+            experiment_id=experiment_id,
+        )
         usage = record.usage
         print(
             f"{record.run_status}  调用 {usage.model_calls} 次模型 / {usage.tool_calls} 次工具  "
@@ -85,20 +95,51 @@ def main() -> int:
             failures.append(record)
             print(f"    错误：{record.error}  ——未保存")
             continue
+        if not record.classroom_ready:
+            # 真的调了模型，但 provider 没给 Token 读数。这是真实运行，不是 Token 实验记录。
+            unmeasured.append(record)
+            print(
+                f"    警告：token_evidence={record.token_evidence}，"
+                "本次模型真实运行，但不能作为 Token 实验记录  ——已保存并标记"
+            )
         rows.append((record, store.save(record)))
 
     if rows:
         print("\n已保存：")
         for record, path in rows:
-            print(f"  [{record.mode}] {record.run_id}  ->  {path.relative_to(store.root.parent)}")
+            mark = "" if record.classroom_ready else f"  [{record.token_evidence}]"
+            print(
+                f"  [{record.mode}] {record.run_id}{mark}"
+                f"  ->  {path.relative_to(store.root.parent)}"
+            )
+        ready = [record for record, _ in rows if record.classroom_ready]
+        print(
+            f"\n课堂可用于 Token 实验的记录：{len(ready)}/{len(modes)} 档"
+            f"（experiment_id={experiment_id}）"
+        )
 
+    exit_code = 0
     if failures:
         print(
             f"\n有 {len(failures)} 档失败未保存（{', '.join(r.mode for r in failures)}）。"
             "先修好 provider 再重跑，课堂不要拿半截记录讲。",
             file=sys.stderr,
         )
-        return 1
+        exit_code = 1
+    if unmeasured:
+        print(
+            f"\n有 {len(unmeasured)} 档没有 Token 读数（{', '.join(r.mode for r in unmeasured)}）："
+            "provider 真实返回了回答但没有返回 usage。\n"
+            "这些记录不能用于 Token 对比实验，也不会计入课堂可用记录。"
+            "请换一个会返回 usage 的 provider 或网关后重跑。",
+            file=sys.stderr,
+        )
+        exit_code = 1
+
+    if exit_code:
+        return exit_code
+
+    live = [record for record, _ in rows if record.evidence_level == "live"]
 
     live = [record for record, _ in rows if record.evidence_level == "live"]
     if live:

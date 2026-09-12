@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..models import FACT_STATE_LABELS
+
 
 @dataclass(frozen=True)
 class Material:
@@ -31,9 +33,16 @@ class Material:
 class ToolSpec:
     """A callable the chain may invoke, backed by a fixed local payload.
 
-    `available=False` means the tool was called and the business fact could not
-    be produced. That is a normal outcome here, not an error: it is the thing
-    the class is watching for.
+    Three outcomes, not two:
+
+    * `missing`    — called, and no business fact could be produced.
+    * `unverified` — something came back, but it cannot be used as a business
+                     fact (a teaching fixture, a stale export, an unconfirmed
+                     source). Having a result is not the same as having a fact.
+    * `verified`   — a result the business may actually rely on.
+
+    Both `missing` and `unverified` leave a fact-gathering step short of its
+    goal; only `verified` counts as obtained.
     """
 
     name: str
@@ -43,10 +52,28 @@ class ToolSpec:
     available: bool = True
     provenance: str = "teaching_fixture"
     verified: bool = False
+    # Why this result is or is not usable, in one authored line.
+    state_note: str | None = None
 
     @property
     def tool_calls(self) -> int:
         return 1
+
+    @property
+    def fact_state(self) -> str:
+        if not self.available:
+            return "missing"
+        if not self.verified:
+            return "unverified"
+        return "verified"
+
+    @property
+    def fact_state_label(self) -> str:
+        return FACT_STATE_LABELS[self.fact_state]
+
+    @property
+    def usable_as_fact(self) -> bool:
+        return self.fact_state == "verified"
 
 
 @dataclass(frozen=True)
@@ -73,7 +100,10 @@ class Scenario:
         return None
 
     def dependency_list(self) -> list[dict]:
-        """Demo 1 的「工具/资料依赖」：工具与资料各自能否给出可用结果。"""
+        """场景声明的「工具/资料依赖」——课前写定，不是本次运行的结果。
+
+        `fact_state` 是这里唯一有意义的字段：有结果 ≠ 能用。
+        """
         items = [
             {
                 "kind": "tool",
@@ -82,7 +112,10 @@ class Scenario:
                 "description": tool.description,
                 "available": tool.available,
                 "verified": tool.verified,
+                "fact_state": tool.fact_state,
+                "fact_state_label": tool.fact_state_label,
                 "provenance": tool.provenance,
+                "note": tool.state_note,
             }
             for tool in self.tools
         ]
@@ -94,7 +127,12 @@ class Scenario:
                 "description": material.body.splitlines()[0],
                 "available": True,
                 "verified": material.verified,
+                "fact_state": "verified" if material.verified else "unverified",
+                "fact_state_label": FACT_STATE_LABELS[
+                    "verified" if material.verified else "unverified"
+                ],
                 "provenance": material.provenance,
+                "note": "场景声明的资料，未接入真实来源" if not material.verified else None,
             }
             for material in self.materials
         )
