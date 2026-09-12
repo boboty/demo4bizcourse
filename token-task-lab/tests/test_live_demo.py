@@ -250,3 +250,36 @@ def test_an_unknown_mode_is_rejected_before_anything_runs():
         "/api/runs/stream", json={"scenario": "tianjin-freight", "mode": "Z"}
     )
     assert response.status_code == 400
+# --------------------------------------------------------------------------
+# 4 第三讲的直接入口：不经过运行背面
+# --------------------------------------------------------------------------
+
+
+def test_the_page_offers_a_direct_replay_entry_from_demo_1():
+    html = client.get("/").text
+
+    assert 'id="replayFromDemo1"' in html
+    assert "重放刚才这次任务的 Token" in html
+    # 刷新 / 跨讲回来的入口，以及带 run_id 直接打开重放的 URL 参数。
+    assert 'id="lastRunBar"' in html
+    assert "params.get('replay')" in html
+
+
+def test_the_replay_view_keeps_its_totals_hidden_until_the_end():
+    html = client.get("/").text
+
+    final_tag = html.split('id="replayFinal"')[1].split(">")[0]
+    assert "hidden" in final_tag
+    assert '<div class="totals" id="replayFinalNumbers"></div>' in html
+    # 打开重放时不会先看到 Token 总量或调用次数：这些只在重放结束后写入。
+    assert 'id="replayNumber"></div>' in html
+
+
+def test_the_token_bearing_sections_start_collapsed():
+    """实验对照与已保存记录都含 Token 明细，讲完 Demo 2 之前不该展开着。"""
+    html = client.get("/").text
+
+    assert html.count('<details class="sec">') == 2
+    assert '<details class="sec" open>' not in html
+    # 这两块分别是 A/B/C/D 对照表与已保存记录，都还在，只是收起来了。
+    assert 'id="cmpWrap"' in html and 'id="records"' in html
