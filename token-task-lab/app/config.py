@@ -3,6 +3,9 @@
 The classroom provider is intentionally fixed to DeepSeek. The only required
 secret is ``LLM_API_KEY``; base URL and model are course assets, not classroom
 setup knobs.
+
+A local ``token-task-lab/.env`` is loaded automatically on import. Existing
+shell environment variables win over values from the file.
 """
 
 from __future__ import annotations
@@ -11,8 +14,14 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNS_DIR = ROOT / "runs"
+
+# Load the demo-local environment file automatically. ``override=False`` keeps
+# an explicitly exported shell variable authoritative when both are present.
+load_dotenv(ROOT / ".env", override=False)
 
 # Classroom defaults. Keep these in one place so the runbook and health page can
 # clearly show what will be called without asking the instructor to configure it.
