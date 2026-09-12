@@ -47,9 +47,12 @@ cd token-task-lab
 python -m venv .venv            # 需要 Python 3.11+
 source .venv/bin/activate
 pip install -r requirements.txt
-export LLM_API_KEY="你的 DeepSeek API Key"
+cp .env.example .env            # 首次运行时做一次
+# 编辑 .env，只填 LLM_API_KEY
 uvicorn app.main:app --reload --port 8014
 ```
+
+`app/config.py` 会自动加载 `token-task-lab/.env`。如果 shell 里已经显式 `export` 了同名变量，则 shell 值优先。
 
 课堂建议直接打开：
 
@@ -61,8 +64,9 @@ http://127.0.0.1:8014/runbook
 
 ## 课前准备：录一份可回放的运行记录
 
+`.env` 已经填好 API Key 后，直接运行：
+
 ```bash
-export LLM_API_KEY="你的 DeepSeek API Key"
 python scripts/record_runs.py          # 真实执行 A/B/C/D 并写入 runs/
 python scripts/record_runs.py C D      # 只跑指定档
 ```
@@ -86,11 +90,15 @@ python scripts/record_runs.py C D      # 只跑指定档
 
 D 档的重复全部走真实 provider；引擎不修改任何已记录数字。
 
+## 本地环境文件
+
+`token-task-lab/.gitignore` 会忽略本 Demo 下的 `.env`、`.env.*` 以及子目录中的同类文件；`.env.example` 例外，继续作为模板提交到仓库。API Key 不应进入 Git。
+
 ## 结构
 
 ```text
 app/
-  config.py            固定 DeepSeek Base URL / model，仅 API Key 来自环境变量
+  config.py            固定 DeepSeek Base URL / model，自动加载 .env
   provider.py          OpenAI-compatible 客户端 + usage 解析
   models.py            RunRecord / StepRecord / FactState / UsageSummary
   scenarios/           场景插件
