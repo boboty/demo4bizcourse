@@ -22,7 +22,7 @@ from .models import RunRecord
 from .provider import OpenAICompatibleProvider
 from .scenarios import get_scenario, scenario_catalog
 from .store import RunStore
-from .views import back_view, front_view
+from .views import back_view, front_view, replay_view
 
 app = FastAPI(title="Token Task Lab", version=__version__)
 ROOT = Path(__file__).resolve().parents[1]
@@ -158,6 +158,18 @@ def get_run(run_id: str):
     if record is None:
         raise HTTPException(status_code=404, detail="run record not found")
     return _record_payload(record)
+
+
+@app.get("/api/runs/{run_id}/replay")
+def get_run_replay(run_id: str):
+    """Demo 2 的 Token 累计重放：只读一条已存记录，不重新调用 provider。
+
+    逐帧的累计值在服务端算好，浏览器只负责把数字从上一帧滚到下一帧，前端不做加法。
+    """
+    record = _store().get(run_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="run record not found")
+    return replay_view(record)
 
 
 @app.post("/api/runs")

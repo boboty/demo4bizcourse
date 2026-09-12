@@ -113,6 +113,30 @@
   .cmp .mode-tag{display:inline-block;width:22px}
   select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid #ccd3ce;background:#fcfdfc}
   .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+  /* Demo 2 的 Token 累计重放：课堂投屏用，字号大、信息少。 */
+  .replay-grid{display:grid;grid-template-columns:minmax(260px,1fr) 1.25fr;gap:26px;align-items:center;margin-top:8px}
+  @media(max-width:820px){.replay-grid{grid-template-columns:1fr;gap:16px}}
+  .replay-big{background:#f7f9f7;border:1px solid var(--line);border-radius:16px;padding:18px 24px}
+  .replay-big .cap{font-size:13px;letter-spacing:.18em;color:var(--muted)}
+  .replay-big .big{font-size:74px;line-height:1.08;font-weight:750;color:var(--accent);
+                   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .replay-big .sub{font-size:15px;color:var(--muted);min-height:24px}
+  .replay-now .now-label{font-size:12.5px;letter-spacing:.12em;color:var(--muted)}
+  .replay-now .now-action{font-size:33px;font-weight:700;line-height:1.24;margin:2px 0 8px}
+  .replay-now .now-step{font-size:14.5px;color:var(--muted)}
+  .replay-now .now-detail{font-size:16px;margin-top:8px}
+  .zero{color:var(--warn);font-weight:600}
+  .replay-ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+  .replay-ctl .speed{display:flex;gap:6px;margin-left:auto}
+  .replay-ctl .speed button{padding:6px 12px;font-size:14px}
+  .replay-ctl .speed button.active{background:var(--accent-soft);border-color:#a9c6b8;color:var(--accent);font-weight:600}
+  .replay-track{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+  .replay-track .chip{border:1px solid var(--line);background:#fbfcfb;border-radius:9px;
+                      padding:6px 11px;font-size:13.5px;color:var(--muted)}
+  .replay-track .chip.done{background:var(--good-bg);border-color:#c7e0d3;color:var(--good)}
+  .replay-track .chip.done.tool{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+  .replay-track .chip.now{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .replay-final{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
   @media(max-width:820px){main{padding:20px 16px 56px}}
 </style>
 </head>
@@ -189,6 +213,10 @@
   <section id="back" class="card back">
     <h2>运行背面｜Demo 2</h2>
     <div id="backMeta" class="muted small"></div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="primary" id="replayOpenBtn">重放 Token 生成过程</button>
+      <span class="muted small">用同一条 run_id 的记录重放，不重新调用模型。</span>
+    </div>
     <div class="totals" id="totals"></div>
     <div id="backNotes"></div>
     <h3>调用步骤</h3>
@@ -198,6 +226,42 @@
     <div id="auditWrap" hidden>
       <h3>交付内容扫描</h3>
       <div id="audit" class="small"></div>
+    </div>
+  </section>
+
+  <!-- Demo 2 现象层：同一条记录按 steps[] 顺序重放，Token 从 0 累加到真实合计。
+       DOM 只在点开重放时才写入，收起运行背面即清空。 -->
+  <section id="replay" class="card" hidden>
+    <h2>同一件任务，Token 是怎么长出来的？</h2>
+    <div class="muted small" id="replaySameRun"></div>
+    <div id="replayWarn"></div>
+    <div class="replay-grid">
+      <div class="replay-big">
+        <div class="cap">TOKEN</div>
+        <div class="big" id="replayNumber"></div>
+        <div class="sub" id="replayDelta"></div>
+      </div>
+      <div class="replay-now">
+        <div class="now-label">当前动作</div>
+        <div class="now-action" id="replayAction">准备就绪</div>
+        <div class="now-step" id="replayStep">按这条记录里的步骤顺序重放</div>
+        <div class="now-detail" id="replayDetail"></div>
+      </div>
+    </div>
+    <div class="replay-ctl">
+      <button class="primary" id="replayStart">开始重放</button>
+      <button id="replayPause" disabled>暂停</button>
+      <button id="replayRestart" disabled>重新播放</button>
+      <button id="replayForce" hidden>仍然重放（数字不完整，仅供演示）</button>
+      <span class="speed">
+        <button data-speed="1" class="active">1×</button>
+        <button data-speed="1.5">1.5×</button>
+      </span>
+    </div>
+    <div class="replay-track" id="replayTrack"></div>
+    <div class="replay-final" id="replayFinal" hidden>
+      <div class="totals" id="replayFinalNumbers"></div>
+      <button id="replayToBack">查看这些 Token 从哪里来的</button>
     </div>
   </section>
 
@@ -468,6 +532,246 @@ function renderBack(back) {
   $('audit').innerHTML = audit;
 }
 
+/* ---------- Demo 2：Token 累计重放 ----------
+   重放只读一条已保存的 run record：step 顺序、每步 Token、动作文案、最终状态全部
+   来自这条记录。每一帧的起点与终点（from_tokens / to_tokens）由服务端从 steps 里
+   算出，这里只负责把大号数字从起点滚到终点，不做任何加法，也不生成任何中间值。 */
+const replay = {
+  data: null, frames: [], index: -1, shown: 0,
+  gen: 0, raf: 0, timer: 0, playing: false, paused: false, speed: 1,
+};
+// 每一帧的停留时间与数字滚动时长。整段 C 档重放约 8–10 秒，课堂看得见。
+const REPLAY_DWELL_MS = 1350;
+const REPLAY_ROLL_MS = 550;
+
+function replayCancel() {
+  replay.gen += 1;
+  if (replay.timer) { clearTimeout(replay.timer); replay.timer = 0; }
+  if (replay.raf) { cancelAnimationFrame(replay.raf); replay.raf = 0; }
+}
+
+function replayPaint(value) {
+  $('replayNumber').textContent = num(value);
+}
+
+function replayPaintTrack(position) {
+  $('replayTrack').querySelectorAll('.chip').forEach((chip) => {
+    const i = Number(chip.dataset.i);
+    chip.classList.toggle('done', i < position);
+    chip.classList.toggle('now', i === position);
+  });
+}
+
+function replayShowFrame(frame) {
+  $('replayAction').textContent = frame.action_label;
+  $('replayStep').textContent = `第 ${frame.step} 步 · ${frame.action}`
+    + (frame.model ? ` · ${frame.model}` : '');
+  // 工具步骤与未计量的模型步骤：这一步不给总量加分，标出来让学员看见。
+  const addsNothing = frame.kind !== 'model' || !frame.measured;
+  const delta = addsNothing
+    ? `<span class="zero">${esc(frame.delta_label)}</span>`
+    : esc(frame.delta_label);
+  $('replayDetail').innerHTML = `${esc(frame.note)} · ${delta}`;
+}
+
+function replayRoll(gen, from, to, ms, done) {
+  const t0 = performance.now();
+  const tick = (now) => {
+    if (gen !== replay.gen) return;
+    const p = Math.min(1, (now - t0) / ms);
+    // 缓动只改变滚动的观感，不改变端点：起点与终点都是记录里的真实累计值。
+    const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    replay.shown = Math.round(from + (to - from) * eased);
+    replayPaint(replay.shown);
+    if (p < 1) { replay.raf = requestAnimationFrame(tick); return; }
+    replay.shown = to;
+    replayPaint(to);
+    done();
+  };
+  replay.raf = requestAnimationFrame(tick);
+}
+
+function replayStep(gen, k) {
+  if (gen !== replay.gen) return;
+  if (k >= replay.frames.length) { replayFinish(gen); return; }
+  replay.index = k;
+  const frame = replay.frames[k];
+  replayShowFrame(frame);
+  replayPaintTrack(k);
+  const dwell = REPLAY_DWELL_MS / replay.speed;
+  if (frame.measured && frame.to_tokens > frame.from_tokens) {
+    replayRoll(gen, frame.from_tokens, frame.to_tokens, REPLAY_ROLL_MS / replay.speed, () => {
+      replay.timer = setTimeout(() => replayStep(gen, k + 1), dwell);
+    });
+  } else {
+    // 工具步骤：动作发生了，Token 不增加 —— 停一下让学员看见这件事。
+    replay.shown = frame.to_tokens;
+    replayPaint(frame.to_tokens);
+    $('replayDelta').textContent = frame.kind === 'tool'
+      ? '动作发生了，Token 没有增加' : '该步 Token 未计量，累计值不增加';
+    replay.timer = setTimeout(() => replayStep(gen, k + 1), dwell);
+  }
+}
+
+function replayPlayFrom(k) {
+  replayCancel();
+  const gen = replay.gen;
+  replay.playing = true;
+  replay.paused = false;
+  $('replayStart').disabled = true;
+  $('replayForce').disabled = true;
+  $('replayPause').disabled = false;
+  $('replayPause').textContent = '暂停';
+  $('replayRestart').disabled = false;
+  $('replayFinal').hidden = true;
+  $('replayDelta').textContent = '';
+  replayStep(gen, k);
+}
+
+function replayFinish(gen) {
+  if (gen !== replay.gen) return;
+  const data = replay.data;
+  const totals = data.totals || {};
+  const finalTokens = data.final_tokens;
+  replay.playing = false;
+  replay.paused = false;
+  replayPaintTrack(replay.frames.length);
+  replayPaint(finalTokens);
+  $('replayAction').textContent = '重放结束';
+  $('replayStep').textContent = `业务状态：${RUN_STATUS_TEXT[totals.run_status] || totals.run_status}`;
+  $('replayDetail').innerHTML = data.complete
+    ? '累计值来自这条记录里每一步的真实读数，和记录自己的 Token 合计一致。'
+    : '<span class="zero">这条记录的 Token 不完整：上面的数字只是已计量步骤的小计，'
+      + '不能当作完整结果。</span>';
+  $('replayDelta').textContent = '';
+  $('replayPause').disabled = true;
+  $('replayStart').disabled = false;
+  $('replayForce').disabled = false;
+
+  const cells = [
+    ['业务任务', '1', '件'],
+    ['模型调用', num(totals.model_calls), '次'],
+    ['工具调用', num(totals.tool_calls), '次'],
+    [data.complete ? 'Token 合计' : 'Token 小计（不完整）', num(finalTokens), ''],
+    ['业务状态', esc(RUN_STATUS_TEXT[totals.run_status] || totals.run_status), ''],
+  ];
+  $('replayFinalNumbers').innerHTML = cells.map(([k, v, unit]) =>
+    `<div class="total"><div class="k">${k}</div><div class="v">${v}${unit ? ` <small>${unit}</small>` : ''}</div></div>`
+  ).join('');
+  $('replayToBack').textContent = `查看这 ${num(finalTokens)} Token 从哪里来的`;
+  $('replayFinal').hidden = false;
+  $('replayFinal').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function replayIdle() {
+  replayCancel();
+  replay.playing = false;
+  replay.paused = false;
+  replay.index = -1;
+  replay.shown = 0;
+  replayPaint(0);
+  $('replayAction').textContent = '准备就绪';
+  $('replayStep').textContent = '按这条记录里的步骤顺序重放';
+  $('replayDetail').textContent = '';
+  $('replayDelta').textContent = '';
+  $('replayPause').disabled = true;
+  $('replayPause').textContent = '暂停';
+  $('replayRestart').disabled = true;
+  $('replayFinal').hidden = true;
+  replayPaintTrack(-1);
+}
+
+function replayRenderShell() {
+  const data = replay.data;
+  $('replaySameRun').innerHTML =
+    `同一次运行 · run_id: <code>${esc(data.run_id)}</code> · ${esc(data.mode_label)} · `
+    + `记录时间 ${esc(data.created_at)}<br>`
+    + '数据全部来自这条已保存的记录：重放不会重新调用模型，也不会产生新的数字。';
+  $('replayWarn').innerHTML = (data.warnings || [])
+    .map((w) => `<div class="banner b-warn">${esc(w)}</div>`).join('');
+  $('replayTrack').innerHTML = replay.frames.map((f, i) =>
+    `<span class="chip${f.kind === 'tool' ? ' tool' : ''}" data-i="${i}">`
+    + `${i + 1}. ${esc(f.short_label || f.action)}</span>`).join('');
+
+  // 记录不完整（Token 未计量 / 输出被截断）时不默认进入正常重放：
+  // 先看警告，要重放得自己按「仍然重放」。
+  const normal = data.playable && replay.frames.length > 0;
+  $('replayStart').hidden = !normal;
+  $('replayStart').disabled = false;
+  $('replayForce').hidden = normal || !replay.frames.length;
+  $('replayForce').disabled = false;
+  replayIdle();
+}
+
+async function openReplay(runId) {
+  if (!runId) return;
+  const button = $('replayOpenBtn');
+  button.disabled = true;
+  try {
+    const data = await getJSON('/api/runs/' + encodeURIComponent(runId) + '/replay');
+    replay.data = data;
+    replay.frames = data.frames || [];
+    replay.speed = replay.speed || 1;
+    replayRenderShell();
+    $('replay').hidden = false;
+    $('replay').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    $('replayWarn').innerHTML = '';
+    $('health').className = 'banner b-bad';
+    $('health').textContent = '重放读取失败：' + err.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function closeReplay() {
+  replayCancel();
+  replay.data = null;
+  replay.frames = [];
+  replay.index = -1;
+  replay.playing = false;
+  $('replay').hidden = true;
+  // 收起即清空：演示正面不会残留任何 Token 数字。
+  $('replayNumber').textContent = '';
+  $('replaySameRun').innerHTML = '';
+  $('replayWarn').innerHTML = '';
+  $('replayTrack').innerHTML = '';
+  $('replayFinalNumbers').innerHTML = '';
+  $('replayFinal').hidden = true;
+  $('replayAction').textContent = '准备就绪';
+  $('replayStep').textContent = '按这条记录里的步骤顺序重放';
+  $('replayDetail').textContent = '';
+  $('replayDelta').textContent = '';
+}
+
+$('replayOpenBtn').onclick = () => openReplay(state.back && state.back.run_id);
+$('replayStart').onclick = () => replayPlayFrom(0);
+$('replayForce').onclick = () => replayPlayFrom(0);
+$('replayRestart').onclick = () => { replayIdle(); replayPlayFrom(0); };
+$('replayPause').onclick = () => {
+  if (!replay.playing) return;
+  if (replay.paused) {
+    // 继续：从当前这一步的起点重放，端点仍是记录里的真实值。
+    replayPlayFrom(Math.max(0, replay.index));
+    return;
+  }
+  replayCancel();
+  replay.paused = true;
+  $('replayPause').textContent = '继续';
+  $('replayDelta').textContent = '已暂停';
+};
+document.querySelectorAll('.speed button').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.speed button').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    replay.speed = Number(b.dataset.speed) || 1;
+  };
+});
+$('replayToBack').onclick = () => {
+  // 现象看完了，回到运行背面看机制：同一个 run_id，同一份记录。
+  $('back').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 /* ---------- 交互 ---------- */
 function applyRecord(payload, source) {
   state.front = payload.front;
@@ -475,6 +779,8 @@ function applyRecord(payload, source) {
   state.savedPath = payload.saved_path || null;
   state.source = source;
   renderFront(payload.front);
+  // 重放属于上一条 run_id，换记录时先收起，避免两次运行的数字混在一起。
+  closeReplay();
   // 背面只有在展开状态下才写入 DOM；收起时清空，页面上不留 Token 数字。
   if ($('back').classList.contains('show')) renderBack(payload.back); else clearBack();
 }
@@ -720,7 +1026,8 @@ $('backBtn').onclick = () => {
   back.classList.toggle('show', opening);
   $('backBtn').textContent = opening ? '收起运行背面' : '查看运行背面';
   // 背面只在打开时写入 DOM，收起即清空：Demo 1 的页面上不会残留 Token 数字。
-  if (opening && state.back) renderBack(state.back); else clearBack();
+  // 重放同属 Demo 2，收起背面时一起收起。
+  if (opening && state.back) renderBack(state.back); else { clearBack(); closeReplay(); }
 };
 
 $('runBtn').onclick = runOne;

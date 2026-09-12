@@ -75,6 +75,7 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
       <label class="check"><input type="checkbox" data-k="demo1">Demo 1 主区域是本次实际运行结果，不是预设基准</label>
       <label class="check"><input type="checkbox" data-k="facts">船期显示“有结果但未核验”，运价/舱位显示无结果</label>
       <label class="check"><input type="checkbox" data-k="sameRun">Demo 1 和 Demo 2 能用同一 run_id 翻面</label>
+      <label class="check"><input type="checkbox" data-k="replayTotal">Token 重放能停在记录自己的 Token 合计，且工具步骤不增加</label>
       <label class="check"><input type="checkbox" data-k="d">D 档相对 C 档有可解释的额外消耗</label>
       <label class="check"><input type="checkbox" data-k="replay">至少一组完整实验可回放，断网也能讲</label>
     </div>
@@ -96,8 +97,10 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
     <h2>4｜Demo 2 · 第三讲：把同一次运行翻到背面</h2>
     <div class="say">刚才从业务正面看是一件事，现在把同一次运行翻过来看背面。</div>
     <div class="step"><div class="n">1</div><div>保持 Demo 1 的同一 run_id，点击“查看运行背面”。</div></div>
-    <div class="step"><div class="n">2</div><div>先看步骤，不急着看总 Token：解析 → 判断缺口 → 获取事实 → 判断 → 校验 → 输出。</div></div>
-    <div class="step"><div class="n">3</div><div>再看系统侧：C 档是 <strong>6 个步骤、5 次模型调用、3 次工具调用</strong>。</div></div>
+    <div class="step"><div class="n">2</div><div>点击<strong>“重放 Token 生成过程”</strong>：大号数字从 0 开始，按记录里的步骤顺序一步步长大；每一步的起点和终点都是这条记录里的真实读数。</div></div>
+    <div class="step"><div class="n">3</div><div>到“获取事实”这一步时停一下：动作在变，<strong>Token 不动</strong>——工具调用不产生模型 Token。</div></div>
+    <div class="step"><div class="n">4</div><div>重放结束后，再点“查看这 N Token 从哪里来的”回到步骤表看机制：解析 → 判断缺口 → 获取事实 → 判断 → 校验 → 输出。</div></div>
+    <div class="step"><div class="n">5</div><div>最后看系统侧：C 档是 <strong>6 个步骤、5 次模型调用、3 次工具调用</strong>。</div></div>
     <div class="land">一件业务任务，不等于一次模型调用。</div>
     <p class="muted small">最后才落到输入 Token / 输出 Token / 缓存 / 总量。任务数 ≠ 调用次数 ≠ Token 数。</p>
     <p class="muted small">步骤表最后一列是 provider 报的 <code>finish_reason</code>，也就是「这次调用为什么结束」。若出现红色的 <strong>输出被截断</strong>，说明那一步撞到了输出上限、只写了一半：<strong>它的文字和 Token 都不能当正常完整结果讲</strong>，课件的冻结实验必须整组没有这一标记。</p>
