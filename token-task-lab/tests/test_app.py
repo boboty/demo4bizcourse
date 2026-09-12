@@ -7,7 +7,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from app.config import ProviderConfig
+from app.config import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, ProviderConfig
 from app.engine import RunEngine
 from app.main import app
 from app.store import RunStore
@@ -47,14 +47,12 @@ def test_scenario_contract():
     assert any(tool["available"] is False for tool in scenario["tools"])
 
 
-def test_app_starts_and_reports_missing_provider():
+def test_app_starts_with_fixed_deepseek_defaults_and_only_needs_api_key():
     health = client.get("/api/health").json()
     assert health["provider_ready"] is False
-    assert set(health["provider"]["missing_settings"]) == {
-        "LLM_BASE_URL",
-        "LLM_API_KEY",
-        "LLM_MODEL",
-    }
+    assert health["provider"]["base_url"] == DEEPSEEK_BASE_URL
+    assert health["provider"]["model"] == DEEPSEEK_MODEL == "deepseek-flash"
+    assert set(health["provider"]["missing_settings"]) == {"LLM_API_KEY"}
     assert "api_key" not in health["provider"]
 
 
@@ -75,7 +73,6 @@ def test_index_page_keeps_the_token_columns_inside_the_back_section():
         assert header in back_section
         assert header not in front_section
 
-    # And the back section is the one that starts collapsed.
     assert 'id="back" class="card back"' in page
     assert ".back{display:none}" in page
 
@@ -119,8 +116,6 @@ def test_demo_1_payload_carries_no_token_or_step_fields(monkeypatch):
     serialised = json.dumps(front, ensure_ascii=False)
     for forbidden in ("input_tokens", "output_tokens", "cached_tokens", "usage", "latency_ms"):
         assert forbidden not in serialised
-    # But Demo 1 does get the business structure it is supposed to show — the
-    # preset baseline (labelled as such) plus this run's own observations.
     assert front["baseline"]["known"] and front["baseline"]["missing"]
     assert front["baseline"]["human_gates"] and front["baseline"]["next_actions"]
     assert front["dependencies"]
