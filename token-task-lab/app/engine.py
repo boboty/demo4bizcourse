@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from uuid import uuid4
 
@@ -157,6 +158,22 @@ class RunContext:
     steps: list[StepRecord] = field(default_factory=list)
     texts: dict[str, str] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
+    # 可选的两个观察者，供 Demo 1 的实时执行视图使用。它们只是旁观——不参与
+    # 执行、不改变调用顺序、不影响任何记录下来的数字，也不影响记录格式。
+    #
+    # 为什么「开始」也要观察：页面上那句「正在理解客户需求……」必须是真的开始
+    # 执行了，而不是前端看到上一步结束就推断下一步在跑。
+    on_step_start: Callable[[int, str, str], None] | None = None
+    on_step: Callable[[StepRecord], None] | None = None
+
+    def _begin(self, phase: str, action: str) -> None:
+        if self.on_step_start is not None:
+            self.on_step_start(self._next_index(), phase, action)
+
+    def _record(self, step: StepRecord) -> None:
+        self.steps.append(step)
+        if self.on_step is not None:
+            self.on_step(step)
 
     @property
     def system_prompt(self) -> str:
@@ -182,6 +199,7 @@ class RunContext:
         detail: str | None = None,
     ) -> str:
         """Make one real model call and record everything it reports back."""
+        self._begin(phase, action)
         messages = [
             {"role": "system", "content": system or self.system_prompt},
             {"role": "user", "content": user},
@@ -201,10 +219,10 @@ class RunContext:
                 latency_ms=latency_ms,
                 detail=f"{resolved_model}: {exc}",
             )
-            self.steps.append(failure_step)
+            self._record(failure_step)
             raise StepFailure(str(exc), failure_step) from exc
 
-        self.steps.append(
+        self._record(
             StepRecord(
                 step=self._next_index(),
                 action=action,
@@ -233,8 +251,9 @@ class RunContext:
         The step carries each tool's fact state, so "we got something back" and
         "we got something usable" stay distinguishable in the record.
         """
+        self._begin(phase, action)
         calls = self.toolbox.call_many(list(names))
-        self.steps.append(
+        self._record(
             StepRecord(
                 step=self._next_index(),
                 action=action,
@@ -255,6 +274,10 @@ class RunContext:
         step = self.steps[-1]
         for key, value in fields.items():
             setattr(step, key, value)
+        # 这一步的结论是现在才定下来的（工具拿到了东西 ≠ 能用），观察者要看到
+        # 修订后的版本，而不是修订前那个还没判断完的样子。
+        if self.on_step is not None:
+            self.on_step(step)
 
 
 # --------------------------------------------------------------------------
@@ -679,9 +702,15 @@ class RunEngine:
         mode: str,
         request_text: str,
         experiment_id: str | None = None,
+        run_id: str | None = None,
+        on_step_start: Callable[[int, str, str], None] | None = None,
+        on_step: Callable[[StepRecord], None] | None = None,
     ) -> RunRecord:
+        # run_id 可以由调用方给定：Demo 1 需要在执行开始前就把「本次运行」的
+        # 身份交给页面，执行结束后 Demo 2 重放的就是同一条记录。不传时行为与
+        # 以前完全一样，记录格式也没有变化。
         identity = {
-            "run_id": str(uuid4()),
+            "run_id": run_id or str(uuid4()),
             "created_at": utc_now_iso(),
             "experiment_id": experiment_id,
             "scenario": scenario.key,
@@ -724,6 +753,8 @@ class RunEngine:
             provider=self.provider,
             config=self.config,
             toolbox=ToolBox(scenario=scenario),
+            on_step_start=on_step_start,
+            on_step=on_step,
         )
 
         try:

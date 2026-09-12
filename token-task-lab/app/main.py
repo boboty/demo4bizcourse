@@ -8,21 +8,31 @@ than four unrelated log files.
 
 from __future__ import annotations
 
+import json
+import queue
+import threading
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import __version__
 from .config import load_provider_config, runs_dir, save_runs_enabled
-from .engine import MODE_LABELS, MODES, RunEngine
+from .engine import MODE_LABELS, MODES, RunEngine, structural_steps
 from .models import RunRecord
 from .provider import OpenAICompatibleProvider
 from .scenarios import get_scenario, scenario_catalog
 from .store import RunStore
-from .views import back_view, front_view, replay_view
+from .views import (
+    back_view,
+    front_view,
+    live_plan,
+    live_step,
+    live_step_start,
+    replay_view,
+)
 
 app = FastAPI(title="Token Task Lab", version=__version__)
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,6 +193,85 @@ def create_run(payload: RunRequest):
         scenario=scenario, mode=payload.mode, request_text=request_text
     )
     return _record_payload(record, _persist(record, payload.save, _store()))
+
+
+@app.post("/api/runs/stream")
+def stream_run(payload: RunRequest):
+    """Demo 1 的实时执行流：任务真的在执行，页面按真实步骤推进。
+
+    执行本身没有任何变化——同一个 engine、同一套调用顺序、同一份记录；这里只是
+    在每一步被记录时顺手往外推一条**业务侧**事件（步骤名、状态、工具事实三态），
+    不含 Token、模型名、调用次数。run_id 在执行前就生成，所以 Demo 1 跑完的那条
+    记录，就是 Demo 2 用来重放的那条记录。
+
+    传输用 NDJSON（一行一个 JSON），而不是 SSE：客户端是 POST 触发的，用 fetch
+    的流读取逐行解析最短，不需要为 EventSource 再拆一个 GET 端点。
+    """
+
+    def ndjson(payload: dict) -> bytes:
+        return (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
+
+    scenario = _resolve(payload)
+    if payload.mode not in MODES:
+        raise HTTPException(status_code=400, detail="mode must be A/B/C/D")
+
+    request_text = payload.request_text.strip() or scenario.request_text
+    run_id = str(uuid4())
+    plan = live_plan(structural_steps(scenario, payload.mode))
+
+    events: queue.Queue[dict | None] = queue.Queue()
+
+    def on_step_start(step, phase, action):
+        events.put(live_step_start(step, phase, action))
+
+    def on_step(step):
+        events.put(live_step(step))
+
+    def worker():
+        try:
+            record = _engine().execute(
+                scenario=scenario,
+                mode=payload.mode,
+                request_text=request_text,
+                run_id=run_id,
+                on_step_start=on_step_start,
+                on_step=on_step,
+            )
+            saved = _persist(record, payload.save, _store())
+            events.put(
+                {
+                    "type": "done",
+                    "run_id": record.run_id,
+                    "run_status": record.run_status,
+                    "mode": record.mode,
+                    "saved": bool(saved),
+                }
+            )
+        except Exception as exc:  # 真机出错也要让页面看到，而不是静默
+            events.put({"type": "error", "message": str(exc)})
+        finally:
+            events.put(None)
+
+    threading.Thread(target=worker, daemon=True).start()
+
+    def generate():
+        yield ndjson(
+            {
+                "type": "start",
+                "run_id": run_id,
+                "mode": payload.mode,
+                "mode_label": MODE_LABELS[payload.mode],
+                "request_text": request_text,
+                "plan": plan,
+            }
+        )
+        while True:
+            event = events.get()
+            if event is None:
+                break
+            yield ndjson(event)
+
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
 
 
 @app.get("/api/experiments")

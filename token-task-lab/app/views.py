@@ -151,6 +151,108 @@ def back_view(record: RunRecord) -> dict:
 
 
 # --------------------------------------------------------------------------
+# Demo 1 的实时执行视图
+# --------------------------------------------------------------------------
+
+# 每一步在课堂上怎么说。两个说法：还没跑完时念第一个，跑完了念第二个。
+# 这里只有业务口径——Demo 1 的执行过程不出现 Token、模型名、调用次数。
+LIVE_STEP_LABELS: dict[str, tuple[str, str]] = {
+    "direct": ("正在直接回答客户问题……", "已直接回答客户问题"),
+    "context": ("正在装载当前可用业务资料……", "已装载当前可用业务资料"),
+    "answer": ("正在基于全量上下文形成结果……", "已形成结果"),
+    "parse": ("正在理解客户需求……", "已理解客户需求"),
+    "d-parse-1": ("正在理解客户需求……", "已理解客户需求"),
+    "gaps": ("正在识别完成任务还缺什么……", "已识别缺失条件"),
+    "facts": ("正在获取业务事实……", "已获取业务事实"),
+    "d-context-1": ("正在获取业务事实……", "已获取业务事实"),
+    "judge": ("正在做业务判断……", "已完成业务判断"),
+    "d-judge-strong": ("正在做业务判断……", "已完成业务判断"),
+    "verify": ("正在校验结果……", "已完成校验"),
+    "d-verify-1": ("正在校验结果……", "已完成校验"),
+    "deliver": ("正在形成最终交付结果……", "已形成最终交付结果"),
+    "d-deliver": ("正在形成最终交付结果……", "已形成最终交付结果"),
+}
+LIVE_STEP_FALLBACK = ("正在处理这一步……", "已完成这一步")
+
+# 这些字段如果出现在 Demo 1 的执行过程里，就等于把 Token 提前泄底。
+# 由测试守住，不是靠自觉。
+LIVE_FORBIDDEN_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "cached_tokens",
+    "total_tokens",
+    "model_calls",
+    "tool_calls",
+    "latency_ms",
+    "finish_reason",
+    "truncated",
+    "usage",
+    "model",
+)
+
+
+def live_step_labels(phase: str) -> tuple[str, str]:
+    return LIVE_STEP_LABELS.get(phase, LIVE_STEP_FALLBACK)
+
+
+def live_plan(steps: list[StepRecord]) -> list[dict]:
+    """执行前把这条链要走的步骤交给页面（只有步骤名，没有状态）。
+
+    页面拿到的是「打算做什么」，每一步到底是完成、被阻塞还是停下等人，只能由
+    真实执行推过来的事件填上去。
+    """
+    plan = []
+    for step in steps:
+        running, done = live_step_labels(step.phase)
+        plan.append(
+            {
+                "step": step.step,
+                "phase": step.phase,
+                "action": step.action,
+                "running_label": running,
+                "done_label": done,
+            }
+        )
+    return plan
+
+
+def live_step_start(step: int, phase: str, action: str) -> dict:
+    """一步真的开始执行了。页面上的「正在……」由这条事件点亮。"""
+    running, _ = live_step_labels(phase)
+    return {
+        "type": "step_start",
+        "step": step,
+        "phase": phase,
+        "action": action,
+        "running_label": running,
+    }
+
+
+def live_step(step: StepRecord) -> dict:
+    """一步真实执行的业务侧投影：只说做了什么、结果如何，不说花了多少。"""
+    running, done = live_step_labels(step.phase)
+    return {
+        "type": "step",
+        "step": step.step,
+        "phase": step.phase,
+        "action": step.action,
+        "status": step.status,
+        "running_label": running,
+        "done_label": done,
+        # 工具事实三态原样带过来：拿到了 ≠ 能用，这一步就是讲这个的。
+        "facts": [
+            {
+                "title": fact.title,
+                "state": fact.state,
+                "state_label": fact.state_label,
+                "note": fact.note,
+            }
+            for fact in (step.facts or [])
+        ],
+    }
+
+
+# --------------------------------------------------------------------------
 # Demo 2 的动态视图：Token 累计重放
 # --------------------------------------------------------------------------
 
