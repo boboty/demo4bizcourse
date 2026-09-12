@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import __version__
+from .analytics import build_report
 from .config import load_provider_config, runs_dir, save_runs_enabled
 from .engine import MODE_LABELS, MODES, RunEngine, structural_steps
 from .models import RunRecord
@@ -272,6 +273,20 @@ def stream_run(payload: RunRequest):
             yield ndjson(event)
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
+
+
+@app.get("/api/analytics")
+def analytics(mode: str | None = None):
+    """Demo 3：把已有的运行记录聚合成三层指标。
+
+    只读 `runs/`，不调用 provider，不产生新记录。`mode` 可选 A/B/C/D，
+    用来按档位看同一批样本（四档实验条件不同，混在一起只适合说明指标本身）。
+    """
+    wanted = (mode or "").strip().upper() or None
+    if wanted is not None and wanted not in MODES:
+        raise HTTPException(status_code=400, detail="mode must be A/B/C/D")
+    records = _store().list_records()
+    return build_report(records, mode=wanted)
 
 
 @app.get("/api/experiments")

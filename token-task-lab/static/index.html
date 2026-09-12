@@ -132,6 +132,24 @@
   .lstep.error .lno{background:var(--bad-bg);color:var(--bad)}
   .lstep.ok .ltext::before{content:"✓ ";color:var(--good)}
   .lstep .lfacts{margin-top:5px}
+  /* Demo 3：三层逐步揭示。不是后台 dashboard：每层少而大的数字。 */
+  .d3-layer{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+  .d3-layer:first-of-type{border-top:0;padding-top:0;margin-top:12px}
+  .d3-layer h3{margin:0 0 10px;font-size:16px;color:var(--accent);font-weight:650;letter-spacing:.01em}
+  .d3-layer.reveal{animation:d3in .38s ease}
+  @keyframes d3in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .d3-ask{margin-top:14px;background:var(--accent-soft);border-left:4px solid var(--accent);
+          border-radius:0 10px 10px 0;padding:11px 15px;font-size:17.5px;font-weight:650;color:var(--accent)}
+  .d3-sub{margin:20px 0 6px;font-size:13.5px;color:var(--muted);letter-spacing:.04em;font-weight:600}
+  .d3-layer .total .v{font-size:26px}
+  .d3-formula{display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+              background:#f7f9f7;border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin:12px 0 4px}
+  .d3-formula .term{font-size:27px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--accent)}
+  .d3-formula .op{font-size:23px;color:var(--muted)}
+  .d3-formula .cap{display:block;font-size:12.5px;color:var(--muted);font-weight:400;letter-spacing:.04em;margin-top:2px}
+  .d3-modes{display:flex;gap:6px;flex-wrap:wrap}
+  .d3-modes button{padding:5px 12px;font-size:13.5px}
+  .d3-modes button.active{background:var(--accent-soft);border-color:#a9c6b8;color:var(--accent);font-weight:600}
   details.sec>summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14.5px;padding:2px 0}
   details.sec[open]>summary{margin-bottom:12px}
   /* Demo 2 的 Token 累计重放：课堂投屏用，字号大、信息少。 */
@@ -331,6 +349,58 @@
       </div>
       <div class="wrap" id="cmpWrap"><div class="muted small">读取中…</div></div>
     </details>
+  </section>
+
+  <!-- Demo 3：不重跑模型，只把已有 run records 聚合成三层指标。
+       第一层默认可见，第二 / 第三层与最终公式要靠按钮逐层展开。 -->
+  <section class="card" id="demo3">
+    <h2>Demo 3｜从 Token 计数到任务级指标</h2>
+    <p class="muted small">
+      样本来自 <code>runs/</code> 里已有的真实运行记录：只做聚合，不重新调用模型，也不产生新数字。
+      每一项的口径都写在卡片提示里。
+    </p>
+    <div id="d3Example" class="banner b-info">读取样本…</div>
+    <div class="toolbar">
+      <span class="muted small" id="d3Sample"></span>
+    </div>
+    <div class="toolbar">
+      <span class="muted small">按档位看：</span>
+      <span class="d3-modes" id="d3Modes"></span>
+    </div>
+
+    <div class="d3-layer" id="d3L1">
+      <h3 id="d3L1Title">第一层｜我们通常先看到这些数字</h3>
+      <div class="totals" id="d3L1Cards"></div>
+      <div class="d3-ask" id="d3L1Ask"></div>
+    </div>
+
+    <div class="d3-layer" id="d3L2" hidden>
+      <h3 id="d3L2Title">第二层｜调用结构</h3>
+      <div class="totals" id="d3L2Cards"></div>
+      <div class="d3-ask" id="d3L2Ask"></div>
+    </div>
+
+    <div class="d3-layer" id="d3L3" hidden>
+      <h3 id="d3L3Title">第三层｜任务级指标</h3>
+      <div class="totals" id="d3L3Cards"></div>
+      <h4 class="d3-sub" id="d3StatusTitle">状态分布</h4>
+      <div class="totals" id="d3StatusCards"></div>
+      <h4 class="d3-sub" id="d3StructTitle">任务结构特征</h4>
+      <p class="muted small" id="d3StructNote"></p>
+      <div class="totals" id="d3StructCards"></div>
+      <div class="d3-ask" id="d3L3Ask"></div>
+    </div>
+
+    <div class="d3-layer" id="d3Final" hidden>
+      <h3>从单一 Token 指标，升级到两个关键变量</h3>
+      <div class="d3-formula" id="d3Formula"></div>
+      <div class="d3-ask" id="d3FinalAsk"></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:20px">
+      <button class="primary" id="d3Next">展开调用结构</button>
+      <button id="d3Restart" hidden>重新演示</button>
+    </div>
   </section>
 
   <section class="card">
@@ -1163,6 +1233,119 @@ async function hydrateDetail(runId) {
   }
 }
 
+/* ---------- Demo 3：从 Token 计数到任务级指标 ----------
+   数据源是 /api/analytics：服务端把 runs/ 里已有的记录算成三层。页面只负责
+   逐层显示——第一层默认可见，第二层、第三层和最终公式要靠按钮展开。 */
+const d3 = { data: null, stage: 1, mode: null };
+
+function d3Cards(items) {
+  return (items || []).map((it) => `<div class="total">
+      <div class="k" title="${esc(it.hint || '')}">${esc(it.label)}</div>
+      <div class="v">${esc(it.display)}${it.unit ? ` <small>${esc(it.unit)}</small>` : ''}</div>
+    </div>`).join('');
+}
+
+function d3Show(id, visible, animate) {
+  const el = $(id);
+  const wasHidden = el.hidden;
+  el.hidden = !visible;
+  // 新展开的区域给一次入场动画：课堂上看得见「多出来一块」。
+  if (visible && wasHidden && animate) {
+    el.classList.remove('reveal');
+    void el.offsetWidth;
+    el.classList.add('reveal');
+  }
+}
+
+function renderD3(animate) {
+  const data = d3.data;
+  if (!data) return;
+  const layer = {};
+  data.layers.forEach((item) => { layer[item.key] = item; });
+
+  $('d3L1Cards').innerHTML = d3Cards(layer.layer1.items);
+  $('d3L1Ask').textContent = layer.layer1.question;
+  $('d3L2Cards').innerHTML = d3Cards(layer.layer2.items);
+  $('d3L2Ask').textContent = layer.layer2.question;
+  $('d3L3Cards').innerHTML = d3Cards(layer.layer3.items);
+  $('d3L3Ask').textContent = layer.layer3.question;
+  $('d3StatusTitle').textContent = layer.layer3.status_title;
+  $('d3StatusCards').innerHTML = d3Cards(layer.layer3.status_items);
+  $('d3StructTitle').textContent = layer.layer3.structure_title;
+  $('d3StructNote').textContent = layer.layer3.structure_note;
+  $('d3StructCards').innerHTML = d3Cards(layer.layer3.structure_items);
+
+  const final = data.final;
+  $('d3Formula').innerHTML =
+    `<div class="term">${esc(final.display_task_count)}<span class="cap">任务量</span></div>`
+    + '<div class="op">×</div>'
+    + `<div class="term">${esc(final.display_tokens_per_task)}<span class="cap">单任务 Token</span></div>`
+    + '<div class="op">=</div>'
+    + `<div class="term">${esc(final.display_total_tokens)}<span class="cap">Token 总量</span></div>`;
+  $('d3FinalAsk').textContent = final.question;
+
+  const sample = data.sample;
+  $('d3Sample').innerHTML =
+    `完整样本 <b>${sample.valid_records}</b> 条 / 记录 ${sample.total_records} 条`
+    + `（结构示例 ${sample.excluded.structure_only}、Token 不完整 ${sample.excluded.token_incomplete}）`
+    + ` · ${esc(sample.note)}`;
+  $('d3Example').innerHTML = data.example
+    ? `前面那条真实记录（<code>${esc(data.example.run_id.slice(0, 8))}</code> · `
+      + `${esc(data.example.mode_label)}）：1 件任务 → ${num(data.example.model_calls)} 次模型调用 → `
+      + `${num(data.example.tool_calls)} 次工具调用 → ${num(data.example.total_tokens)} Token → `
+      + `${esc(RUN_STATUS_TEXT[data.example.run_status] || data.example.run_status)}。<br>`
+      + 'Demo 3 把这条认知放大到整个样本：<b>统计单位要从「一次调用」换成「一件任务」。</b>'
+    : '当前样本里还没有可用于聚合的运行记录。';
+
+  const modes = [''].concat(sample.modes || []);
+  $('d3Modes').innerHTML = modes.map((m) =>
+    `<button data-mode="${esc(m)}" class="${(d3.mode || '') === m ? 'active' : ''}">`
+    + `${m ? `${esc(m)} 档` : '全部'}</button>`).join('');
+  $('d3Modes').querySelectorAll('button').forEach((button) => {
+    button.onclick = () => loadAnalytics(button.dataset.mode || null);
+  });
+
+  d3Reveal(d3.stage, animate);
+}
+
+function d3Reveal(stage, animate) {
+  d3.stage = Math.min(3, Math.max(1, stage));
+  d3Show('d3L2', d3.stage >= 2, animate);
+  d3Show('d3L3', d3.stage >= 3, animate);
+  // 「任务量 × 单任务 Token」在第三层之后才出现。
+  d3Show('d3Final', d3.stage >= 3, animate);
+  const next = $('d3Next');
+  if (d3.stage === 1) {
+    next.hidden = false;
+    next.textContent = '展开调用结构';
+  } else if (d3.stage === 2) {
+    next.hidden = false;
+    next.textContent = '展开任务指标';
+  } else {
+    next.hidden = true;
+  }
+  $('d3Restart').hidden = d3.stage === 1;
+}
+
+async function loadAnalytics(mode) {
+  try {
+    const url = '/api/analytics' + (mode ? '?mode=' + encodeURIComponent(mode) : '');
+    d3.data = await getJSON(url);
+    d3.mode = mode || null;
+    renderD3(false);
+  } catch (err) {
+    $('d3Example').className = 'banner b-bad';
+    $('d3Example').textContent = '读取聚合失败：' + err.message;
+  }
+}
+
+$('d3Next').onclick = () => d3Reveal(d3.stage + 1, true);
+$('d3Restart').onclick = () => {
+  // 重新演示：先回到第一层，再滚回这一节的开头。
+  d3Reveal(1, false);
+  $('demo3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 /* ---------- 已保存记录 ---------- */
 async function loadRecords() {
   const box = $('records');
@@ -1266,6 +1449,8 @@ $('expPicker').onchange = (e) => {
   await loadHealth();
   await loadExperiments();
   await loadRecords();
+  // Demo 3 的聚合只读已有记录；页面打开时算好第一层，后两层等课堂展开。
+  await loadAnalytics(null);
   try {
     const scenarios = await getJSON('/api/scenarios');
     const first = scenarios[state.scenario] || Object.values(scenarios)[0];

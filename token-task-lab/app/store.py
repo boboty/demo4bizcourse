@@ -62,6 +62,19 @@ class RunStore:
         summaries.sort(key=lambda item: item.created_at, reverse=True)
         return summaries[:limit]
 
+    def list_records(self, *, limit: int = 500) -> list[RunRecord]:
+        """整条记录，不只是摘要。
+
+        Demo 3 的聚合要看 steps 才能数工具调用与阻塞步骤，摘要在那里不够用。
+        记录本身仍然是一条一个 JSON 文件，没有新增字段。
+        """
+        records: list[RunRecord] = []
+        for summary in self.list_summaries(limit=limit):
+            record = self.get(summary.run_id)
+            if record is not None:
+                records.append(record)
+        return records
+
     def get_raw(self, run_id: str) -> dict | None:
         record = self.get(run_id)
         return record.model_dump() if record else None

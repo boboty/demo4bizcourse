@@ -37,7 +37,7 @@
     </div>
   </header>
 
-  <nav><a href="#prep">1 环境</a><a href="#verify">2 课前验证</a><a href="#demo1">3 Demo 1</a><a href="#demo2">4 Demo 2</a><a href="#compare">5 A/B/C/D</a><a href="#fallback">6 故障兜底</a><a href="#live">7 实际 Demo</a></nav>
+  <nav><a href="#prep">1 环境</a><a href="#verify">2 课前验证</a><a href="#demo1">3 Demo 1</a><a href="#demo2">4 Demo 2</a><a href="#compare">5 A/B/C/D</a><a href="#demo3">6 Demo 3</a><a href="#fallback">7 故障兜底</a><a href="#live">8 实际 Demo</a></nav>
 
   <section class="card prepOnly" id="prep">
     <h2>1｜环境准备：课堂只填 API Key</h2>
@@ -77,6 +77,7 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
       <label class="check"><input type="checkbox" data-k="facts">船期显示“有结果但未核验”，运价/舱位显示无结果</label>
       <label class="check"><input type="checkbox" data-k="sameRun">Demo 1 和 Demo 2 能用同一 run_id 翻面</label>
       <label class="check"><input type="checkbox" data-k="replayTotal">Token 重放能停在记录自己的 Token 合计，且工具步骤不增加</label>
+      <label class="check"><input type="checkbox" data-k="demo3">Demo 3 三层能逐层展开，「重新演示」能回到第一层</label>
       <label class="check"><input type="checkbox" data-k="d">D 档相对 C 档有可解释的额外消耗</label>
       <label class="check"><input type="checkbox" data-k="replay">至少一组完整实验可回放，断网也能讲</label>
     </div>
@@ -125,8 +126,46 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
     <div id="latestExperiment" class="small muted">正在读取最近实验…</div>
   </section>
 
+  <section class="card" id="demo3">
+    <h2>6｜Demo 3 · 第四讲：从 Token 计数到任务级指标</h2>
+    <div class="say">前面看的是一条记录。如果每天都有很多条这样的记录，只统计 Token 总数、调用次数和响应时间，还够用吗？</div>
+    <div class="small muted">Demo 3 不重跑模型：它把 <code>runs/</code> 里已有的真实记录按<strong>任务</strong>聚合，分三层逐步展开。页面在 Demo 页较下方（实验对照下面）。</div>
+    <div class="cmd"><pre>Demo 页 → 向下滚动到「Demo 3｜从 Token 计数到任务级指标」</pre><button class="copy">复制</button></div>
+    <div class="actions" style="margin:10px 0"><a class="btn primary" href="/#demo3" target="_blank">打开 Demo 3</a><span class="small muted" id="d3SampleLine">正在读取样本…</span></div>
+
+    <h3>第一步｜基础指标</h3>
+    <div class="step"><div class="n">1</div><div>页面上只有四个数字：<strong>Token 总量、模型调用次数、平均响应时间、异常运行</strong>。<span class="muted">这一层故意不给任务口径。</span></div></div>
+    <div class="say">“如果今天我们手里只有这些数据，其实已经能做计量了。”</div>
+    <div class="land">停一下，再问：“但刚才 A、B、C、D 差那么多，这张表能解释吗？”</div>
+    <div class="step"><div class="n">2</div><div>点击 <strong>“展开调用结构”</strong>。</div></div>
+
+    <h3>第二步｜调用结构</h3>
+    <div class="step"><div class="n">3</div><div>新增：Input / Output / Cached Token、模型调用次数、工具调用次数、平均每次调用的 Token、平均每次调用的输入 Token（上下文规模代理量）。</div></div>
+    <div class="say">“现在开始知道 Token 是怎么花掉的。”</div>
+    <div class="land">再问：“但这些调用到底完成了多少工作？”</div>
+    <div class="step"><div class="n">4</div><div>点击 <strong>“展开任务指标”</strong>。</div></div>
+
+    <h3>第三步｜任务级指标</h3>
+    <div class="step"><div class="n">5</div><div>新增：任务数、Token / 任务、模型调用 / 任务、工具调用 / 任务、平均任务耗时，以及状态分布（完成 / 含阻塞步骤 / 转人工 / 失败）与任务结构特征。</div></div>
+    <div class="say">“Token 总量告诉你用了多少，任务级指标才能告诉你为什么。”</div>
+    <div class="step"><div class="n">6</div><div>指底部公式：<strong>任务量 × 单任务 Token = Token 总量</strong>，并念出最后那句问题。</div></div>
+    <div class="land">Token 增长，到底来自更多真实任务，还是同样任务变得更贵？</div>
+    <p class="muted small">转 PPT：“所以第四讲接下来，我们至少同时看两个变量：任务量，以及单任务消耗。”四象限的判断由 PPT 完成，Demo 3 不替课堂下结论。</p>
+
+    <div class="mini" style="margin-top:12px">
+      <strong>数据纪律（课堂上可以直接讲）</strong>
+      <p class="muted small" style="margin:4px 0 0">
+        样本只纳入<strong>真实执行 + Token 计量完整 + 有明确运行状态</strong>的记录，页面照实写「完整样本 N 条 / 记录 M 条」。
+        重试次数、缓存命中率、上下文长度、「任务复杂度评分」这类现有记录无法可靠推导的指标一律不显示——宁可少一个数字，也不编一个数字。
+        任务结构特征（调用数 / 步骤数 / 上下文规模 / 是否含校验步骤）只作为<strong>结构特征</strong>展示，不是复杂度分数。
+      </p>
+    </div>
+    <div class="notice small">A/B/C/D 是实验条件不同的运行（C 档 5 次模型调用、D 档 7 次且重复上下文）。四档混在一起只适合说明指标体系；要谈消耗对比，用上面的档位筛选逐档看。</div>
+    <div id="d3Preview" class="small muted"></div>
+  </section>
+
   <section class="card" id="fallback">
-    <h2>6｜课堂故障策略</h2>
+    <h2>7｜课堂故障策略</h2>
     <div class="two">
       <div class="mini"><strong>Provider / 网络正常</strong><p>可以现场跑一档作为彩蛋，但主讲仍优先回放课前验证过的完整实验。</p></div>
       <div class="mini"><strong>Provider / 网络异常</strong><p>立即回放已保存实验，不现场排障。课堂讲的是结构，不是现场运维。</p></div>
@@ -135,7 +174,7 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
   </section>
 
   <section class="card" id="live">
-    <h2>7｜实际 Demo</h2>
+    <h2>8｜实际 Demo</h2>
     <p class="muted">下面就是正式 Demo 页面。讲课时可以一直停留在本页，按上面的剧本推进。</p>
     <iframe src="/" title="Token Task Lab"></iframe>
   </section>
@@ -192,7 +231,32 @@ async function labelReplayTarget(){
       : '还没有可重放的记录：先跑一次 C 档。';
   }catch(e){$('replayTarget').textContent='读取记录失败：'+e.message}
 }
+// Demo 3 课前核对：把当前样本的三层数字列一遍，讲师不用现场点开才知道。
+async function loadD3(){
+  try{
+    const d=await j('/api/analytics');const l={};d.layers.forEach(x=>{l[x.key]=x});
+    const it=(layer,key)=>(l[layer].items.find(x=>x.key===key)||{}).display||'—';
+    const st=key=>(l.layer3.status_items.find(x=>x.key===key)||{}).display||'—';
+    $('d3SampleLine').innerHTML=`完整样本 <b>${d.sample.valid_records}</b> 条 / 记录 ${d.sample.total_records} 条`;
+    $('d3Preview').innerHTML=
+      `<table><thead><tr><th>层</th><th>指标</th><th>当前样本</th></tr></thead><tbody>`+
+      `<tr><td>一</td><td>Token 总量</td><td>${esc(it('layer1','total_tokens'))}</td></tr>`+
+      `<tr><td>一</td><td>模型调用次数</td><td>${esc(it('layer1','model_calls'))} 次</td></tr>`+
+      `<tr><td>一</td><td>平均响应时间</td><td>${esc(it('layer1','avg_latency'))} 秒</td></tr>`+
+      `<tr><td>一</td><td>异常运行</td><td>${esc(it('layer1','error_runs'))}</td></tr>`+
+      `<tr><td>二</td><td>工具调用次数</td><td>${esc(it('layer2','tool_calls'))} 次</td></tr>`+
+      `<tr><td>二</td><td>平均每次模型调用 Token</td><td>${esc(it('layer2','tokens_per_call'))}</td></tr>`+
+      `<tr><td>三</td><td>任务数</td><td>${esc(it('layer3','task_count'))} 件</td></tr>`+
+      `<tr><td>三</td><td>Token / 任务</td><td>${esc(it('layer3','tokens_per_task'))}</td></tr>`+
+      `<tr><td>三</td><td>模型调用 / 任务</td><td>${esc(it('layer3','model_calls_per_task'))}</td></tr>`+
+      `<tr><td>三</td><td>工具调用 / 任务</td><td>${esc(it('layer3','tool_calls_per_task'))}</td></tr>`+
+      `<tr><td>三</td><td>完成 / 含阻塞 / 转人工 / 失败</td><td>${esc(st('completed'))} · ${esc(st('blocked'))} · ${esc(st('waiting_human'))} · ${esc(st('failed'))}</td></tr>`+
+      `</tbody></table>`+
+      `<p>任务量 × 单任务 Token = ${esc(d.final.display_task_count)} × ${esc(d.final.display_tokens_per_task)} = ${esc(d.final.display_total_tokens)}</p>`;
+  }catch(e){$('d3SampleLine').textContent='读取失败：'+e.message}
+}
 labelReplayTarget();
+loadD3();
 refresh();
 </script>
 </body>
