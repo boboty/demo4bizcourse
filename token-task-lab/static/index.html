@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Token Task Lab</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;margin:0;background:#f5f6f2;color:#17201c}
+    main{max-width:1120px;margin:0 auto;padding:36px 24px 60px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+    h1{margin:0 0 8px;font-size:34px}.muted{color:#69736e}.card{background:white;border:1px solid #e3e6e0;border-radius:18px;padding:20px;margin-top:18px}
+    textarea{width:100%;min-height:86px;padding:12px;border:1px solid #ccd3ce;border-radius:10px;box-sizing:border-box;font:inherit}
+    button{border:0;border-radius:10px;padding:10px 15px;cursor:pointer}.primary{background:#173f32;color:white}.mode{background:#e9eeeb}.mode.active{background:#cfe2d8}
+    .modes{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tag{display:inline-block;background:#eef2ef;border-radius:999px;padding:4px 9px;margin:3px}
+    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid #e7e9e6;font-size:14px}.warn{color:#8b4b00}.back{display:none}.back.show{display:block}
+    .banner{background:#fff6df;border:1px solid #ead8a5;border-radius:12px;padding:12px 14px;margin-top:14px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{display:block}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><div><h1>Token Task Lab</h1><div class="muted">同一件企业任务：先看业务正面，再翻到运行背面。</div></div><button id="backBtn">查看运行背面</button></div>
+  <div class="banner">当前是教学骨架版本：不伪造船期、运价或 Token 数字。真实 provider 接入后由实际运行日志填充。</div>
+
+  <section class="card">
+    <strong>客户原话</strong>
+    <textarea id="request">天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。</textarea>
+    <div class="modes">
+      <button class="mode" data-mode="A">A 直接回答</button><button class="mode" data-mode="B">B 全量上下文</button><button class="mode active" data-mode="C">C 任务链</button><button class="mode" data-mode="D">D 低效版本</button>
+    </div>
+    <button class="primary" id="runBtn">生成一次教学运行</button>
+  </section>
+
+  <section id="front" class="card">
+    <h2>业务正面｜Demo 1</h2>
+    <div class="grid"><div><strong>已知条件</strong><div id="known"></div></div><div><strong>缺失条件</strong><div id="missing"></div></div></div>
+    <p><strong>任务：</strong><span id="task">尚未运行</span></p>
+    <p><strong>人工确认点：</strong><span id="gates">—</span></p>
+    <p class="muted">本页故意不展示 Token。第二讲只看任务能否被接住、哪里需要停下来。</p>
+  </section>
+
+  <section id="back" class="card back">
+    <h2>运行背面｜Demo 2</h2>
+    <p><strong>run_id：</strong><span id="runId">—</span></p>
+    <table><thead><tr><th>Step</th><th>动作</th><th>状态</th><th>模型</th><th>输入</th><th>输出</th><th>缓存</th><th>工具</th><th>耗时</th></tr></thead><tbody id="steps"></tbody></table>
+    <p class="muted" id="usage">真实运行后在这里汇总模型调用、工具调用与 Token。</p>
+  </section>
+</main>
+<script>
+let mode='C', current=null;
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode});
+function tags(items){return items.map(x=>`<span class="tag">${x}</span>`).join('')}
+async function run(){const r=await fetch('/api/runs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario:'tianjin-freight',mode,request_text:document.querySelector('#request').value})});current=await r.json();
+  known.innerHTML=tags(current.known);missing.innerHTML=tags(current.missing);task.textContent=current.task;gates.textContent=current.human_gates.join(' / ');runId.textContent=current.run_id;
+  steps.innerHTML=current.steps.map(s=>`<tr><td>${s.step}</td><td>${s.action}</td><td>${s.status}</td><td>${s.model??'—'}</td><td>${s.input_tokens??'—'}</td><td>${s.output_tokens??'—'}</td><td>${s.cached_tokens??'—'}</td><td>${s.tool_calls}</td><td>${s.latency_ms??'—'}</td></tr>`).join('');
+  usage.textContent=current.note;
+}
+runBtn.onclick=run;backBtn.onclick=()=>back.classList.toggle('show');
+</script>
+</body>
+</html>
