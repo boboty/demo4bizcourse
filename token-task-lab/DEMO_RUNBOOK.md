@@ -3,6 +3,16 @@
 > 课堂实际使用入口：启动 `uvicorn app.main:app --port 8014` 后打开 **http://127.0.0.1:8014/runbook**。
 > `static/runbook.html` 将本页内容组织成单页讲师驾驶舱，并自动读取 Provider、Token 证据和最近实验状态；本 Markdown 保留为教学逻辑与台词的文字源。
 
+## Provider 固定配置
+
+本课程 Demo 固定使用 DeepSeek：
+
+- Base URL：`https://api.deepseek.com`
+- Model：`deepseek-flash`
+- 课堂唯一必填：`LLM_API_KEY`
+
+不在课堂临时切换 base URL 或模型，避免实验条件变化。
+
 ## 课堂位置
 
 ### Demo 1｜第二讲“四问”之后
@@ -60,7 +70,7 @@
 课堂默认回放已验证记录。上课前跑一次：
 
 ```bash
-export LLM_BASE_URL=... LLM_API_KEY=... LLM_MODEL=...
+export LLM_API_KEY="你的 DeepSeek API Key"
 python scripts/record_runs.py        # 真实执行 A/B/C/D，写入 runs/
 ```
 
@@ -85,6 +95,7 @@ python scripts/record_runs.py        # 真实执行 A/B/C/D，写入 runs/
 
 课前确认：
 
+- [ ] Provider 固定显示 `https://api.deepseek.com` / `deepseek-flash`，只需 API Key
 - [ ] Demo 1 主区域展示的是本次运行的实际结果，不是基准区的预设答案
 - [ ] 现场如果把输入改成别的城市，基准区提示「已不适用」且不再被念出来
 - [ ] Demo 1 收起运行背面时，HTML 里也不含 Token 数字
