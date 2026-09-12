@@ -27,6 +27,7 @@ from .views import back_view, front_view
 app = FastAPI(title="Token Task Lab", version=__version__)
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = ROOT / "static" / "index.html"
+RUNBOOK = ROOT / "static" / "runbook.html"
 
 DEFAULT_SCENARIO = "tianjin-freight"
 
@@ -80,6 +81,12 @@ def _persist(record: RunRecord, save: bool, store: RunStore) -> str | None:
 @app.get("/")
 def home():
     return FileResponse(STATIC)
+
+
+@app.get("/runbook")
+def runbook():
+    """Single-page instructor cockpit: prep, validation, teaching flow and embedded demo."""
+    return FileResponse(RUNBOOK)
 
 
 @app.get("/api/health")
