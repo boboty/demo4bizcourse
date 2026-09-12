@@ -27,6 +27,7 @@ from .models import (
     RunRecord,
     StepRecord,
     UsageSummary,
+    output_evidence_for,
     utc_now_iso,
 )
 from .provider import OpenAICompatibleProvider, ProviderError
@@ -44,6 +45,31 @@ MODES: tuple[str, ...] = tuple(MODE_LABELS)
 # How many times the low-efficiency mode re-pastes the same context. Real
 # repeated input, billed as repeated input — this is the whole demonstration.
 D_CONTEXT_REPEAT = 3
+
+# Output budgets, in Chinese characters, per step kind. `max_tokens` is the hard
+# cap the provider enforces; these are the soft limits written into the prompt
+# so a normal run finishes well inside it. Without them the pass-through steps
+# (判断缺口 / 校验) restate their whole input and end up at the cap, which means
+# the Token numbers record how much padding the prompt invited rather than how
+# much work the step did.
+BUDGET_PARSE = 150
+BUDGET_GAPS = 150
+BUDGET_JUDGE = 250
+BUDGET_VERIFY = 250
+BUDGET_DELIVER = 400
+# A / B answer the customer directly; same delivery budget as C's 输出 step.
+BUDGET_DIRECT = 400
+
+_CONCISE = "只给结论，不复述输入或题目，不展开推理过程。"
+
+
+def _budget(instruction: str, limit: int) -> str:
+    """Append the step's output budget to its instruction.
+
+    Kept next to the step that uses it rather than in the scenario: how long an
+    answer may be is an engine-level measurement decision, not business content.
+    """
+    return f"{instruction}\n{_CONCISE}总字数不超过 {limit} 字。"
 
 
 class StepFailure(RuntimeError):
@@ -122,6 +148,7 @@ class RunContext:
         parts = [self.scenario.persona, f"业务目标：{self.scenario.task}"]
         if rules:
             parts.append("硬性要求：\n" + rules)
+        parts.append(f"输出要求：{_CONCISE}")
         return "\n\n".join(parts)
 
     def _next_index(self) -> int:
@@ -176,6 +203,9 @@ class RunContext:
                 result=result.text or None,
                 detail=detail,
                 usage_raw=result.usage_raw or None,
+                # Only the provider's own reason is recorded; `truncated` is
+                # derived from it on the record, so the two cannot drift.
+                finish_reason=result.finish_reason,
             )
         )
         self.texts[phase] = result.text
@@ -239,9 +269,11 @@ def run_mode_a(ctx: RunContext) -> tuple[str, str]:
         phase="direct",
         action="直接回答客户问题",
         user=ctx.request_text,
-        system=(
+        system=_budget(
             f"{ctx.scenario.persona}\n\n"
             "请直接给出客户可交付的结果。不要描述你的推理过程，不要向客户反问。"
+            "简洁、可直接发送给客户。",
+            BUDGET_DIRECT,
         ),
     )
     ctx.notes.append("A 档只把客户原话交给模型：没有业务资料、没有工具调用。模型若编造船期或运价，本档会留下证据；模型若谨慎停下，同样成立。")
@@ -262,7 +294,11 @@ def run_mode_b(ctx: RunContext) -> tuple[str, str]:
         user=(
             f"客户原话：\n{ctx.request_text}\n\n"
             f"当前可用业务资料与工具结果：\n{context}\n\n"
-            "请基于以上全部资料，形成可交付结果。"
+            + _budget(
+                "请基于以上全部资料，形成可交付结果。简洁、可直接发送给客户，"
+                "不要复述资料原文。",
+                BUDGET_DIRECT,
+            )
         ),
     )
     ctx.notes.append("B 档一次性把当前可用资料全部塞进上下文：任务是同一件，输入量随资料量线性增长。")
@@ -278,7 +314,11 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
         action="解析客户需求",
         user=(
             f"客户原话：\n{ctx.request_text}\n\n"
-            "请解析为结构化需求：起运港、目的港、箱型箱量、货好时间、客户期望。只输出结论。"
+            + _budget(
+                "请解析为结构化需求：起运港、目的港、箱型箱量、货好时间、客户期望。"
+                "只输出这几项结构化字段，每项一行，不要编造客户没说的条件。",
+                BUDGET_PARSE,
+            )
         ),
     )
 
@@ -288,7 +328,11 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
         user=(
             f"需求解析：\n{parsed}\n\n"
             f"当前可用资料清单：\n{scenario.materials_block()}\n\n"
-            "要完成这件任务，还缺哪些只能由外部事实或人工确认补上的条件？只列缺口，不要编造内容。"
+            + _budget(
+                "要完成这件任务，还缺哪些只能由外部事实或人工确认补上的条件？"
+                "只列缺口，每条一行，不要编造内容，不要解释为什么缺。",
+                BUDGET_GAPS,
+            )
         ),
     )
 
@@ -316,7 +360,11 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
             f"需求解析：\n{parsed}\n\n"
             f"已识别缺口：\n{gaps}\n\n"
             f"已取回事实（注意每条的 provenance 与 verified 标记）：\n{fact_block}\n\n"
-            "请给出候选方案与必须停下来的人工确认点。没有可核验来源的数字一律写「待业务资料」。"
+            + _budget(
+                "请给出候选方案与必须停下来的人工确认点。"
+                "没有可核验来源的数字一律写「待业务资料」。",
+                BUDGET_JUDGE,
+            )
         ),
     )
 
@@ -326,8 +374,12 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
         user=(
             f"待校验草稿：\n{judgment}\n\n"
             f"事实依据：\n{fact_block}\n\n"
-            "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，一律改为「待业务资料 / 人工确认」。"
-            "然后输出修订后的草稿。"
+            + _budget(
+                "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，"
+                "一律改为「待业务资料 / 人工确认」。只输出修订后的草稿，"
+                "不要逐条解释改动过程。",
+                BUDGET_VERIFY,
+            )
         ),
     )
 
@@ -337,7 +389,11 @@ def run_mode_c(ctx: RunContext) -> tuple[str, str]:
         status="waiting_human",
         user=(
             f"已校验内容：\n{checked}\n\n"
-            "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，最后列出人工确认点。"
+            + _budget(
+                "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，"
+                "最后列出人工确认点。",
+                BUDGET_DELIVER,
+            )
         ),
     )
     ctx.notes.append(
@@ -380,7 +436,12 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
     heavy_user = (
         f"客户原话：\n{ctx.request_text}\n\n"
         f"当前可用业务资料与工具结果：\n{heavy_context}\n\n"
-        "请解析为结构化需求并给出候选方案。"
+        # D 档的浪费必须是「真实重复的上下文」，不是「被提示词邀请的长输出」：
+        # 与 C 档一样的字数上限，重复步骤才只重复它该重复的那部分。
+        + _budget(
+            "请解析为结构化需求并给出候选方案。解析部分只输出结构化字段。",
+            BUDGET_JUDGE,
+        )
     )
 
     parsed = ctx.ask(
@@ -398,7 +459,7 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
     judge_user = (
         f"需求解析：\n{parsed}\n\n"
         f"当前可用业务资料与工具结果：\n{heavy_context}\n\n"
-        "请给出候选方案与必须停下来的人工确认点。"
+        + _budget("请给出候选方案与必须停下来的人工确认点。", BUDGET_JUDGE)
     )
     strong = ctx.ask(
         phase="d-judge-strong",
@@ -420,8 +481,11 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
     verify_user = (
         f"待校验草稿：\n{strong}\n\n"
         f"事实依据：\n{heavy_context}\n\n"
-        "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，一律改为「待业务资料 / 人工确认」。"
-        "然后输出修订后的草稿。"
+        + _budget(
+            "逐条检查草稿：凡是没有可核验来源的船期、运价、舱位承诺，"
+            "一律改为「待业务资料 / 人工确认」。只输出修订后的草稿。",
+            BUDGET_VERIFY,
+        )
     )
     ctx.ask(phase="d-verify-1", action="重复校验（第 1 次）", user=verify_user)
     checked = ctx.ask(
@@ -436,7 +500,11 @@ def run_mode_d(ctx: RunContext) -> tuple[str, str]:
         status="waiting_human",
         user=(
             f"已校验内容：\n{checked}\n\n"
-            "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，最后列出人工确认点。"
+            + _budget(
+                "请输出最终可交付结果：先给结论，再给缺失条件与下一步动作，"
+                "最后列出人工确认点。",
+                BUDGET_DELIVER,
+            )
         ),
     )
 
@@ -658,6 +726,21 @@ class RunEngine:
     ) -> RunRecord:
         notes = list(ctx.notes)
         token_evidence = token_evidence_for(ctx.steps)
+        output_evidence = output_evidence_for(ctx.steps)
+        if output_evidence == "truncated":
+            cut = [step.step for step in ctx.steps if step.truncated]
+            notes.append(
+                "输出不完整：第 "
+                + "、".join(str(index) for index in cut)
+                + " 步的模型调用因为长度上限被截断（finish_reason=length），"
+                "写下来的只是模型当时想说的前半段。这几次调用的 Token 读数依然真实，"
+                "但不能当作正常完整结果使用。"
+            )
+        elif output_evidence == "unknown":
+            notes.append(
+                "provider 没有返回 finish_reason：本次无法确认每个调用是正常结束还是被截断，"
+                "输出的完整性未获证明。"
+            )
         if token_evidence == "not_reported":
             notes.append(
                 "provider 没有返回 usage：这次是真实模型调用，但没有 Token 读数，"

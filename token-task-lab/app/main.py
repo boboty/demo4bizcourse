@@ -96,12 +96,28 @@ def health():
     live = [item for item in summaries if item.evidence_level == "live"]
     ready = [item for item in live if item.classroom_ready]
     unmeasured = [item for item in live if not item.classroom_ready]
+    # 三个数字分开报：真实调用 / Token 计量完整 / 输出完整且可冻结。
+    freeze = [item for item in live if item.freeze_ready]
+    truncated = [item for item in live if item.output_evidence == "truncated"]
+    unverified_output = [
+        item for item in live if item.output_evidence == "unknown"
+    ]
 
     notes = []
     if unmeasured:
         notes.append(
             f"有 {len(unmeasured)} 份记录是真实模型调用但缺少 Token 读数，"
             "不能作为 Token 实验记录。"
+        )
+    if truncated:
+        notes.append(
+            f"有 {len(truncated)} 份记录存在输出截断（finish_reason=length）："
+            "Token 读数完整，但输出不完整，这组数字不适合课堂冻结。"
+        )
+    if unverified_output:
+        notes.append(
+            f"有 {len(unverified_output)} 份记录 provider 未上报 finish_reason，"
+            "无法确认输出是否完整，暂不计入可冻结记录。"
         )
     if live and not ready:
         notes.append("还没有可用于 Token 对比的课堂记录，课前请先跑一次 scripts/record_runs.py。")
@@ -116,6 +132,9 @@ def health():
         "saved_live_runs": len(live),
         "classroom_ready_runs": len(ready),
         "unmeasured_live_runs": len(unmeasured),
+        # 计量完整 ≠ 输出完整：可冻结要求两者同时成立。
+        "freeze_ready_runs": len(freeze),
+        "truncated_live_runs": len(truncated),
         "modes": MODE_LABELS,
         "notes": notes,
     }

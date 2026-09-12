@@ -37,6 +37,8 @@ FRONT_FIELDS = (
 )
 
 # Field names that must never appear in a front view, checked by the test suite.
+# Truncation is a system-side fact about the calls behind the text: it belongs
+# to Demo 2, so Demo 1 stays free of it along with every other run-side number.
 FORBIDDEN_IN_FRONT = (
     "usage",
     "steps",
@@ -53,6 +55,11 @@ FORBIDDEN_IN_FRONT = (
     "provider",
     "token_evidence",
     "usage_summary",
+    "finish_reason",
+    "truncated",
+    "truncated_steps",
+    "output_evidence",
+    "freeze_ready",
 )
 
 # Which chain step answers which Demo 1 question. The low-efficiency mode's
@@ -129,5 +136,15 @@ def front_view(record: RunRecord) -> dict:
 
 
 def back_view(record: RunRecord) -> dict:
-    """Demo 2 运行背面：步骤、usage、输出与异常。"""
-    return record.model_dump()
+    """Demo 2 运行背面：步骤、usage、输出与异常。
+
+    `output_evidence` / `truncated_steps` travel inside the record itself (see
+    `RunRecord`), so a replayed record always reports truncation from its own
+    steps. The two readiness flags are added here because they are properties,
+    and the back page must be able to show 计量完整 and 输出完整 as two separate
+    facts rather than one verdict.
+    """
+    payload = record.model_dump()
+    payload["classroom_ready"] = record.classroom_ready
+    payload["freeze_ready"] = record.freeze_ready
+    return payload

@@ -51,6 +51,8 @@
 - tool_calls
 - latency_ms
 - result/status
+- finish_reason（provider 报的结束原因；缺失记为 unknown，不当作完整）
+- 输出是否被长度上限截断（截断的步骤必须明确标出，不能让学员误以为是完整结果）
 
 页首同时显示：业务侧 `1 件任务`，系统侧实际模型调用次数、工具调用次数、Token 合计。
 
@@ -69,6 +71,8 @@
 - 如果缺报价资料，任务应明确停在“报价待业务资料/人工确认”。
 - 教学用结构化资料如需构造，必须标注 `teaching_fixture`，不得在课堂文案中暗示为真实客户数据。
 - Token、耗时、缓存命中必须来自 provider 返回值或本地实测。
+- 输出是否完整同样只能来自 provider 的 `finish_reason`：没有这个字段就只能记
+  `unknown`，不得推断为完整，也不得为了让数字好看而调大 `max_tokens`。
 
 ## Provider
 

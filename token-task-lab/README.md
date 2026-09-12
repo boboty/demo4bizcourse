@@ -20,15 +20,24 @@
 4. 允许模型停下来：缺资料、缺权限、缺事实都是教学内容，不追求“完美跑通”。
 5. 记录是主，真机是彩蛋：课堂必须能回放一份经过验证的运行记录。
 
-## 三条不能破的课程不变量
+## 四条不能破的课程不变量
 
-这三条都有测试强制（`tests/test_course_invariants.py`），改动核心逻辑时会挡住回归：
+这四条都有测试强制（`tests/test_course_invariants.py`、`tests/test_truncation.py`），改动核心逻辑时会挡住回归：
 
 **① Demo 1 展示的是本次运行的结果，不是课前写好的答案。** 预设 `known / missing / next_actions` 只出现在「场景验收基准」里；主区域渲染本次 `parse / gaps / facts / judge / verify / deliver` 的真实产出。
 
 **② 有结果 ≠ 能用。** 工具结果分 `missing` / `unverified` / `verified` 三种状态；天津船期是“有结果但未核验”，因此仍不能作为可核验业务事实。
 
 **③ 真实模型调用 ≠ Token 证据齐备。** `evidence_level=live` 只说明真的调了模型；`classroom_ready` 只有在 usage 齐备时才成立。
+
+**④ Token 计量完整 ≠ 输出完整。** 一份 usage 读得清清楚楚的记录，可能是撞了输出上限的结果：数字是真的，内容只有前半段。所以两者分开记：
+
+- `token_evidence`：`measured / partial / not_reported / not_executed`（计量口径，未变）
+- `output_evidence`：`complete / truncated / unknown / not_executed`（输出完整性）
+- 每个 `StepRecord` 记 provider 报的 `finish_reason`，`truncated` 由它派生（`length` / `max_tokens` 才算截断）
+- `freeze_ready` = `classroom_ready` **且** `output_evidence=complete`：这才是「适合课堂冻结」的独立判断
+
+`finish_reason` 缺失记为 `unknown`，**不当作完整**：provider 没说，就不能替它说「输出是完整的」。
 
 ## 课堂固定 Provider
 
@@ -75,9 +84,12 @@ python scripts/record_runs.py C D      # 只跑指定档
 
 ```text
 课堂可用于 Token 实验的记录：4/4 档
+适合课堂冻结的档位：4/4 档（Token 已计量 且 无 finish_reason=length 截断）
 ```
 
-否则不要把这一组数字作为 Token 课堂证据。
+第一行只说明 Token 计量完整；第二行才说明输出也完整。任何一档出现 `finish_reason=length`
+（某一步撞到 `max_tokens` 上限、只写了一半），脚本会逐档标出被截断的步号、把该档排除在可冻结
+之外并以非零码退出。**两组数字都必须是 4/4 才能冻结课件数据。**
 
 ## 四种模式
 
@@ -90,6 +102,13 @@ python scripts/record_runs.py C D      # 只跑指定档
 
 D 档的重复全部走真实 provider；引擎不修改任何已记录数字。
 
+### 输出长度：提示词约束，不靠调大 max_tokens
+
+`max_tokens` 保持 900 不变。每个步骤在提示词里带一个字数上限（需求解析 / 缺口判断 150 字、
+业务判断 / 校验 250 字、最终交付与 A/B 档 400 字），避免模型把预算花在复述输入上。
+这样输出数字反映的是这一步的工作量，而不是提示词邀请来的填充；真撞上限时，
+`finish_reason=length` 会把该步明确标成截断，而不是伪装成一次正常完成。
+
 ## 本地环境文件
 
 `token-task-lab/.gitignore` 会忽略本 Demo 下的 `.env`、`.env.*` 以及子目录中的同类文件；`.env.example` 例外，继续作为模板提交到仓库。API Key 不应进入 Git。
@@ -99,11 +118,11 @@ D 档的重复全部走真实 provider；引擎不修改任何已记录数字。
 ```text
 app/
   config.py            固定 DeepSeek Base URL / model，自动加载 .env
-  provider.py          OpenAI-compatible 客户端 + usage 解析
+  provider.py          OpenAI-compatible 客户端 + usage / finish_reason 解析
   models.py            RunRecord / StepRecord / FactState / UsageSummary
   scenarios/           场景插件
   tools.py             工具调用、事实状态与计数
-  engine.py            A/B/C/D runner、usage 汇总、token_evidence 判定
+  engine.py            A/B/C/D runner、usage 汇总、token_evidence 与 output_evidence 判定
   store.py             runs/*.json 持久化
   views.py             front / back 投影
   main.py              FastAPI 路由（含 /api/experiments 与 /runbook）
@@ -117,7 +136,7 @@ static/runbook.html     讲师单页驾驶舱
 
 | 路由 | 用途 |
 | --- | --- |
-| `GET /api/health` | provider 状态；真实运行与 classroom-ready 分开报 |
+| `GET /api/health` | provider 状态；真实运行 / Token 可用 / 可冻结三个数分开报 |
 | `GET /api/scenarios` | 场景目录 |
 | `POST /api/runs` | 跑单档 |
 | `GET /api/runs` / `GET /api/runs/{id}` | 记录列表 / 回放 |

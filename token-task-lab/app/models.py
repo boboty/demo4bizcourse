@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ok            — the step did its job
 # blocked       — an external dependency (fact, permission, capacity) is missing
@@ -19,6 +19,40 @@ from pydantic import BaseModel, Field
 # skipped       — the chain stopped before reaching this step
 # not_executed  — no provider configured; the step is shown as structure only
 STEP_STATUSES = ("ok", "blocked", "waiting_human", "error", "skipped", "not_executed")
+
+# How a completion ended, as the provider reports it. A call stopped by the
+# output cap did not finish — what it wrote is a prefix of what it was saying,
+# and no Token figure makes that text complete.
+TRUNCATING_FINISH_REASONS = ("length", "max_tokens")
+
+# Output completeness is a *different claim* from token measurement. A run can
+# have perfectly measured usage for text that was cut off mid-sentence, so the
+# two are recorded separately and never collapsed into one "ready" flag.
+#   complete     — every model call reported an ending that was not the cap
+#   truncated    — at least one call hit the output cap (finish_reason=length)
+#   unknown      — a call happened but the provider reported no finish_reason,
+#                  so completeness cannot be claimed either way
+#   not_executed — no model call happened
+OUTPUT_EVIDENCE_LEVELS = ("complete", "truncated", "unknown", "not_executed")
+
+
+def output_evidence_for(steps: list["StepRecord"]) -> str:
+    """Did the calls that produced this output actually finish?
+
+    Returns one of ``OUTPUT_EVIDENCE_LEVELS``. A missing ``finish_reason`` is
+    *not* read as "stopped normally": a gateway that says nothing has left the
+    output's completeness unproven, and calling that complete is exactly the
+    mistake this level exists to prevent.
+    """
+    model_steps = [step for step in steps if step.model]
+    if not model_steps:
+        return "not_executed"
+    if any(step.truncated for step in model_steps):
+        return "truncated"
+    if any(step.finish_reason is None for step in model_steps):
+        return "unknown"
+    return "complete"
+
 
 # live          — real model calls happened
 # structure_only— no provider configured; the chain shape is shown, numbers are null
@@ -70,6 +104,16 @@ class StepRecord(BaseModel):
     result: str | None = None
     detail: str | None = None
     usage_raw: dict | None = None
+    # How the provider said this call ended, verbatim (lower-cased), or None
+    # when it did not say. `truncated` is derived from it below, never set
+    # independently, so the two can never disagree in a saved record.
+    finish_reason: str | None = None
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _derive_truncation(self) -> "StepRecord":
+        self.truncated = self.finish_reason in TRUNCATING_FINISH_REASONS
+        return self
 
 
 class UsageSummary(BaseModel):
@@ -132,20 +176,47 @@ class RunRecord(BaseModel):
     run_status: str = "ok"
     evidence_level: str = "structure_only"
     token_evidence: str = "not_executed"
+    # Output completeness, derived from the steps below. Kept as its own axis:
+    # usage can be perfectly measured for text the output cap cut in half.
+    output_evidence: str = "not_executed"
+    truncated_steps: list[int] = Field(default_factory=list)
     provider: dict | None = None
     claim_audit: ClaimAudit | None = None
     notes: list[str] = Field(default_factory=list)
     error: str | None = None
 
+    @model_validator(mode="after")
+    def _derive_output_completeness(self) -> "RunRecord":
+        # Derived, so a record loaded back from runs/ reports truncation from
+        # its own steps — including records written before this field existed,
+        # which come back as `unknown` rather than as falsely complete.
+        self.output_evidence = output_evidence_for(self.steps)
+        self.truncated_steps = [step.step for step in self.steps if step.truncated]
+        return self
+
     @property
     def classroom_ready(self) -> bool:
-        """Usable as a Token teaching record: really executed, usage measured."""
+        """Usable as a Token teaching record: really executed, usage measured.
+
+        This answers one question only — 数字是否计量完整. Whether the output
+        itself finished is a separate question, answered by `output_evidence`.
+        """
         return (
             self.evidence_level == "live"
             and self.token_evidence == "measured"
             and self.usage.input_tokens is not None
             and self.usage.output_tokens is not None
         )
+
+    @property
+    def freeze_ready(self) -> bool:
+        """适合课堂冻结：Token 读数完整，**并且**没有输出被长度上限截断。
+
+        Deliberately a second, independent check rather than a tightening of
+        `classroom_ready`: 一组数字可以「计量完整但输出不完整」，把两者
+        合并会掩盖这种记录，正是本次要避免的。
+        """
+        return self.classroom_ready and self.output_evidence == "complete"
 
 
 class RecordSummary(BaseModel):
@@ -168,7 +239,11 @@ class RecordSummary(BaseModel):
     cached_tokens: int | None = None
     total_tokens: int | None = None
     latency_ms: int | None = None
+    # Token 计量完整 ≠ 输出完整：对照表两列都要有，才能看出某档是不是被截断。
     classroom_ready: bool = False
+    output_evidence: str = "not_executed"
+    truncated_calls: int = 0
+    freeze_ready: bool = False
     request_text: str
 
 
@@ -196,5 +271,8 @@ def summarise(record: RunRecord) -> RecordSummary:
         total_tokens=record.usage.total_tokens,
         latency_ms=record.usage.latency_ms,
         classroom_ready=record.classroom_ready,
+        output_evidence=record.output_evidence,
+        truncated_calls=len(record.truncated_steps),
+        freeze_ready=record.freeze_ready,
         request_text=record.request_text,
     )

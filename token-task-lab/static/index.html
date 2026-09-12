@@ -95,6 +95,14 @@
   .pill.measured{background:var(--good-bg);color:var(--good)}
   .pill.partial,.pill.not_reported{background:var(--warn-bg);color:var(--warn)}
   .pill.not_executed{background:#eef0ee;color:var(--muted)}
+  /* 输出完整性：与 Token 证据分开配色，两者是不同的判断。 */
+  .pill.complete{background:var(--good-bg);color:var(--good)}
+  .pill.truncated{background:var(--bad-bg);color:var(--bad);font-weight:600}
+  .pill.unknown{background:var(--warn-bg);color:var(--warn)}
+  .banner.b-cut{background:var(--bad-bg);border:1px solid var(--bad);color:var(--bad);font-weight:600}
+  .trunc{display:inline-block;background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad);
+         border-radius:6px;padding:1px 7px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  tr.cut>td{background:#fdf7f6}
   .cmp{table-layout:auto}
   .cmp tbody tr.row{cursor:pointer}
   .cmp tbody tr.row:hover{background:#f7faf8}
@@ -246,6 +254,11 @@ const TOKEN_EVIDENCE_TEXT = {
   measured: 'Token 已计量', partial: 'Token 不完整',
   not_reported: 'provider 未返回 usage', not_executed: '未计量',
 };
+// 输出完整性是另一个判断：Token 读数可以完整，而输出被长度上限截断。
+const OUTPUT_EVIDENCE_TEXT = {
+  complete: '输出完整', truncated: '输出被截断',
+  unknown: '结束原因未上报', not_executed: '未执行',
+};
 
 async function getJSON(url, options) {
   const res = await fetch(url, options);
@@ -319,23 +332,31 @@ function stepsTableHTML(back) {
       ? `<div class="small">${factTags(s.facts)}</div>` : '';
     const detail = (s.detail || facts)
       ? `<div class="muted small">${esc(s.detail || '')}</div>${facts}` : '';
-    return `<tr>
+    // 被截断的步骤必须一眼看得出来，不能和正常完成的步骤混在一起。
+    const cut = s.truncated
+      ? '<span class="trunc" title="该次调用因为长度上限被截断，写下来的不是完整输出">输出被截断</span>'
+      : '';
+    const reason = s.finish_reason
+      ? `${esc(s.finish_reason)}${s.truncated ? ' · 截断' : ''}`
+      : '—';
+    return `<tr${s.truncated ? ' class="cut"' : ''}>
       <td class="num">${s.step}</td>
       <td>${esc(s.action)}${detail}</td>
-      <td><span class="status s-${esc(s.status)}">${esc(STATUS_TEXT[s.status] || s.status)}</span></td>
+      <td><span class="status s-${esc(s.status)}">${esc(STATUS_TEXT[s.status] || s.status)}</span> ${cut}</td>
       <td class="small">${esc(dash(s.model))}</td>
       <td class="num">${s.input_tokens === null || s.input_tokens === undefined ? '—' : num(s.input_tokens)}</td>
       <td class="num">${s.output_tokens === null || s.output_tokens === undefined ? '—' : num(s.output_tokens)}</td>
       <td class="num">${s.cached_tokens === null || s.cached_tokens === undefined ? '—' : num(s.cached_tokens)}</td>
       <td class="num">${s.tool_calls || 0}</td>
       <td class="num">${s.latency_ms === null || s.latency_ms === undefined ? '—' : num(s.latency_ms)}</td>
+      <td class="small">${reason}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" class="muted">没有步骤</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="muted">没有步骤</td></tr>';
 
   return `<table><thead><tr>
     <th>Step</th><th>动作</th><th>状态</th><th>模型</th>
     <th class="num">输入</th><th class="num">输出</th><th class="num">缓存</th>
-    <th class="num">工具</th><th class="num">耗时</th>
+    <th class="num">工具</th><th class="num">耗时</th><th>结束原因</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -357,8 +378,25 @@ function totalsHTML(back) {
   ).join('');
 }
 
+// 截断的说明由红色横幅统一呈现——它必须最先被看到，记录 notes 里的同一条
+// 不再在下面重复一遍。前缀与 engine 写入的那两条 note 一致。
+const TRUNCATION_NOTE_PREFIXES = ['输出不完整：', 'provider 没有返回 finish_reason'];
+const isTruncationNote = (note) =>
+  TRUNCATION_NOTE_PREFIXES.some((prefix) => String(note).startsWith(prefix));
+
 function backNotesHTML(back) {
   let html = '';
+  // 截断提示放在最前面：它比任何 Token 数字都更先被看到。
+  if (back.output_evidence === 'truncated') {
+    const steps = (back.truncated_steps || []).join('、');
+    html += '<div class="banner b-cut">本次输出不完整：'
+      + `<b>第 ${esc(steps)} 步</b>的模型调用因为长度上限被截断（<code>finish_reason=length</code>）。`
+      + '这一步写下来的只是模型当时想说的前半段，<b>它的文字和 Token 读数都不能当作正常完整结果使用。</b>'
+      + '这不是模型给出的完整交付。</div>';
+  } else if (back.output_evidence === 'unknown') {
+    html += '<div class="banner b-warn">provider 没有返回 <code>finish_reason</code>：'
+      + '本次无法确认每个调用是正常结束还是被截断。Token 读数仍然真实，但<b>输出的完整性未获证明</b>。</div>';
+  }
   if (back.evidence_level === 'structure_only') {
     html += '<div class="banner b-warn">本次没有 provider，页面展示的是调用链结构，'
       + '所有 Token 字段为 null——没有数字可供编造。</div>';
@@ -369,9 +407,10 @@ function backNotesHTML(back) {
     html += '<div class="banner b-warn">只有部分模型调用返回了 usage，Token 合计不完整，只能作参考。</div>';
   }
   if (back.error) html += `<div class="banner b-bad">运行中断：${esc(back.error)}</div>`;
-  if ((back.notes || []).length) {
+  const notes = (back.notes || []).filter((n) => !isTruncationNote(n));
+  if (notes.length) {
     html += '<div class="banner b-info"><ul style="margin:0;padding-left:20px">'
-      + back.notes.map((n) => `<li>${esc(n)}</li>`).join('') + '</ul></div>';
+      + notes.map((n) => `<li>${esc(n)}</li>`).join('') + '</ul></div>';
   }
   return html;
 }
@@ -408,7 +447,9 @@ function renderBack(back) {
   $('backMeta').innerHTML =
     `run_id：<code>${esc(back.run_id)}</code>${exp} · ${esc(back.mode_label)} · `
     + `<span class="pill ${esc(back.evidence_level)}">${esc(EVIDENCE_TEXT[back.evidence_level] || back.evidence_level)}</span> `
-    + `<span class="pill ${esc(back.token_evidence)}">${esc(TOKEN_EVIDENCE_TEXT[back.token_evidence] || back.token_evidence)}</span> · `
+    + `<span class="pill ${esc(back.token_evidence)}">${esc(TOKEN_EVIDENCE_TEXT[back.token_evidence] || back.token_evidence)}</span> `
+    + `<span class="pill ${esc(back.output_evidence || 'not_executed')}">${esc(OUTPUT_EVIDENCE_TEXT[back.output_evidence] || back.output_evidence || '—')}</span> `
+    + `${back.freeze_ready ? '<span class="pill complete">适合课堂冻结</span>' : '<span class="pill not_executed">不适合课堂冻结</span>'} · `
     + `业务状态：${esc(RUN_STATUS_TEXT[back.run_status] || back.run_status)} · `
     + `记录时间：${esc(back.created_at)}<br>`
     + `provider：${esc(provider.base_url || '未配置')} · 模型：${esc(provider.model || '—')}`
@@ -485,13 +526,18 @@ function comparisonRows(experiment) {
   const header = `<thead><tr>
     <th>模式</th><th class="num">模型调用</th><th class="num">工具调用</th>
     <th class="num">输入 Token</th><th class="num">输出 Token</th><th class="num">缓存</th>
-    <th class="num">Token 合计</th><th>业务状态</th><th>Token 证据</th><th></th>
+    <th class="num">Token 合计</th><th>业务状态</th><th>Token 证据</th><th>输出完整性</th><th></th>
   </tr></thead>`;
 
   const rows = experiment.records.map((r) => {
     const open = state.expanded === r.run_id;
     const ready = r.classroom_ready;
-    const main = `<tr class="row" data-run="${esc(r.run_id)}">
+    // 两列分开念：Token 计量完整 ≠ 输出完整。某档被截断时必须看得出来。
+    const cut = r.output_evidence === 'truncated';
+    const outputCell = `<span class="pill ${esc(r.output_evidence || 'not_executed')}">`
+      + `${cut ? `输出被截断 ${num(r.truncated_calls)} 次` : esc(OUTPUT_EVIDENCE_TEXT[r.output_evidence] || '—')}</span>`
+      + (r.freeze_ready ? '' : ' <span class="pill not_executed">不可冻结</span>');
+    const main = `<tr class="row${cut ? ' cut' : ''}" data-run="${esc(r.run_id)}">
       <td><span class="mode-tag">${esc(r.mode)}</span>${esc((r.mode_label || '').slice(2))}</td>
       <td class="num">${num(r.model_calls)}</td>
       <td class="num">${num(r.tool_calls)}</td>
@@ -502,9 +548,10 @@ function comparisonRows(experiment) {
       <td>${esc(RUN_STATUS_TEXT[r.run_status] || r.run_status)}</td>
       <td><span class="pill ${esc(r.token_evidence)}">${esc(TOKEN_EVIDENCE_TEXT[r.token_evidence] || r.token_evidence)}</span>
         ${ready ? '' : '<span class="pill not_reported">不可用于 Token 实验</span>'}</td>
+      <td>${outputCell}</td>
       <td class="caret">${open ? '▾' : '▸'}</td>
     </tr>`;
-    return main + (open ? `<tr class="detail"><td colspan="10" id="detail-${esc(r.run_id)}">载入中…</td></tr>` : '');
+    return main + (open ? `<tr class="detail"><td colspan="11" id="detail-${esc(r.run_id)}">载入中…</td></tr>` : '');
   }).join('');
 
   return `<table class="cmp">${header}<tbody>${rows}</tbody></table>`;
@@ -555,9 +602,13 @@ function renderComparison() {
   if (!experiment) return;
   $('cmpWrap').innerHTML = comparisonRows(experiment);
   const ready = experiment.records.filter((r) => r.classroom_ready).length;
+  const freeze = experiment.records.filter((r) => r.freeze_ready).length;
+  const cut = experiment.records.filter((r) => r.output_evidence === 'truncated');
   $('expMeta').textContent =
     `${experiment.request_text ? '「' + experiment.request_text + '」· ' : ''}`
-    + `${experiment.records.length} 条记录，其中可用于 Token 实验 ${ready} 条`;
+    + `${experiment.records.length} 条记录，可用于 Token 实验 ${ready} 条，`
+    + `输出完整且可冻结 ${freeze} 条`
+    + (cut.length ? `｜${cut.map((r) => r.mode).join('/')} 档存在截断，不能作为完整结果使用` : '');
 
   $('cmpWrap').querySelectorAll('tr.row').forEach((row) => {
     row.onclick = () => {
@@ -577,8 +628,8 @@ async function hydrateDetail(runId) {
     const audit = auditHTML(back);
     cell.innerHTML =
       `<h4>调用链（${esc(back.mode_label)}，run_id ${esc(back.run_id.slice(0, 8))}）</h4>`
-      + stepsTableHTML(back)
       + backNotesHTML(back)
+      + stepsTableHTML(back)
       + `<h4>交付结果</h4><pre class="out">${esc(back.output || '（无交付文本）')}</pre>`
       + (audit ? `<h4>交付内容扫描</h4><div class="small">${audit}</div>` : '');
   } catch (err) {
@@ -601,6 +652,8 @@ async function loadRecords() {
         <button data-run="${esc(r.run_id)}">回放</button>
         <span class="pill ${esc(r.evidence_level)}">${esc(EVIDENCE_TEXT[r.evidence_level] || r.evidence_level)}</span>
         <span class="pill ${esc(r.token_evidence)}">${esc(TOKEN_EVIDENCE_TEXT[r.token_evidence] || r.token_evidence)}</span>
+        <span class="pill ${esc(r.output_evidence || 'not_executed')}">${esc(OUTPUT_EVIDENCE_TEXT[r.output_evidence] || '—')}</span>
+        ${r.output_evidence === 'truncated' ? `<span class="trunc">截断 ${num(r.truncated_calls)} 次</span>` : ''}
         <strong>${esc(r.mode_label)}</strong>
         <span>模型 ${num(r.model_calls)} · 工具 ${num(r.tool_calls)} · 输入 ${num(r.input_tokens)} · 输出 ${num(r.output_tokens)}</span>
         <span class="muted small">${esc(r.created_at)} · ${esc(r.run_id.slice(0, 8))}</span>
@@ -639,6 +692,9 @@ async function loadHealth() {
       + `<br>已保存 ${h.saved_runs} 份记录：其中真实模型调用 ${h.saved_live_runs} 份，`
       + `<b>可用于 Token 实验 ${h.classroom_ready_runs} 份</b>`
       + (h.unmeasured_live_runs ? `（另有 ${h.unmeasured_live_runs} 份真实调用但无 Token 读数）` : '')
+      + `<br>其中<b>输出完整、适合课堂冻结 ${h.freeze_ready_runs ?? 0} 份</b>`
+      + (h.truncated_live_runs
+        ? `（有 ${h.truncated_live_runs} 份存在输出截断：Token 计量完整，但输出不完整）` : '')
       + (h.notes && h.notes.length
         ? '<br><span class="small">' + h.notes.map(esc).join('<br>') + '</span>' : '');
     $('runHint').textContent = p.configured ? '' : '当前为结构示例模式';

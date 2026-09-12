@@ -32,7 +32,7 @@
     <div class="statusGrid">
       <div class="status" id="sProvider"><div class="k">Provider</div><div class="v">读取中…</div></div>
       <div class="status" id="sModel"><div class="k">模型</div><div class="v">deepseek-flash</div></div>
-      <div class="status" id="sReady"><div class="k">Token 可用记录</div><div class="v">读取中…</div></div>
+      <div class="status" id="sReady"><div class="k">Token 可用 / 可冻结</div><div class="v">读取中…</div></div>
       <div class="status" id="sExperiment"><div class="k">最近对照实验</div><div class="v">读取中…</div></div>
     </div>
   </header>
@@ -62,7 +62,7 @@ python scripts/record_runs.py
 uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
       </div>
     </div>
-    <div class="notice small">录制脚本最后必须出现：<strong>课堂可用于 Token 实验的记录：4/4 档</strong>。否则不要把这组数字用于课件或课堂对比。</div>
+    <div class="notice small">录制脚本最后必须出现：<strong>课堂可用于 Token 实验的记录：4/4 档</strong>，并且<strong>适合课堂冻结的档位：4/4</strong>。前者只说明 Token 计量完整；只要有任何一档出现 <code>finish_reason=length</code> 截断，输出就不完整，不能拿这组数字做课件或课堂对比。</div>
   </section>
 
   <section class="card" id="verify">
@@ -71,7 +71,7 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
     <div class="checks" id="checks">
       <label class="check"><input type="checkbox" data-k="tests">pytest 全部通过</label>
       <label class="check"><input type="checkbox" data-k="provider">Provider 显示可用，模型为 deepseek-flash</label>
-      <label class="check"><input type="checkbox" data-k="four">最新实验 A/B/C/D 四档齐全且 Token 证据可用</label>
+      <label class="check"><input type="checkbox" data-k="four">最新实验 A/B/C/D 四档齐全、Token 证据可用，且无 finish_reason=length 截断</label>
       <label class="check"><input type="checkbox" data-k="demo1">Demo 1 主区域是本次实际运行结果，不是预设基准</label>
       <label class="check"><input type="checkbox" data-k="facts">船期显示“有结果但未核验”，运价/舱位显示无结果</label>
       <label class="check"><input type="checkbox" data-k="sameRun">Demo 1 和 Demo 2 能用同一 run_id 翻面</label>
@@ -100,6 +100,7 @@ uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
     <div class="step"><div class="n">3</div><div>再看系统侧：C 档是 <strong>6 个步骤、5 次模型调用、3 次工具调用</strong>。</div></div>
     <div class="land">一件业务任务，不等于一次模型调用。</div>
     <p class="muted small">最后才落到输入 Token / 输出 Token / 缓存 / 总量。任务数 ≠ 调用次数 ≠ Token 数。</p>
+    <p class="muted small">步骤表最后一列是 provider 报的 <code>finish_reason</code>，也就是「这次调用为什么结束」。若出现红色的 <strong>输出被截断</strong>，说明那一步撞到了输出上限、只写了一半：<strong>它的文字和 Token 都不能当正常完整结果讲</strong>，课件的冻结实验必须整组没有这一标记。</p>
   </section>
 
   <section class="card" id="compare">
@@ -139,17 +140,22 @@ async function refresh(){
     const h=await j('/api/health');const p=h.provider||{};
     status($('sProvider'),h.provider_ready?'可用':'未配置',h.provider_ready?'good':'warn');
     status($('sModel'),p.model||'—',p.model==='deepseek-flash'?'good':'warn');
-    status($('sReady'),String(h.classroom_ready_runs??0),(h.classroom_ready_runs||0)>0?'good':'warn');
+    // Token 计量完整 ≠ 输出完整：两个数字都报，冻结要求两者同时成立。
+    const ready=h.classroom_ready_runs??0,freeze=h.freeze_ready_runs??0;
+    status($('sReady'),`${ready} / ${freeze}`,(freeze>0&&freeze===ready)?'good':'warn');
     $('healthNotes').innerHTML=(h.notes||[]).map(x=>`<p>${esc(x)}</p>`).join('');
   }catch(e){status($('sProvider'),'读取失败','bad');$('healthNotes').textContent=e.message}
   try{
     const x=await j('/api/experiments');const ex=(x.experiments||[]).find(e=>e.experiment_id);
     if(!ex){status($('sExperiment'),'暂无','warn');$('latestExperiment').textContent='还没有保存的 A/B/C/D 对照实验。';return}
     const rows=ex.records||[],ready=rows.filter(r=>r.classroom_ready).length;
-    status($('sExperiment'),`${ready}/${rows.length} 可用`,ready===rows.length&&rows.length>=4?'good':'warn');
+    const frozen=rows.filter(r=>r.freeze_ready).length,cut=rows.filter(r=>r.output_evidence==='truncated');
+    status($('sExperiment'),`${frozen}/${rows.length} 可冻结`,frozen===rows.length&&rows.length>=4?'good':'warn');
     $('latestExperiment').innerHTML=`最近 experiment_id：<code>${esc(ex.experiment_id)}</code> · ${esc(ex.created_at||'')}<br>`+
-      `<table><thead><tr><th>档</th><th>模型调用</th><th>工具调用</th><th>输入</th><th>输出</th><th>合计</th><th>Token证据</th></tr></thead><tbody>`+
-      rows.map(r=>`<tr><td><strong>${esc(r.mode)}</strong></td><td>${r.model_calls??'—'}</td><td>${r.tool_calls??'—'}</td><td>${r.input_tokens??'—'}</td><td>${r.output_tokens??'—'}</td><td>${r.total_tokens??'—'}</td><td>${r.classroom_ready?'<span class="pill">可用</span>':'不可用'}</td></tr>`).join('')+`</tbody></table>`;
+      `<table><thead><tr><th>档</th><th>模型调用</th><th>工具调用</th><th>输入</th><th>输出</th><th>合计</th><th>Token证据</th><th>输出完整性</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td><strong>${esc(r.mode)}</strong></td><td>${r.model_calls??'—'}</td><td>${r.tool_calls??'—'}</td><td>${r.input_tokens??'—'}</td><td>${r.output_tokens??'—'}</td><td>${r.total_tokens??'—'}</td><td>${r.classroom_ready?'<span class="pill">可用</span>':'不可用'}</td><td>${r.output_evidence==='truncated'?`<span class="pill">截断 ${r.truncated_calls??''} 次</span>`:(r.freeze_ready?'<span class="pill">完整</span>':esc(r.output_evidence||'—'))}</td></tr>`).join('')+`</tbody></table>`+
+      (cut.length?`<p class="small">⚠ ${cut.map(r=>r.mode).join('/')} 档存在输出截断（finish_reason=length）：Token 读数完整但输出不完整，不要把这组数字当完整结果讲，重跑后再用。</p>`:'')+
+      `Token 可用 ${ready}/${rows.length}，输出完整且可冻结 ${frozen}/${rows.length}。`;
   }catch(e){status($('sExperiment'),'读取失败','bad');$('latestExperiment').textContent=e.message}
 }
 $('refresh').onclick=refresh;$('classroom').onclick=()=>{document.body.classList.toggle('classroom');$('classroom').textContent=document.body.classList.contains('classroom')?'退出课堂模式':'课堂模式'};

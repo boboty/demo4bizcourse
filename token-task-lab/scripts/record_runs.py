@@ -76,6 +76,7 @@ def main() -> int:
     rows = []
     failures = []
     unmeasured = []
+    truncated = []
     for mode in modes:
         print(f"运行 {mode} ...", end=" ", flush=True)
         record = engine.execute(
@@ -102,23 +103,73 @@ def main() -> int:
                 f"    警告：token_evidence={record.token_evidence}，"
                 "本次模型真实运行，但不能作为 Token 实验记录  ——已保存并标记"
             )
+        if record.output_evidence == "truncated":
+            # 计量完整但输出不完整：数字是真的，内容却只有前半段。
+            truncated.append(record)
+            print(
+                "    警告：第 "
+                + "、".join(str(index) for index in record.truncated_steps)
+                + " 步被长度上限截断（finish_reason=length），输出不完整"
+                "  ——已保存并标记，不可用于课堂冻结"
+            )
+        elif record.output_evidence == "unknown":
+            print("    提示：provider 未上报 finish_reason，输出完整性无法确认  ——已保存并标记")
         rows.append((record, store.save(record)))
 
     if rows:
         print("\n已保存：")
         for record, path in rows:
             mark = "" if record.classroom_ready else f"  [{record.token_evidence}]"
+            if record.output_evidence == "truncated":
+                mark += f"  [输出被截断 {len(record.truncated_steps)} 次]"
+            elif record.output_evidence == "unknown":
+                mark += "  [finish_reason 未上报]"
             print(
                 f"  [{record.mode}] {record.run_id}{mark}"
                 f"  ->  {path.relative_to(store.root.parent)}"
             )
         ready = [record for record, _ in rows if record.classroom_ready]
+        frozen = [record for record, _ in rows if record.freeze_ready]
         print(
             f"\n课堂可用于 Token 实验的记录：{len(ready)}/{len(modes)} 档"
             f"（experiment_id={experiment_id}）"
         )
+        # 计量完整与输出完整是两个判断，分开报：可冻结要求两者同时成立。
+        print(
+            f"适合课堂冻结的档位：{len(frozen)}/{len(modes)} 档"
+            "（Token 已计量 且 无 finish_reason=length 截断）"
+        )
+
+    # 对比表放在成败判定之前：截断或失败时更需要看见这张表，而不是被跳过。
+    live = [record for record, _ in rows if record.evidence_level == "live"]
+    if live:
+        print("\n各档对比（全部来自本次真实调用）：")
+        header = (
+            f"{'档位':<4}{'模型调用':>8}{'工具调用':>8}{'输入':>12}{'输出':>10}"
+            f"{'缓存':>10}{'耗时ms':>10}{'截断':>6}"
+        )
+        print(header)
+        print("-" * len(header))
+        for record in live:
+            u = record.usage
+            print(
+                f"{record.mode:<4}{u.model_calls:>8}{u.tool_calls:>8}"
+                f"{fmt(u.input_tokens):>12}{fmt(u.output_tokens):>10}"
+                f"{fmt(u.cached_tokens):>10}{fmt(u.latency_ms):>10}"
+                f"{len(record.truncated_steps):>6}"
+            )
+        print("截断 > 0 的档位输出不完整，不要作为完整结果使用。")
 
     exit_code = 0
+    if truncated:
+        print(
+            f"\n有 {len(truncated)} 档输出被长度上限截断（{', '.join(r.mode for r in truncated)}）："
+            "Token 读数完整，但那几次调用只写了前半段。\n"
+            "这组记录已保存并标记为不可冻结，不要用作课件数字；"
+            "请按提示里的字数上限收紧该步骤的提示词后重跑。",
+            file=sys.stderr,
+        )
+        exit_code = 1
     if failures:
         print(
             f"\n有 {len(failures)} 档失败未保存（{', '.join(r.mode for r in failures)}）。"
@@ -139,21 +190,6 @@ def main() -> int:
     if exit_code:
         return exit_code
 
-    live = [record for record, _ in rows if record.evidence_level == "live"]
-
-    live = [record for record, _ in rows if record.evidence_level == "live"]
-    if live:
-        print("\n各档对比（全部来自本次真实调用）：")
-        header = f"{'档位':<4}{'模型调用':>8}{'工具调用':>8}{'输入':>12}{'输出':>10}{'缓存':>10}{'耗时ms':>10}"
-        print(header)
-        print("-" * len(header))
-        for record in live:
-            u = record.usage
-            print(
-                f"{record.mode:<4}{u.model_calls:>8}{u.tool_calls:>8}"
-                f"{fmt(u.input_tokens):>12}{fmt(u.output_tokens):>10}"
-                f"{fmt(u.cached_tokens):>10}{fmt(u.latency_ms):>10}"
-            )
     return 0
 
 

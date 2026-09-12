@@ -17,6 +17,7 @@ from typing import Any, Iterable
 import httpx
 
 from .config import ProviderConfig
+from .models import TRUNCATING_FINISH_REASONS
 
 
 class ProviderError(RuntimeError):
@@ -32,6 +33,14 @@ class ProviderResult:
     cached_tokens: int | None
     latency_ms: int
     usage_raw: dict[str, Any] = field(default_factory=dict)
+    # Why the completion stopped, as the provider reported it. ``None`` means
+    # the gateway did not say — which is not the same as "stopped normally".
+    finish_reason: str | None = None
+
+    @property
+    def truncated(self) -> bool:
+        """True when the output cap ended the call, so `text` is a prefix."""
+        return self.finish_reason in TRUNCATING_FINISH_REASONS
 
 
 # Different OpenAI-compatible gateways spell cached-prompt accounting
@@ -86,6 +95,22 @@ def parse_usage(usage: Any) -> tuple[int | None, int | None, int | None]:
         cached_tokens = _first_int(usage, _CACHED_TOKEN_KEYS)
 
     return input_tokens, output_tokens, cached_tokens
+
+
+def parse_finish_reason(choice: Any) -> str | None:
+    """How the provider says this completion ended, or ``None`` if it is silent.
+
+    Only the value the provider actually sent is returned — a missing or blank
+    ``finish_reason`` stays ``None``. Defaulting it to ``stop`` would turn "we
+    were not told" into "it finished", which is the one thing this field exists
+    to distinguish.
+    """
+    if not isinstance(choice, dict):
+        return None
+    value = choice.get("finish_reason")
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value.strip().lower()
 
 
 class OpenAICompatibleProvider:
@@ -181,4 +206,5 @@ class OpenAICompatibleProvider:
             cached_tokens=cached_tokens,
             latency_ms=latency_ms,
             usage_raw=usage if isinstance(usage, dict) else {},
+            finish_reason=parse_finish_reason(first),
         )
