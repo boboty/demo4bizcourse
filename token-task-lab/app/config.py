@@ -1,7 +1,8 @@
-"""Provider and runtime configuration, read from the environment only.
+"""Provider and runtime configuration for the classroom lab.
 
-Secrets never live in the repo: `LLM_API_KEY` is read here, forwarded to the
-provider as an Authorization header, and never written into a run record.
+The classroom provider is intentionally fixed to DeepSeek. The only required
+secret is ``LLM_API_KEY``; base URL and model are course assets, not classroom
+setup knobs.
 """
 
 from __future__ import annotations
@@ -12,6 +13,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNS_DIR = ROOT / "runs"
+
+# Classroom defaults. Keep these in one place so the runbook and health page can
+# clearly show what will be called without asking the instructor to configure it.
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-flash"
 
 TRUTHY = {"1", "true", "yes", "on"}
 
@@ -38,13 +44,15 @@ def _env_int(name: str, default: int) -> int:
 class ProviderConfig:
     """OpenAI-compatible endpoint settings.
 
-    `base_url` is expected to include the API version segment, e.g.
-    ``https://api.openai.com/v1`` — the client appends ``/chat/completions``.
+    ``base_url`` and ``model`` default to the fixed DeepSeek classroom values.
+    Tests and local experiments may still construct this dataclass with explicit
+    values, but ``load_provider_config`` deliberately does not read env overrides
+    for them.
     """
 
-    base_url: str = ""
+    base_url: str = DEEPSEEK_BASE_URL
     api_key: str = ""
-    model: str = ""
+    model: str = DEEPSEEK_MODEL
     strong_model: str | None = None
     timeout_s: float = 60.0
     temperature: float = 0.2
@@ -56,14 +64,9 @@ class ProviderConfig:
 
     @property
     def missing_settings(self) -> list[str]:
-        missing = []
-        if not self.base_url:
-            missing.append("LLM_BASE_URL")
-        if not self.api_key:
-            missing.append("LLM_API_KEY")
-        if not self.model:
-            missing.append("LLM_MODEL")
-        return missing
+        # Base URL and model are fixed by the course. The instructor only needs
+        # to provide the DeepSeek API key.
+        return [] if self.api_key else ["LLM_API_KEY"]
 
     def public(self) -> dict:
         """Config safe to hand to the browser — deliberately omits the key."""
@@ -80,9 +83,9 @@ class ProviderConfig:
 
 def load_provider_config() -> ProviderConfig:
     return ProviderConfig(
-        base_url=_env("LLM_BASE_URL"),
+        base_url=DEEPSEEK_BASE_URL,
         api_key=_env("LLM_API_KEY"),
-        model=_env("LLM_MODEL"),
+        model=DEEPSEEK_MODEL,
         strong_model=_env("LLM_STRONG_MODEL") or None,
         timeout_s=_env_float("LLM_TIMEOUT_S", 60.0),
         temperature=_env_float("LLM_TEMPERATURE", 0.2),
