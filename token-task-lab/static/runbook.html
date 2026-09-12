@@ -41,7 +41,7 @@
 
   <section class="card prepOnly" id="prep">
     <h2>1｜环境准备：课堂只填 API Key</h2>
-    <p class="muted">代码固定使用 <code>https://api.deepseek.com</code> 和 <code>deepseek-flash</code>。不要在课堂临时切模型。</p>
+    <p class="muted">代码固定使用 <code>https://api.deepseek.com</code> 和 <code>deepseek-flash</code>。本目录的 <code>.env</code> 会自动加载，不需要额外 export，也不需要 <code>--env-file</code>。</p>
     <div class="two">
       <div>
         <h3>首次准备</h3>
@@ -50,13 +50,14 @@ cd token-task-lab
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
+# 编辑 .env，只填 LLM_API_KEY
 pytest -q</pre><button class="copy">复制</button></div>
       </div>
       <div>
         <h3>每次上课前</h3>
         <div class="cmd"><pre>cd token-task-lab
 source .venv/bin/activate
-export LLM_API_KEY="填你的 DeepSeek API Key"
 python scripts/record_runs.py
 uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
       </div>
