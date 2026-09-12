@@ -1,60 +1,426 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Token Task Lab</title>
-  <style>
-    body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;margin:0;background:#f5f6f2;color:#17201c}
-    main{max-width:1120px;margin:0 auto;padding:36px 24px 60px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
-    h1{margin:0 0 8px;font-size:34px}.muted{color:#69736e}.card{background:white;border:1px solid #e3e6e0;border-radius:18px;padding:20px;margin-top:18px}
-    textarea{width:100%;min-height:86px;padding:12px;border:1px solid #ccd3ce;border-radius:10px;box-sizing:border-box;font:inherit}
-    button{border:0;border-radius:10px;padding:10px 15px;cursor:pointer}.primary{background:#173f32;color:white}.mode{background:#e9eeeb}.mode.active{background:#cfe2d8}
-    .modes{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tag{display:inline-block;background:#eef2ef;border-radius:999px;padding:4px 9px;margin:3px}
-    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid #e7e9e6;font-size:14px}.warn{color:#8b4b00}.back{display:none}.back.show{display:block}
-    .banner{background:#fff6df;border:1px solid #ead8a5;border-radius:12px;padding:12px 14px;margin-top:14px}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{display:block}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Token Task Lab</title>
+<style>
+  :root{
+    --ink:#151d19; --muted:#5f6b64; --line:#dfe4de; --bg:#f4f6f2; --card:#ffffff;
+    --accent:#14463a; --accent-soft:#e2ede7; --warn:#8a4b00; --warn-bg:#fff6e2; --warn-line:#e8d59c;
+    --bad:#8c2f2f; --bad-bg:#fdf0ef; --bad-line:#eccfcc; --good:#1c5c46;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB",sans-serif;
+       font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  main{max-width:1180px;margin:0 auto;padding:32px 24px 72px}
+  h1{margin:0;font-size:30px;letter-spacing:-.01em}
+  h2{margin:0 0 14px;font-size:19px}
+  h3{margin:22px 0 8px;font-size:15px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  p{margin:8px 0}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  textarea{width:100%;min-height:84px;padding:12px 14px;border:1px solid #ccd3ce;border-radius:10px;
+           font:inherit;resize:vertical;background:#fcfdfc}
+  textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  button{font:inherit;border:1px solid transparent;border-radius:10px;padding:9px 15px;cursor:pointer;
+         background:#e9eeeb;color:var(--ink);transition:background .12s}
+  button:hover{background:#dfe6e1}
+  button.primary{background:var(--accent);color:#fff;font-weight:600;padding:11px 22px}
+  button.primary:hover{background:#0e3529}
+  button.primary:disabled{opacity:.55;cursor:progress}
+  .modes{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+  .mode.active{background:var(--accent-soft);border-color:#a9c6b8;font-weight:600;color:var(--accent)}
+  .tag{display:inline-block;background:#eef2ef;border:1px solid #e2e8e3;border-radius:999px;
+       padding:4px 11px;margin:3px 4px 3px 0;font-size:13.5px}
+  .tag.miss{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+  .tag.gate{background:#eaf1fb;border-color:#cfdff4;color:#24507f}
+  .tag.dep{background:#f2eefb;border-color:#ded3f3;color:#4c3b7a}
+  .tag.dep.off{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+  ol.next{margin:6px 0 0;padding-left:22px}
+  ol.next li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #edf0ec;vertical-align:top}
+  th{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .wrap{overflow-x:auto}
+  .status{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12.5px;white-space:nowrap}
+  .s-ok{background:#e8f3ed;color:var(--good)}
+  .s-blocked{background:var(--warn-bg);color:var(--warn)}
+  .s-waiting_human{background:#eaf1fb;color:#24507f}
+  .s-error{background:var(--bad-bg);color:var(--bad)}
+  .s-skipped,.s-not_executed{background:#eef0ee;color:var(--muted)}
+  .banner{border-radius:12px;padding:12px 15px;margin-top:14px;font-size:14.5px}
+  .b-warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:#5f3600}
+  .b-bad{background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad)}
+  .b-good{background:#e8f3ed;border:1px solid #c7e0d3;color:var(--good)}
+  .b-info{background:#eef2fb;border:1px solid #d3dff2;color:#2a4a75}
+  .back{display:none}
+  .back.show{display:block}
+  .totals{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 18px}
+  .total{flex:1 1 150px;background:#f7f9f7;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .total .k{font-size:12.5px;color:var(--muted);letter-spacing:.03em}
+  .total .v{font-size:23px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+  .total .v small{font-size:13px;font-weight:400;color:var(--muted)}
+  pre.out{background:#f7f9f7;border:1px solid var(--line);border-radius:12px;padding:14px;
+          white-space:pre-wrap;word-break:break-word;font-size:14px;margin:0;max-height:420px;overflow:auto}
+  .audit li{margin:3px 0}
+  .audit code{background:#f2f4f1;border-radius:5px;padding:1px 6px;font-size:13px}
+  .rec{display:flex;gap:12px;align-items:baseline;padding:9px 4px;border-bottom:1px solid #edf0ec;flex-wrap:wrap}
+  .rec:last-child{border-bottom:0}
+  .rec button{background:none;border:1px solid var(--line);padding:5px 12px;font-size:13px}
+  .rec button:hover{background:var(--accent-soft);border-color:#a9c6b8}
+  .pill{font-size:12px;border-radius:999px;padding:2px 9px;background:#eef0ee;color:var(--muted)}
+  .pill.live{background:#e8f3ed;color:var(--good)}
+  .pill.structure_only{background:var(--warn-bg);color:var(--warn)}
+  select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid #ccd3ce;background:#fcfdfc}
+  @media(max-width:820px){.row,.row3{grid-template-columns:1fr}main{padding:20px 16px 56px}}
+</style>
 </head>
 <body>
 <main>
-  <div class="top"><div><h1>Token Task Lab</h1><div class="muted">同一件企业任务：先看业务正面，再翻到运行背面。</div></div><button id="backBtn">查看运行背面</button></div>
-  <div class="banner">当前是教学骨架版本：不伪造船期、运价或 Token 数字。真实 provider 接入后由实际运行日志填充。</div>
+  <div class="top">
+    <div>
+      <h1>Token Task Lab</h1>
+      <div class="muted">同一件企业任务：先看业务正面，再翻到运行背面。</div>
+    </div>
+    <div style="text-align:right">
+      <button id="backBtn">查看运行背面</button>
+      <div class="muted small" id="providerLine" style="margin-top:6px">读取 provider 状态…</div>
+    </div>
+  </div>
+
+  <div id="health" class="banner b-info">正在读取运行环境…</div>
 
   <section class="card">
     <strong>客户原话</strong>
-    <textarea id="request">天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。</textarea>
+    <textarea id="request" spellcheck="false"></textarea>
     <div class="modes">
-      <button class="mode" data-mode="A">A 直接回答</button><button class="mode" data-mode="B">B 全量上下文</button><button class="mode active" data-mode="C">C 任务链</button><button class="mode" data-mode="D">D 低效版本</button>
+      <button class="mode" data-mode="A">A 直接回答</button>
+      <button class="mode" data-mode="B">B 全量上下文</button>
+      <button class="mode active" data-mode="C">C 任务链</button>
+      <button class="mode" data-mode="D">D 低效版本</button>
     </div>
-    <button class="primary" id="runBtn">生成一次教学运行</button>
+    <button class="primary" id="runBtn">运行这一次</button>
+    <span class="muted small" id="runHint" style="margin-left:10px"></span>
   </section>
 
+  <!-- Demo 1：业务正面。本区块在 DOM 里就不含任何 Token 数字。 -->
   <section id="front" class="card">
     <h2>业务正面｜Demo 1</h2>
-    <div class="grid"><div><strong>已知条件</strong><div id="known"></div></div><div><strong>缺失条件</strong><div id="missing"></div></div></div>
-    <p><strong>任务：</strong><span id="task">尚未运行</span></p>
-    <p><strong>人工确认点：</strong><span id="gates">—</span></p>
-    <p class="muted">本页故意不展示 Token。第二讲只看任务能否被接住、哪里需要停下来。</p>
+    <div id="frontEmpty" class="muted">尚未运行。选择 A/B/C/D 后点「运行这一次」，或从下方回放一份已验证记录。</div>
+    <div id="frontBody" hidden>
+      <h3>原始需求</h3>
+      <p id="fRequest">—</p>
+      <h3>任务理解</h3>
+      <p id="fTask">—</p>
+      <div class="row">
+        <div><h3>已知条件</h3><div id="fKnown"></div></div>
+        <div><h3>缺失条件</h3><div id="fMissing"></div></div>
+      </div>
+      <h3>下一步动作</h3>
+      <ol class="next" id="fNext"></ol>
+      <h3>工具 / 资料依赖</h3>
+      <div id="fDeps"></div>
+      <h3>人工确认点</h3>
+      <div id="fGates"></div>
+      <p class="muted small" style="margin-top:18px">
+        本页刻意不展示 Token。第二讲只看任务能否被接住、哪里需要停下来。
+      </p>
+    </div>
   </section>
 
+  <!-- Demo 2：运行背面。内容只在「查看运行背面」打开时才写入。 -->
   <section id="back" class="card back">
     <h2>运行背面｜Demo 2</h2>
-    <p><strong>run_id：</strong><span id="runId">—</span></p>
-    <table><thead><tr><th>Step</th><th>动作</th><th>状态</th><th>模型</th><th>输入</th><th>输出</th><th>缓存</th><th>工具</th><th>耗时</th></tr></thead><tbody id="steps"></tbody></table>
-    <p class="muted" id="usage">真实运行后在这里汇总模型调用、工具调用与 Token。</p>
+    <div id="backMeta" class="muted small"></div>
+    <div class="totals" id="totals"></div>
+    <div id="backNotes"></div>
+    <h3>调用步骤</h3>
+    <div class="wrap">
+      <table>
+        <thead><tr>
+          <th>Step</th><th>动作</th><th>状态</th><th>模型</th>
+          <th style="text-align:right">输入</th><th style="text-align:right">输出</th>
+          <th style="text-align:right">缓存</th><th style="text-align:right">工具</th>
+          <th style="text-align:right">耗时</th>
+        </tr></thead>
+        <tbody id="steps"></tbody>
+      </table>
+    </div>
+    <h3>结果</h3>
+    <pre class="out" id="output">—</pre>
+    <div id="auditWrap" hidden>
+      <h3>交付内容扫描</h3>
+      <div id="audit" class="small"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>已保存的运行记录</h2>
+    <p class="muted small">
+      课堂默认回放这里已验证的记录；现场真机运行只是增强。
+      <button id="reloadBtn" style="margin-left:8px">刷新列表</button>
+    </p>
+    <div id="records" class="muted small">读取中…</div>
   </section>
 </main>
+
 <script>
-let mode='C', current=null;
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode});
-function tags(items){return items.map(x=>`<span class="tag">${x}</span>`).join('')}
-async function run(){const r=await fetch('/api/runs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario:'tianjin-freight',mode,request_text:document.querySelector('#request').value})});current=await r.json();
-  known.innerHTML=tags(current.known);missing.innerHTML=tags(current.missing);task.textContent=current.task;gates.textContent=current.human_gates.join(' / ');runId.textContent=current.run_id;
-  steps.innerHTML=current.steps.map(s=>`<tr><td>${s.step}</td><td>${s.action}</td><td>${s.status}</td><td>${s.model??'—'}</td><td>${s.input_tokens??'—'}</td><td>${s.output_tokens??'—'}</td><td>${s.cached_tokens??'—'}</td><td>${s.tool_calls}</td><td>${s.latency_ms??'—'}</td></tr>`).join('');
-  usage.textContent=current.note;
+// 服务端把每次运行拆成 front / back 两半：front 里根本不含 Token 字段。
+const state = { mode: 'C', scenario: 'tianjin-freight', front: null, back: null, savedPath: null, source: null };
+
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dash = (v) => (v === null || v === undefined ? '—' : v);
+const num = (v) => (v === null || v === undefined ? '—' : Number(v).toLocaleString('en-US'));
+
+const STATUS_TEXT = {
+  ok: '完成', blocked: '被阻塞', waiting_human: '待人工确认',
+  error: '出错', skipped: '未执行', not_executed: '未执行',
+};
+const RUN_STATUS_TEXT = {
+  ok: '正常完成', waiting_human: '停在人工确认点', blocked: '被阻塞',
+  error: '执行出错', not_executed: '未执行（结构示例）',
+};
+const EVIDENCE_TEXT = {
+  live: '真实运行记录', structure_only: '结构示例（无 provider）',
+};
+
+async function getJSON(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.json();
 }
-runBtn.onclick=run;backBtn.onclick=()=>back.classList.toggle('show');
+
+/* ---------- Demo 1：业务正面 ---------- */
+function renderFront(rec) {
+  $('frontEmpty').hidden = true;
+  $('frontBody').hidden = false;
+  $('fRequest').textContent = rec.request_text;
+  $('fTask').textContent = rec.task || '—';
+  $('fKnown').innerHTML = (rec.known || []).map((x) => `<span class="tag">${esc(x)}</span>`).join('') || '—';
+  $('fMissing').innerHTML = (rec.missing || []).map((x) => `<span class="tag miss">${esc(x)}</span>`).join('') || '—';
+  $('fNext').innerHTML = (rec.next_actions || []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>—</li>';
+  $('fGates').innerHTML = (rec.human_gates || []).map((x) => `<span class="tag gate">${esc(x)}</span>`).join('') || '—';
+
+  $('fDeps').innerHTML = (rec.dependencies || []).map((d) => {
+    const off = d.available === false ? ' off' : '';
+    const state = d.available === false ? '无可用结果' : '有结果';
+    const trust = d.verified ? '已核验' : '未核验';
+    return `<span class="tag dep${off}" title="${esc(d.description || '')}">`
+      + `${esc(d.kind === 'tool' ? '工具' : '资料')}·${esc(d.title)} · ${state} · ${trust}</span>`;
+  }).join('') || '—';
+}
+
+/* ---------- Demo 2：运行背面 ---------- */
+function clearBack() {
+  $('backMeta').textContent = '';
+  $('totals').innerHTML = '';
+  $('backNotes').innerHTML = '';
+  $('steps').innerHTML = '';
+  $('output').textContent = '—';
+  $('auditWrap').hidden = true;
+  $('audit').innerHTML = '';
+}
+
+function renderBack(rec) {
+  const u = rec.usage || {};
+  const provider = rec.provider || {};
+  const saved = state.source === 'run' && state.savedPath ? ' · 已保存' : '';
+
+  $('backMeta').innerHTML =
+    `run_id：<code>${esc(rec.run_id)}</code> · ${esc(rec.mode_label)} · `
+    + `<span class="pill ${esc(rec.evidence_level)}">${esc(EVIDENCE_TEXT[rec.evidence_level] || rec.evidence_level)}</span> · `
+    + `业务状态：${esc(RUN_STATUS_TEXT[rec.run_status] || rec.run_status)} · `
+    + `记录时间：${esc(rec.created_at)}<br>`
+    + `provider：${esc(provider.base_url || '未配置')} · 模型：${esc(provider.model || '—')}`
+    + `${rec.mode === 'D' && provider.strong_model ? ' · 强模型：' + esc(provider.strong_model) : ''}`
+    + `${saved}`;
+
+  // 页首对照：业务侧一件任务，系统侧的实际调用与合计。
+  const cacheCell = u.cached_tokens === null || u.cached_tokens === undefined
+    ? '<small>provider 未返回</small>' : num(u.cached_tokens);
+  $('totals').innerHTML = [
+    ['业务侧 任务数', '1', '件'],
+    ['系统侧 模型调用', num(u.model_calls), '次'],
+    ['系统侧 工具调用', num(u.tool_calls), '次'],
+    ['输入 Token', num(u.input_tokens), ''],
+    ['输出 Token', num(u.output_tokens), ''],
+    ['缓存 Token', cacheCell, ''],
+    ['Token 合计', num(u.total_tokens), ''],
+    ['总耗时', num(u.latency_ms), 'ms'],
+  ].map(([k, v, unit]) =>
+    `<div class="total"><div class="k">${k}</div><div class="v">${v}${unit ? ` <small>${unit}</small>` : ''}</div></div>`
+  ).join('');
+
+  const banner = rec.evidence_level === 'structure_only'
+    ? '<div class="banner b-warn">本次没有 provider，页面展示的是调用链结构，所有 Token 字段为 null——没有数字可供编造。</div>'
+    : '';
+  const error = rec.error ? `<div class="banner b-bad">运行中断：${esc(rec.error)}</div>` : '';
+  const notes = (rec.notes || []).length
+    ? `<div class="banner b-info"><ul style="margin:0;padding-left:20px">`
+      + rec.notes.map((n) => `<li>${esc(n)}</li>`).join('') + `</ul></div>`
+    : '';
+  $('backNotes').innerHTML = banner + error + notes;
+
+  $('steps').innerHTML = (rec.steps || []).map((s) => `
+    <tr>
+      <td class="num">${s.step}</td>
+      <td>${esc(s.action)}${s.detail ? `<div class="muted small">${esc(s.detail)}</div>` : ''}</td>
+      <td><span class="status s-${esc(s.status)}">${esc(STATUS_TEXT[s.status] || s.status)}</span></td>
+      <td class="small">${esc(dash(s.model))}</td>
+      <td class="num">${s.input_tokens === null || s.input_tokens === undefined ? '—' : num(s.input_tokens)}</td>
+      <td class="num">${s.output_tokens === null || s.output_tokens === undefined ? '—' : num(s.output_tokens)}</td>
+      <td class="num">${s.cached_tokens === null || s.cached_tokens === undefined ? '—' : num(s.cached_tokens)}</td>
+      <td class="num">${s.tool_calls || 0}</td>
+      <td class="num">${s.latency_ms === null || s.latency_ms === undefined ? '—' : num(s.latency_ms)}</td>
+    </tr>`).join('') || '<tr><td colspan="9" class="muted">没有步骤</td></tr>';
+
+  $('output').textContent = rec.output || '（本次运行没有产出交付文本）';
+
+  const audit = rec.claim_audit;
+  if (audit && audit.verdict !== 'no_output') {
+    $('auditWrap').hidden = false;
+    const list = (label, items, cls) => items && items.length
+      ? `<div>${label}：${items.map((x) => `<code>${esc(x)}</code>`).join(' ')}</div>` : '';
+    $('audit').innerHTML =
+      `<p class="muted">${esc(audit.disclaimer)}</p>`
+      + list('疑似金额表述', audit.price_mentions)
+      + list('疑似船期/航次表述', audit.schedule_mentions)
+      + (audit.verdict === 'contains_concrete_commitments'
+        ? '<p class="banner b-warn" style="margin-top:8px">扫描命中具体表述。请对照上方「工具/资料依赖」确认这些内容是否有可核验来源。</p>'
+        : '<p class="muted">未命中具体金额或船期表述。</p>');
+  }
+}
+
+/* ---------- 交互 ---------- */
+function applyRecord(payload, source) {
+  state.front = payload.front;
+  state.back = payload.back;
+  state.savedPath = payload.saved_path || null;
+  state.source = source;
+  renderFront(payload.front);
+  // 背面只有在展开状态下才写入 DOM；收起时清空，页面上不留 Token 数字。
+  if ($('back').classList.contains('show')) renderBack(payload.back); else clearBack();
+}
+
+async function run() {
+  const btn = $('runBtn');
+  btn.disabled = true;
+  $('runHint').textContent = '运行中…（A 档 1 次模型调用，D 档会真实执行更多次）';
+  try {
+    const payload = await getJSON('/api/runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: state.scenario,
+        mode: state.mode,
+        request_text: $('request').value,
+      }),
+    });
+    applyRecord(payload, 'run');
+    $('runHint').textContent = payload.saved_path ? '已保存到 runs/' : '未保存';
+    loadRecords();
+  } catch (err) {
+    $('runHint').textContent = '运行失败：' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadRecords() {
+  const box = $('records');
+  try {
+    const data = await getJSON('/api/runs');
+    if (!data.records.length) {
+      box.innerHTML = '<p>还没有保存的运行记录。有 provider 时运行一次会自动保存；也可以用 '
+        + '<code>python scripts/record_runs.py</code> 课前批量跑 A/B/C/D。</p>';
+      return;
+    }
+    box.innerHTML = data.records.map((r) => `
+      <div class="rec">
+        <button data-run="${esc(r.run_id)}">回放</button>
+        <span class="pill ${esc(r.evidence_level)}">${esc(EVIDENCE_TEXT[r.evidence_level] || r.evidence_level)}</span>
+        <strong>${esc(r.mode_label)}</strong>
+        <span>模型 ${num(r.model_calls)} · 工具 ${num(r.tool_calls)} · 输入 ${num(r.input_tokens)} · 输出 ${num(r.output_tokens)}</span>
+        <span class="muted small">${esc(r.created_at)} · ${esc(r.run_id.slice(0, 8))}</span>
+      </div>`).join('');
+    box.querySelectorAll('button[data-run]').forEach((b) => {
+      b.onclick = async () => {
+        try {
+          const payload = await getJSON('/api/runs/' + encodeURIComponent(b.dataset.run));
+          applyRecord(payload, 'replay');
+          const rec = payload.front;
+          $('request').value = rec.request_text;
+          $('runHint').textContent = '已回放 ' + rec.run_id.slice(0, 8);
+          document.querySelectorAll('.mode').forEach((x) => x.classList.toggle('active', x.dataset.mode === rec.mode));
+          state.mode = rec.mode;
+        } catch (err) { $('runHint').textContent = '回放失败：' + err.message; }
+      };
+    });
+  } catch (err) {
+    box.innerHTML = '<p>读取记录失败：' + esc(err.message) + '</p>';
+  }
+}
+
+async function loadHealth() {
+  try {
+    const h = await getJSON('/api/health');
+    const p = h.provider;
+    $('providerLine').textContent = p.configured
+      ? `provider 已配置 · ${p.model}`
+      : 'provider 未配置 · 只能回放记录与结构示例';
+    $('health').className = 'banner ' + (p.configured ? 'b-good' : 'b-warn');
+    $('health').innerHTML = p.configured
+      ? `真实运行可用：<code>${esc(p.base_url)}</code>，模型 <code>${esc(p.model)}</code>`
+        + (p.strong_model ? `，D 档强模型 <code>${esc(p.strong_model)}</code>` : '（未配置 LLM_STRONG_MODEL，D 档强模型项不成立）')
+        + `。已保存 ${h.saved_runs} 份记录（其中真实运行 ${h.saved_live_runs} 份）。`
+      : `未配置 provider（缺少 <code>${esc((p.missing_settings || []).join('、'))}</code>）：`
+        + `Demo 仍可启动，回放已保存记录；点「运行这一次」只会得到结构示例，Token 字段全部为 null。`
+        + `<br><span class="small">配置 <code>LLM_BASE_URL</code> / <code>LLM_API_KEY</code> / <code>LLM_MODEL</code> 后重启即可真实运行。</span>`;
+    $('runHint').textContent = p.configured ? '' : '当前为结构示例模式';
+  } catch (err) {
+    $('health').className = 'banner b-bad';
+    $('health').textContent = '无法读取运行环境：' + err.message;
+  }
+}
+
+document.querySelectorAll('.mode').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.mode').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    state.mode = b.dataset.mode;
+  };
+});
+
+$('backBtn').onclick = () => {
+  const back = $('back');
+  const opening = !back.classList.contains('show');
+  back.classList.toggle('show', opening);
+  $('backBtn').textContent = opening ? '收起运行背面' : '查看运行背面';
+  // 背面只在打开时写入 DOM，收起即清空：Demo 1 的页面上不会残留 Token 数字。
+  if (opening && state.record) renderBack(state.record); else clearBack();
+};
+
+$('runBtn').onclick = run;
+$('reloadBtn').onclick = loadRecords;
+
+(async function init() {
+  await loadHealth();
+  await loadRecords();
+  try {
+    const scenarios = await getJSON('/api/scenarios');
+    const first = scenarios[state.scenario] || Object.values(scenarios)[0];
+    if (first) { state.scenario = first.key; $('request').value = first.request_text; }
+  } catch (err) { /* 保留默认文案 */ }
+})();
 </script>
 </body>
 </html>

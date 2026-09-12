@@ -1,0 +1,217 @@
+{
+  "run_id": "57027be2-5264-4f01-b833-a5b8c51b7e56",
+  "created_at": "2026-09-12T03:08:49+00:00",
+  "scenario": "tianjin-freight",
+  "scenario_name": "天津货代询价",
+  "mode": "C",
+  "mode_label": "C 任务链",
+  "request_text": "天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。",
+  "task": "根据客户询价识别已知与缺失条件，取回可核验的船期/报价事实，形成候选方案；事实不足时明确停在待业务资料或人工确认，不得编造船期、运价或舱位承诺。",
+  "known": [
+    "起运港：天津新港",
+    "目的港：釜山",
+    "箱型箱量：20GP × 2",
+    "货好时间：下周三（客户口径）"
+  ],
+  "missing": [
+    "可核验的有效船期",
+    "有效报价资料（运价、附加费、有效期）",
+    "舱位确认"
+  ],
+  "next_actions": [
+    "向承运人或订舱平台按航次取回真实船期",
+    "取回承运人报价单，确认有效期与附加费",
+    "向船公司/订舱口实时确认可用舱位",
+    "由业务人员完成报价确认与舱位承诺"
+  ],
+  "human_gates": [
+    "报价确认",
+    "舱位承诺"
+  ],
+  "dependencies": [
+    {
+      "kind": "tool",
+      "name": "sailing_schedule",
+      "title": "查询船期",
+      "description": "按起运港/目的港/箱型取回船期；此处返回教学构造结构，未经验证。",
+      "available": true,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    },
+    {
+      "kind": "tool",
+      "name": "rate_card",
+      "title": "查询运价",
+      "description": "取回承运人报价；本地无可核验报价资料。",
+      "available": false,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    },
+    {
+      "kind": "tool",
+      "name": "space_check",
+      "title": "确认舱位",
+      "description": "确认可用舱位；需由船公司/订舱口实时确认。",
+      "available": false,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    },
+    {
+      "kind": "material",
+      "name": "sailing_schedule",
+      "title": "船期资料来源说明",
+      "description": "以下内容为课堂教学构造的示例结构，不是承运人发布的真实船期，不得作为业务事实使用。",
+      "available": true,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    },
+    {
+      "kind": "material",
+      "name": "rate_source",
+      "title": "报价资料来源说明",
+      "description": "本场景可用的报价来源：承运人报价单、订舱平台有效期运价。",
+      "available": true,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    },
+    {
+      "kind": "material",
+      "name": "customer_profile",
+      "title": "客户与业务口径",
+      "description": "客户为长期合作货代客户，询价口径为「船期 + 价格」。",
+      "available": true,
+      "verified": false,
+      "provenance": "teaching_fixture"
+    }
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "解析客户需求",
+      "phase": "parse",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 0,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    },
+    {
+      "step": 2,
+      "action": "判断缺口",
+      "phase": "gaps",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 0,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    },
+    {
+      "step": 3,
+      "action": "获取可核验业务事实",
+      "phase": "facts",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 3,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    },
+    {
+      "step": 4,
+      "action": "业务判断与人工确认点",
+      "phase": "judge",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 0,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    },
+    {
+      "step": 5,
+      "action": "校验：不得把未核验资料写成事实",
+      "phase": "verify",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 0,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    },
+    {
+      "step": 6,
+      "action": "形成可交付结果与停止点",
+      "phase": "deliver",
+      "status": "not_executed",
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cached_tokens": null,
+      "tool_calls": 0,
+      "tools": [],
+      "latency_ms": null,
+      "result": null,
+      "detail": "未执行：本次没有可用的 provider",
+      "usage_raw": null
+    }
+  ],
+  "usage": {
+    "model_calls": 0,
+    "tool_calls": 3,
+    "input_tokens": null,
+    "output_tokens": null,
+    "cached_tokens": null,
+    "total_tokens": null,
+    "latency_ms": null
+  },
+  "output": null,
+  "run_status": "not_executed",
+  "evidence_level": "structure_only",
+  "provider": {
+    "base_url": "",
+    "model": "",
+    "strong_model": null,
+    "model_for_strong_steps": "",
+    "configured": false,
+    "missing_settings": [
+      "LLM_BASE_URL",
+      "LLM_API_KEY",
+      "LLM_MODEL"
+    ],
+    "timeout_s": 60.0
+  },
+  "claim_audit": null,
+  "notes": [
+    "未配置 provider（缺少 LLM_BASE_URL、LLM_API_KEY、LLM_MODEL）：本次只输出结构示例，所有 Token 字段为 null，不伪造数字。",
+    "设置 LLM_BASE_URL / LLM_API_KEY / LLM_MODEL 后可执行真实运行并留存 usage。",
+    "无 provider 时仍可回放仓库内已保存的运行记录。"
+  ],
+  "error": null
+}
