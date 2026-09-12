@@ -1,5 +1,8 @@
 # DEMO_RUNBOOK
 
+> 课堂实际使用入口：启动 `uvicorn app.main:app --port 8014` 后打开 **http://127.0.0.1:8014/runbook**。
+> `static/runbook.html` 将本页内容组织成单页讲师驾驶舱，并自动读取 Provider、Token 证据和最近实验状态；本 Markdown 保留为教学逻辑与台词的文字源。
+
 ## 课堂位置
 
 ### Demo 1｜第二讲“四问”之后
