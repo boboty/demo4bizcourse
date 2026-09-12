@@ -5,250 +5,156 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Token Task Lab · 讲师 Runbook</title>
   <style>
-    :root{
-      --bg:#f5f7f4;--paper:#ffffff;--ink:#18221e;--muted:#66736d;--line:#dfe6e1;
-      --accent:#1d5a47;--accent-soft:#e8f1ed;--warn:#8a5a14;--warn-soft:#fbf1df;
-      --bad:#8b3b35;--bad-soft:#f8e9e7;--good:#236044;--good-soft:#e6f2eb;
-      --shadow:0 8px 28px rgba(25,42,34,.07);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.55}
-    a{color:var(--accent)}
-    button,a.btn{font:inherit}
-    .shell{max-width:1540px;margin:0 auto;padding:22px}
-    .hero{background:linear-gradient(135deg,#eef4f0,#f8faf8);border:1px solid var(--line);border-radius:22px;padding:24px 28px;box-shadow:var(--shadow)}
-    .hero-top{display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-    h1{font-size:32px;line-height:1.15;margin:0 0 8px}.subtitle{color:var(--muted);max-width:900px;margin:0}
-    .hero-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 13px;border-radius:10px;text-decoration:none;cursor:pointer}
-    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn:hover{filter:brightness(.98)}
-    .status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
-    .status{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 15px}.status .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.status .v{font-size:20px;font-weight:700;margin-top:3px}.status.good{background:var(--good-soft)}.status.warn{background:var(--warn-soft)}.status.bad{background:var(--bad-soft)}
-    .nav{position:sticky;top:0;z-index:20;margin:14px 0;padding:9px;background:rgba(245,247,244,.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:13px;display:flex;gap:7px;overflow:auto}
-    .nav a{white-space:nowrap;text-decoration:none;padding:7px 10px;border-radius:8px;color:var(--muted)}.nav a:hover{background:#fff;color:var(--ink)}
-    section{scroll-margin-top:74px}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:21px;margin:14px 0;box-shadow:0 4px 18px rgba(25,42,34,.035)}
-    .card h2{font-size:22px;margin:0 0 6px}.card h3{font-size:16px;margin:18px 0 7px}.lead{color:var(--muted);margin:0 0 14px}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .mini{border:1px solid var(--line);border-radius:13px;padding:14px;background:#fbfcfb}.mini h3{margin:0 0 7px}.mini p{margin:5px 0}
-    .step{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.step:first-of-type{border-top:0}.n{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800}
-    .say{border-left:4px solid var(--accent);padding:10px 13px;background:var(--accent-soft);border-radius:0 10px 10px 0;margin:8px 0;font-weight:650}
-    .land{border-left:4px solid var(--warn);padding:10px 13px;background:var(--warn-soft);border-radius:0 10px 10px 0;margin:8px 0;font-weight:700}
-    .note{color:var(--muted);font-size:13px}.danger{background:var(--bad-soft);border:1px solid #efd3d0;border-radius:11px;padding:11px 13px}.ok{background:var(--good-soft);border:1px solid #cfe5d7;border-radius:11px;padding:11px 13px}
-    pre{margin:0;white-space:pre-wrap;word-break:break-word;background:#17201c;color:#f1f5f3;border-radius:12px;padding:14px 46px 14px 15px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:48px}
-    .cmd{position:relative;margin:8px 0}.copy{position:absolute;right:8px;top:8px;border:1px solid #42524b;background:#28352f;color:#fff;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:12px}
-    ul{margin-top:7px}.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px}.check{display:flex;gap:9px;align-items:flex-start;padding:7px 0}.check input{margin-top:5px;transform:scale(1.12);accent-color:var(--accent)}
-    table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}th{color:var(--muted);font-size:12px;font-weight:650}td.num{text-align:right;font-variant-numeric:tabular-nums}
-    .pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:12px;background:#eef2ef;color:#4c5a54}.pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.bad{background:var(--bad-soft);color:var(--bad)}
-    .demo-frame-wrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}.demo-toolbar{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#eef2ef;border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}.demo-toolbar span{font-size:13px;color:var(--muted)}iframe{width:100%;height:1080px;border:0;background:white}
-    details{border-top:1px solid var(--line);padding:10px 0}details:first-of-type{border-top:0}summary{cursor:pointer;font-weight:650}
-    .mode-class .prep-only{display:none}.mode-class .hero{padding:17px 22px}.mode-class iframe{height:1200px}
-    .mode-class .nav a[href="#prep"],.mode-class .nav a[href="#record"]{display:none}
-    footer{color:var(--muted);font-size:12px;padding:24px 2px 40px;text-align:center}
-    @media(max-width:980px){.status-grid{grid-template-columns:1fr 1fr}.two,.three{grid-template-columns:1fr}.checks{grid-template-columns:1fr}iframe{height:1250px}}
+    :root{--bg:#f5f7f4;--paper:#fff;--ink:#18221e;--muted:#69736e;--line:#dfe6e1;--accent:#1d5a47;--soft:#e8f1ed;--warn:#8a5a14;--warnbg:#fbf1df;--bad:#8b3b35;--badbg:#f8e9e7;--good:#236044;--goodbg:#e6f2eb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.55}
+    .shell{max-width:1500px;margin:auto;padding:22px}.hero,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px}.hero{padding:24px 28px}.card{padding:20px;margin:14px 0}.heroTop{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+    h1{margin:0 0 7px;font-size:31px}h2{margin:0 0 7px;font-size:22px}h3{margin:16px 0 7px;font-size:16px}.muted{color:var(--muted)}.small{font-size:13px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--ink)}.btn.primary{background:var(--accent);border-color:var(--accent);color:white}
+    .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:17px}.status{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fbfcfb}.status .k{font-size:12px;color:var(--muted)}.status .v{font-weight:750;font-size:18px;margin-top:2px}.good{background:var(--goodbg)}.warn{background:var(--warnbg)}.bad{background:var(--badbg)}
+    nav{position:sticky;top:0;z-index:20;margin:12px 0;padding:8px;background:rgba(245,247,244,.94);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:11px;display:flex;gap:6px;overflow:auto}nav a{white-space:nowrap;padding:6px 9px;border-radius:7px;text-decoration:none;color:var(--muted)}nav a:hover{background:#fff;color:var(--ink)}
+    section{scroll-margin-top:68px}.two{display:grid;grid-template-columns:1fr 1fr;gap:13px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.mini{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fbfcfb}
+    .step{display:grid;grid-template-columns:38px 1fr;gap:11px;padding:11px 0;border-top:1px solid var(--line)}.step:first-of-type{border-top:0}.n{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--accent);font-weight:800}
+    .say{background:var(--soft);border-left:4px solid var(--accent);padding:9px 12px;border-radius:0 9px 9px 0;font-weight:650;margin:7px 0}.land{background:var(--warnbg);border-left:4px solid var(--warn);padding:9px 12px;border-radius:0 9px 9px 0;font-weight:750;margin:7px 0}
+    pre{margin:0;background:#17201c;color:#f3f6f4;padding:13px 45px 13px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-word;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}.cmd{position:relative;margin:8px 0}.copy{position:absolute;right:7px;top:7px;border:1px solid #48564f;background:#28352f;color:#fff;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:12px}
+    .checks{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}.check{display:flex;gap:8px;padding:5px 0}.check input{margin-top:5px;accent-color:var(--accent)}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}th{color:var(--muted);font-weight:650}.pill{display:inline-block;padding:3px 7px;border-radius:999px;font-size:12px;background:var(--soft);color:var(--accent)}
+    iframe{width:100%;height:900px;border:1px solid var(--line);border-radius:12px;background:#fff}.danger{padding:10px 12px;background:var(--badbg);border-radius:9px}.notice{padding:10px 12px;background:var(--warnbg);border-radius:9px}.classroom .prepOnly{display:none}.classroom iframe{height:1000px}
+    @media(max-width:900px){.statusGrid,.two,.three,.checks{grid-template-columns:1fr}.shell{padding:12px}iframe{height:1100px}}
   </style>
 </head>
 <body>
-<div class="shell">
+<div class="shell" id="page">
   <header class="hero">
-    <div class="hero-top">
-      <div>
-        <h1>Token Task Lab · 讲师 Runbook</h1>
-        <p class="subtitle">从环境准备、真实实验录制、课前验证，到 Demo 1 → Demo 2 → A/B/C/D 对照 → D 档低效收束。上课时只保留这一页即可。</p>
-      </div>
-      <div class="hero-actions">
-        <button class="btn" id="refreshBtn">刷新状态</button>
-        <button class="btn" id="classModeBtn">进入课堂模式</button>
-        <a class="btn primary" href="/" target="_blank">单独打开 Demo</a>
-      </div>
+    <div class="heroTop">
+      <div><h1>Token Task Lab · 讲师驾驶舱</h1><p class="muted">从课前环境、实验验证，到 Demo 1 / Demo 2 / A-B-C-D 对照，一页走完。课堂 Provider 固定为 DeepSeek，只需要 API Key。</p></div>
+      <div class="actions"><button class="btn" id="refresh">刷新状态</button><button class="btn primary" id="classroom">课堂模式</button><a class="btn" href="/" target="_blank">单独打开 Demo</a></div>
     </div>
-    <div class="status-grid" id="statusGrid">
-      <div class="status"><div class="k">Provider</div><div class="v" id="providerStatus">读取中…</div></div>
-      <div class="status"><div class="k">真实模型调用</div><div class="v" id="liveRuns">—</div></div>
-      <div class="status"><div class="k">Token 可用记录</div><div class="v" id="readyRuns">—</div></div>
-      <div class="status"><div class="k">最近对照实验</div><div class="v" id="latestExperiment">—</div></div>
+    <div class="statusGrid">
+      <div class="status" id="sProvider"><div class="k">Provider</div><div class="v">读取中…</div></div>
+      <div class="status" id="sModel"><div class="k">模型</div><div class="v">deepseek-flash</div></div>
+      <div class="status" id="sReady"><div class="k">Token 可用记录</div><div class="v">读取中…</div></div>
+      <div class="status" id="sExperiment"><div class="k">最近对照实验</div><div class="v">读取中…</div></div>
     </div>
   </header>
 
-  <nav class="nav">
-    <a href="#prep">1 环境</a><a href="#record">2 录制</a><a href="#check">3 课前验证</a><a href="#demo1">4 Demo 1</a><a href="#demo2">5 Demo 2</a><a href="#compare">6 实验对照</a><a href="#fallback">7 故障策略</a><a href="#console">Demo 操作区</a>
-  </nav>
+  <nav><a href="#prep">1 环境</a><a href="#verify">2 课前验证</a><a href="#demo1">3 Demo 1</a><a href="#demo2">4 Demo 2</a><a href="#compare">5 A/B/C/D</a><a href="#fallback">6 故障兜底</a><a href="#live">7 实际 Demo</a></nav>
 
-  <section id="prep" class="card prep-only">
-    <h2>1｜环境准备</h2>
-    <p class="lead">第一次准备或代码更新后走一遍。已经进入课堂现场时，这一段可以在“课堂模式”中隐藏。</p>
+  <section class="card prepOnly" id="prep">
+    <h2>1｜环境准备：课堂只填 API Key</h2>
+    <p class="muted">代码固定使用 <code>https://api.deepseek.com</code> 和 <code>deepseek-flash</code>。不要在课堂临时切模型。</p>
     <div class="two">
-      <div class="mini">
-        <h3>A. 更新与安装</h3>
-        <div class="cmd"><button class="copy">复制</button><pre>git pull
+      <div>
+        <h3>首次准备</h3>
+        <div class="cmd"><pre>git pull
 cd token-task-lab
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt</pre></div>
+pip install -r requirements.txt
+pytest -q</pre><button class="copy">复制</button></div>
       </div>
-      <div class="mini">
-        <h3>B. 先验测试</h3>
-        <div class="cmd"><button class="copy">复制</button><pre>pytest -q</pre></div>
-        <p class="note">当前基准：88 项测试。数量以后可能增加，关键是全部通过。</p>
-      </div>
-      <div class="mini">
-        <h3>C. 配置真实 Provider</h3>
-        <div class="cmd"><button class="copy">复制</button><pre>export LLM_BASE_URL="你的 OpenAI-compatible API 地址"
-export LLM_API_KEY="你的 API Key"
-export LLM_MODEL="课堂使用模型"</pre></div>
-        <p class="note">第一次正式实验先不配 <code>LLM_STRONG_MODEL</code>，先把“重复上下文 / 重复步骤”这个变量讲干净。</p>
-      </div>
-      <div class="mini">
-        <h3>D. 启动</h3>
-        <div class="cmd"><button class="copy">复制</button><pre>uvicorn app.main:app --port 8014</pre></div>
-        <p class="note">Demo：<code>http://127.0.0.1:8014/</code>　Runbook：<code>/runbook</code></p>
+      <div>
+        <h3>每次上课前</h3>
+        <div class="cmd"><pre>cd token-task-lab
+source .venv/bin/activate
+export LLM_API_KEY="填你的 DeepSeek API Key"
+python scripts/record_runs.py
+uvicorn app.main:app --port 8014</pre><button class="copy">复制</button></div>
       </div>
     </div>
+    <div class="notice small">录制脚本最后必须出现：<strong>课堂可用于 Token 实验的记录：4/4 档</strong>。否则不要把这组数字用于课件或课堂对比。</div>
   </section>
 
-  <section id="record" class="card prep-only">
-    <h2>2｜录一组可进课件的真实 A/B/C/D</h2>
-    <p class="lead">课件里的数字来自固定的一组真实实验。不要手填，不要从不同时间的散记录拼表。</p>
-    <div class="cmd"><button class="copy">复制</button><pre>python scripts/record_runs.py | tee experiment-01.txt</pre></div>
-    <div class="two">
-      <div class="ok"><strong>通过标准</strong><br>脚本最后必须出现：<code>课堂可用于 Token 实验的记录：4/4 档</code>。</div>
-      <div class="danger"><strong>不要进课件</strong><br>只要不是 4/4，就先修 Provider / usage。真实调用但没有 input/output Token，不算课堂 Token 证据。</div>
+  <section class="card" id="verify">
+    <h2>2｜课前验证</h2>
+    <p class="muted">先自动看状态，再人工确认一次课堂关键点。勾选项保存在本机浏览器。</p>
+    <div class="checks" id="checks">
+      <label class="check"><input type="checkbox" data-k="tests">pytest 全部通过</label>
+      <label class="check"><input type="checkbox" data-k="provider">Provider 显示可用，模型为 deepseek-flash</label>
+      <label class="check"><input type="checkbox" data-k="four">最新实验 A/B/C/D 四档齐全且 Token 证据可用</label>
+      <label class="check"><input type="checkbox" data-k="demo1">Demo 1 主区域是本次实际运行结果，不是预设基准</label>
+      <label class="check"><input type="checkbox" data-k="facts">船期显示“有结果但未核验”，运价/舱位显示无结果</label>
+      <label class="check"><input type="checkbox" data-k="sameRun">Demo 1 和 Demo 2 能用同一 run_id 翻面</label>
+      <label class="check"><input type="checkbox" data-k="d">D 档相对 C 档有可解释的额外消耗</label>
+      <label class="check"><input type="checkbox" data-k="replay">至少一组完整实验可回放，断网也能讲</label>
     </div>
-    <h3>冻结规则</h3>
-    <ul>
-      <li>找到一组差异清楚、4/4 可用的实验后，记住它的 <code>experiment_id</code>，作为课程基准实验。</li>
-      <li>课件注明：固定模型与固定任务条件下的一次真实运行记录；Token 数量用于观察调用结构，不代表行业固定消耗。</li>
-      <li>后续现场真机跑出不同数字没问题，课件仍使用冻结的基准实验。</li>
-    </ul>
+    <div id="healthNotes" class="small muted"></div>
   </section>
 
-  <section id="check" class="card">
-    <h2>3｜课前验证</h2>
-    <p class="lead">自动状态在页首；下面是必须人工确认的讲师检查。勾选状态只保存在当前浏览器。</p>
-    <div id="healthNotes"></div>
-    <div class="checks">
-      <label class="check"><input type="checkbox" data-check="front-real"><span>Demo 1 主区域是本次真实运行结果，不是预设基准。</span></label>
-      <label class="check"><input type="checkbox" data-check="same-run"><span>Demo 1 → Demo 2 使用同一个 run_id。</span></label>
-      <label class="check"><input type="checkbox" data-check="facts"><span>船期显示“有结果但未核验”；运价、舱位显示“无结果”。</span></label>
-      <label class="check"><input type="checkbox" data-check="four-ready"><span>基准实验 A/B/C/D 四档 Token 证据都是“已计量”。</span></label>
-      <label class="check"><input type="checkbox" data-check="replay"><span>断网 / Provider 不可用时，基准实验仍能回放。</span></label>
-      <label class="check"><input type="checkbox" data-check="d-cost"><span>D 档比 C 档存在可解释的额外模型调用 / 输入 Token。</span></label>
-    </div>
-    <h3>最近一组对照实验</h3>
-    <div id="latestTable" class="note">读取中…</div>
-  </section>
-
-  <section id="demo1" class="card">
-    <h2>4｜Demo 1 · 第二讲“四问”之后</h2>
-    <p class="lead">目标：证明“四问”是企业任务能够交出去的实际条件。此时不要让 Token 抢戏。</p>
+  <section class="card" id="demo1">
+    <h2>3｜Demo 1 · 第二讲：先看业务正面</h2>
     <div class="say">刚才说条件拿不到就应该停，我们直接看它会停在哪里。</div>
-    <div class="step"><div class="n">1</div><div><strong>选 C 档，使用天津货代原始询价，运行或回放基准 C 档。</strong><br><span class="note">不要先打开运行背面。</span></div></div>
-    <div class="step"><div class="n">2</div><div><strong>按顺序看“本次运行的实际业务结果”：</strong><br>AI 实际任务理解 → AI 实际识别缺口 → 本次事实获取结果 → 业务判断 → 校验 → 最终停止点。</div></div>
-    <div class="step"><div class="n">3</div><div><strong>停在事实获取结果。</strong><br>船期＝有结果但未核验；运价＝无结果；舱位＝无结果。</div></div>
+    <div class="step"><div class="n">1</div><div><strong>输入客户原话，选 C 档运行。</strong><br><span class="muted">天津新港到釜山，下周三货好，两个20GP，帮我看看船期和价格。</span></div></div>
+    <div class="step"><div class="n">2</div><div>逐条看：AI实际任务理解 → 实际识别缺口 → 本次事实获取 → 业务判断 → 校验 → 最终停止点。</div></div>
+    <div class="step"><div class="n">3</div><div>停在事实获取：<strong>船期=有结果但未核验；运价=无结果；舱位=无结果。</strong></div></div>
     <div class="land">拿到了 ≠ 能用。</div>
-    <div class="step"><div class="n">4</div><div>需要时才展开“场景验收基准”：说明它是课前写定的验收答案，不是本次 AI 输出。</div></div>
-    <div class="step"><div class="n">5</div><div>如果现场换成青岛→仁川等新输入，看到“基准已不适用”后，只讲上方实际运行结果。</div></div>
-    <div class="danger"><strong>这里不要讲：</strong>Token 数、为什么要验证、Token 效率。验证归第二讲四问，Token 留给第三讲。</div>
+    <div class="step"><div class="n">4</div><div>需要时再展开“场景验收基准”。强调：那是课前写定的对照答案，不是 AI 本次输出。</div></div>
+    <div class="danger small"><strong>这里不要打开 Token 背面。</strong>第二讲只证明任务边界、资料条件和人工确认点。</div>
   </section>
 
-  <section id="demo2" class="card">
-    <h2>5｜Demo 2 · 第三讲调用链之后</h2>
-    <p class="lead">目标：把 Demo 1 的同一件业务任务翻到系统背面，看到一件任务如何变成多次调用。</p>
-    <div class="say">刚才从正面看是一件事，现在把同一次运行翻过来看背面。</div>
-    <div class="step"><div class="n">1</div><div>沿用 Demo 1 的同一个 <code>run_id</code>，打开“运行背面”。</div></div>
-    <div class="step"><div class="n">2</div><div>先看步骤，不先看总数：解析 → 判断缺口 → 获取事实 → 判断 → 校验 → 输出。</div></div>
-    <div class="step"><div class="n">3</div><div>再看汇总：C 档是 <strong>6 个步骤、5 次模型调用、3 次工具调用</strong>；Token 使用本次真实记录的数值。</div></div>
+  <section class="card" id="demo2">
+    <h2>4｜Demo 2 · 第三讲：把同一次运行翻到背面</h2>
+    <div class="say">刚才从业务正面看是一件事，现在把同一次运行翻过来看背面。</div>
+    <div class="step"><div class="n">1</div><div>保持 Demo 1 的同一 run_id，点击“查看运行背面”。</div></div>
+    <div class="step"><div class="n">2</div><div>先看步骤，不急着看总 Token：解析 → 判断缺口 → 获取事实 → 判断 → 校验 → 输出。</div></div>
+    <div class="step"><div class="n">3</div><div>再看系统侧：C 档是 <strong>6 个步骤、5 次模型调用、3 次工具调用</strong>。</div></div>
     <div class="land">一件业务任务，不等于一次模型调用。</div>
-    <div class="step"><div class="n">4</div><div>只用一句话正式命名：任务数 ≠ 调用次数 ≠ Token 数。不要在这里展开 tokenizer 科普。</div></div>
+    <p class="muted small">最后才落到输入 Token / 输出 Token / 缓存 / 总量。任务数 ≠ 调用次数 ≠ Token 数。</p>
   </section>
 
-  <section id="compare" class="card">
-    <h2>6｜第三讲主画面 · A/B/C/D 实验对照</h2>
-    <p class="lead">同一件任务、同一批实验、一个 experiment_id。先比较“怎么做”，再比较“花了多少”。</p>
+  <section class="card" id="compare">
+    <h2>5｜第三讲主画面：A / B / C / D 同屏实验</h2>
+    <p class="muted">使用同一个 experiment_id 的四档记录。只有“Token 已计量”的行才参与对比。</p>
     <div class="three">
-      <div class="mini"><h3>A｜直接回答</h3><p>只给客户原话。</p><p class="note">若编造：只验来源；若谨慎停下：它自己暴露了缺失条件。两种都成立。</p></div>
-      <div class="mini"><h3>B｜全量上下文</h3><p>一次性把可用资料都塞进去。</p><p class="note">观察输入 Token 上升，以及“上下文多”是否真的等于“任务做得好”。</p></div>
-      <div class="mini"><h3>C｜任务链</h3><p>该查时查、该判断时判断、缺事实就停。</p><p class="note">这是主版本。不能脱离任务完成质量谈 Token 效率。</p></div>
+      <div class="mini"><strong>A｜直接回答</strong><p>只有客户原话。若编造，问来源；若谨慎停下，也成立。</p></div>
+      <div class="mini"><strong>B｜全量上下文</strong><p>一次把可用资料全部塞进去。重点观察输入 Token 如何变化。</p></div>
+      <div class="mini"><strong>C｜任务链</strong><p>合理版本：按步骤在需要的时候拿资料、判断、校验。</p></div>
     </div>
-    <div class="mini" style="margin-top:12px"><h3>D｜低效版本</h3><p>重复装载、重复上下文、重复解析、重复判断、重复校验，全部真实执行。</p><div class="land">该花的 Token 要花，白花的 Token 要省。</div></div>
-    <h3>对照时按这个顺序讲</h3>
-    <ol>
-      <li>先确认四行的 <strong>Token 证据＝已计量</strong>，否则不要比较数字。</li>
-      <li>比较模型调用 / 工具调用：一件任务背后结构不同。</li>
-      <li>比较输入 Token：B 和 D 为什么增长，分别是“业务资料增加”还是“重复浪费”。</li>
-      <li>比较任务结果：Token 高不等于坏，必须同时看它增加的是有效工作量还是低效工作量。</li>
-      <li>最后只用 C vs D 收束，不需要给 A/B/C/D 排一个“绝对冠军”。</li>
-    </ol>
+    <div class="mini" style="margin-top:11px"><strong>D｜低效版本</strong><p>同一业务目标，但真实执行重复上下文、重复解析、重复判断、重复校验。不要手改数字。</p></div>
+    <div class="land">该花的 Token 要花，白花的 Token 要省。</div>
+    <div id="latestExperiment" class="small muted">正在读取最近实验…</div>
   </section>
 
-  <section id="fallback" class="card">
-    <h2>7｜课堂故障策略</h2>
-    <details open><summary>Provider / 网络突然失败</summary><p>立即切到已保存的基准实验回放，不现场排障。台词：“现场调用失败不影响我们看结构，我直接切到课前真实跑过的这一组。”</p></details>
-    <details><summary>现场真机数字和课件不一样</summary><p>正常。课件是冻结的一次基准实验；现场运行是另一轮随机生成。讲结构，不追求数字复现。</p></details>
-    <details><summary>A 档没有编造，反而很谨慎</summary><p>更好。直接指出：“它自己告诉我们条件不够。” 然后进入 B，不要为了预设剧情诱导模型胡编。</p></details>
-    <details><summary>某一档真实调用但 Token 证据不可用</summary><p>不要现场拿这一档做 Token 数值比较。切回 4/4 classroom-ready 的基准实验。</p></details>
-    <details><summary>时间不够</summary><p>优先保：C 的正面 → 同一 run 翻背面 → C vs D。A 只用保存输出验货，B 可以压缩讲。</p></details>
-  </section>
-
-  <section id="console" class="card">
-    <h2>Demo 操作区</h2>
-    <p class="lead">下面直接嵌入当前 Token Task Lab。上课时可以在本页完成运行、回放、打开背面和实验对照。</p>
-    <div class="demo-frame-wrap">
-      <div class="demo-toolbar"><span>嵌入：<code>/</code>　状态变化后可刷新 iframe。</span><div><button class="btn" id="reloadFrame">刷新 Demo</button> <a class="btn" href="/" target="_blank">单独打开</a></div></div>
-      <iframe id="demoFrame" src="/" title="Token Task Lab Demo"></iframe>
+  <section class="card" id="fallback">
+    <h2>6｜课堂故障策略</h2>
+    <div class="two">
+      <div class="mini"><strong>Provider / 网络正常</strong><p>可以现场跑一档作为彩蛋，但主讲仍优先回放课前验证过的完整实验。</p></div>
+      <div class="mini"><strong>Provider / 网络异常</strong><p>立即回放已保存实验，不现场排障。课堂讲的是结构，不是现场运维。</p></div>
     </div>
+    <p class="muted small">真机和回放结果不完全一致是正常的。课件引用的是冻结实验记录，不是“行业固定 Token 值”。</p>
   </section>
 
-  <footer>Runbook 状态来自 <code>/api/health</code> 与 <code>/api/experiments</code>。人工勾选项只写入浏览器 localStorage，不写入服务器。</footer>
+  <section class="card" id="live">
+    <h2>7｜实际 Demo</h2>
+    <p class="muted">下面就是正式 Demo 页面。讲课时可以一直停留在本页，按上面的剧本推进。</p>
+    <iframe src="/" title="Token Task Lab"></iframe>
+  </section>
 </div>
 <script>
-const $ = (id) => document.getElementById(id);
-const fmt = (v) => v === null || v === undefined ? '—' : Number(v).toLocaleString('en-US');
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-async function json(url){const r=await fetch(url);if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);return r.json()}
-
-function statusClass(el, kind){el.closest('.status').className='status '+(kind||'')}
-
-async function refreshStatus(){
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function j(url){const r=await fetch(url);if(!r.ok)throw new Error(await r.text());return r.json()}
+function status(el,text,cls=''){el.className='status '+cls;el.querySelector('.v').textContent=text}
+async function refresh(){
   try{
-    const [h,e] = await Promise.all([json('/api/health'), json('/api/experiments?limit=20')]);
-    $('providerStatus').textContent = h.provider_ready ? (h.provider.model || '已配置') : '未配置';
-    statusClass($('providerStatus'), h.provider_ready ? 'good':'warn');
-    $('liveRuns').textContent = fmt(h.saved_live_runs); statusClass($('liveRuns'), h.saved_live_runs ? 'good':'warn');
-    $('readyRuns').textContent = fmt(h.classroom_ready_runs); statusClass($('readyRuns'), h.classroom_ready_runs ? 'good':'bad');
-    $('healthNotes').innerHTML = (h.notes||[]).map(n=>`<div class="danger" style="margin:7px 0">${esc(n)}</div>`).join('') || '<div class="ok">环境接口未报告阻塞性问题。仍需完成下方人工检查。</div>';
-
-    const experiments=(e.experiments||[]).filter(x=>x.experiment_id);
-    const latest=experiments[0];
-    if(!latest){$('latestExperiment').textContent='暂无';statusClass($('latestExperiment'),'warn');$('latestTable').innerHTML='还没有保存的对照实验。先执行 <code>python scripts/record_runs.py</code>。';return}
-    const ready=(latest.records||[]).filter(r=>r.classroom_ready).length;
-    $('latestExperiment').textContent=`${ready}/${latest.records.length} 可用`; statusClass($('latestExperiment'), ready===latest.records.length && ready===4 ? 'good':'warn');
-    $('latestTable').innerHTML = `<div class="note" style="margin-bottom:7px">experiment_id：<code>${esc(latest.experiment_id)}</code>　${esc(latest.request_text||'')}</div>`+
-      `<div style="overflow:auto"><table><thead><tr><th>档位</th><th>模型调用</th><th>工具</th><th>输入</th><th>输出</th><th>缓存</th><th>合计</th><th>业务状态</th><th>Token证据</th></tr></thead><tbody>`+
-      (latest.records||[]).map(r=>`<tr><td><strong>${esc(r.mode)}</strong></td><td class="num">${fmt(r.model_calls)}</td><td class="num">${fmt(r.tool_calls)}</td><td class="num">${fmt(r.input_tokens)}</td><td class="num">${fmt(r.output_tokens)}</td><td class="num">${fmt(r.cached_tokens)}</td><td class="num">${fmt(r.total_tokens)}</td><td>${esc(r.run_status)}</td><td><span class="pill ${r.classroom_ready?'good':'bad'}">${r.classroom_ready?'已计量':'不可用'}</span></td></tr>`).join('')+
-      `</tbody></table></div>`;
-  }catch(err){
-    $('providerStatus').textContent='接口失败';statusClass($('providerStatus'),'bad');
-    $('healthNotes').innerHTML=`<div class="danger">Runbook 无法读取 Demo API：${esc(err.message)}。确认 FastAPI 正在运行。</div>`;
-  }
+    const h=await j('/api/health');const p=h.provider||{};
+    status($('sProvider'),h.provider_ready?'可用':'未配置',h.provider_ready?'good':'warn');
+    status($('sModel'),p.model||'—',p.model==='deepseek-flash'?'good':'warn');
+    status($('sReady'),String(h.classroom_ready_runs??0),(h.classroom_ready_runs||0)>0?'good':'warn');
+    $('healthNotes').innerHTML=(h.notes||[]).map(x=>`<p>${esc(x)}</p>`).join('');
+  }catch(e){status($('sProvider'),'读取失败','bad');$('healthNotes').textContent=e.message}
+  try{
+    const x=await j('/api/experiments');const ex=(x.experiments||[]).find(e=>e.experiment_id);
+    if(!ex){status($('sExperiment'),'暂无','warn');$('latestExperiment').textContent='还没有保存的 A/B/C/D 对照实验。';return}
+    const rows=ex.records||[],ready=rows.filter(r=>r.classroom_ready).length;
+    status($('sExperiment'),`${ready}/${rows.length} 可用`,ready===rows.length&&rows.length>=4?'good':'warn');
+    $('latestExperiment').innerHTML=`最近 experiment_id：<code>${esc(ex.experiment_id)}</code> · ${esc(ex.created_at||'')}<br>`+
+      `<table><thead><tr><th>档</th><th>模型调用</th><th>工具调用</th><th>输入</th><th>输出</th><th>合计</th><th>Token证据</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td><strong>${esc(r.mode)}</strong></td><td>${r.model_calls??'—'}</td><td>${r.tool_calls??'—'}</td><td>${r.input_tokens??'—'}</td><td>${r.output_tokens??'—'}</td><td>${r.total_tokens??'—'}</td><td>${r.classroom_ready?'<span class="pill">可用</span>':'不可用'}</td></tr>`).join('')+`</tbody></table>`;
+  }catch(e){status($('sExperiment'),'读取失败','bad');$('latestExperiment').textContent=e.message}
 }
-
-document.querySelectorAll('.copy').forEach(btn=>btn.onclick=async()=>{
-  const text=btn.nextElementSibling.innerText; await navigator.clipboard.writeText(text); const old=btn.textContent;btn.textContent='已复制';setTimeout(()=>btn.textContent=old,900);
-});
-
-document.querySelectorAll('input[data-check]').forEach(box=>{
-  const key='token-runbook:'+box.dataset.check; box.checked=localStorage.getItem(key)==='1'; box.onchange=()=>localStorage.setItem(key,box.checked?'1':'0');
-});
-
-function setClassMode(on){document.body.classList.toggle('mode-class',on);localStorage.setItem('token-runbook:classMode',on?'1':'0');$('classModeBtn').textContent=on?'退出课堂模式':'进入课堂模式'}
-$('classModeBtn').onclick=()=>setClassMode(!document.body.classList.contains('mode-class'));
-setClassMode(localStorage.getItem('token-runbook:classMode')==='1');
-$('refreshBtn').onclick=refreshStatus;
-$('reloadFrame').onclick=()=>{$('demoFrame').src='/';};
-refreshStatus();
-setInterval(refreshStatus,30000);
+$('refresh').onclick=refresh;$('classroom').onclick=()=>{document.body.classList.toggle('classroom');$('classroom').textContent=document.body.classList.contains('classroom')?'退出课堂模式':'课堂模式'};
+document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{const t=b.previousElementSibling.innerText;await navigator.clipboard.writeText(t);const old=b.textContent;b.textContent='已复制';setTimeout(()=>b.textContent=old,900)});
+document.querySelectorAll('.check input').forEach(c=>{const k='token-lab-'+c.dataset.k;c.checked=localStorage.getItem(k)==='1';c.onchange=()=>localStorage.setItem(k,c.checked?'1':'0')});
+refresh();
 </script>
 </body>
 </html>
