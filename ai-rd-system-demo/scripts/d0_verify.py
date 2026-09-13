@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -55,6 +56,16 @@ def last_line(result: subprocess.CompletedProcess[str]) -> str:
     return lines[-1] if lines else "无输出"
 
 
+def pytest_outcome_counts(result: subprocess.CompletedProcess[str]) -> tuple[int, int] | None:
+    """提取 pytest 汇总中的 failed/passed 计数，忽略每次运行耗时差异。"""
+    summary = last_line(result)
+    failed = re.search(r"(\d+) failed", summary)
+    passed = re.search(r"(\d+) passed", summary)
+    if not failed or not passed:
+        return None
+    return int(failed.group(1)), int(passed.group(1))
+
+
 def main() -> int:
     expected_python = ROOT / ".venv" / "bin" / "python"
     check(
@@ -89,8 +100,17 @@ def main() -> int:
     first = pytest(WORKSPACE, D0_TESTS)
     second = pytest(WORKSPACE, D0_TESTS)
     d0_output = (first.stdout or "") + (first.stderr or "")
+    first_counts = pytest_outcome_counts(first)
+    second_counts = pytest_outcome_counts(second)
     check("D0 起点是红灯（故障条件存在）", first.returncode != 0, last_line(first))
-    check("D0 起点失败可重复", second.returncode != 0 and last_line(second) == last_line(first), last_line(second))
+    check(
+        "D0 起点失败可重复",
+        first.returncode != 0
+        and second.returncode != 0
+        and first_counts is not None
+        and second_counts == first_counts,
+        f"first={last_line(first)}; second={last_line(second)}",
+    )
     check(
         "D0 失败来自真实断言，而不是缺文件或语法错误",
         "AssertionError" in d0_output
