@@ -51,7 +51,12 @@
 - [ ] 验收角色在形成期望前看不到实现、开发测试和开发聊天。
 - [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致，且 REJECTED/SUBMITTED 仍能在列表查询中查到。
 
-## Demo 4
-- [ ] 复盘新增的是规则与检查项，不是这次案例金额。
-- [ ] 必须新开 Codex 会话验证规则加载。
-- [ ] 新会话变体结果：FX_LOSS_PLUS_TAX_REFUND / 11000。
+## Demo 4｜demo4-sedimentation（沿用 D1→D3 融资申请页面）
+- [ ] `./scripts/reset_demo4.sh` 后是"D3 fixed"状态：开发测试 `19 passed`，浏览器 REJECTED 仍可查询、导出 0 条；还没有规则文档、`golden/` 或统一 `verify.sh`（此时 `verify.sh` 只跑 pytest）。
+- [ ] D4-2 事故复盘任务不指定固定文件名，只要求覆盖四类资产：规则文档（进 repo、可发现、有 owner）、Golden Case（业务事实驱动、独立于开发单测）、统一 `verify.sh`（pytest + Golden 都从这里进）、可发现的工程记忆（`AGENTS.md` 指向前三者，不重复整份规则原文）。
+- [ ] 讲师参考沉淀态：`instructor/baselines/demo4-sedimented/`（`docs/rules/export_eligibility.md` + `golden/cases.json` + `golden/check_export_eligibility.py` + 升级后的 `verify.sh` + `AGENTS.md`），`./scripts/restore_demo4_sedimented.sh` 可确定性恢复到这个目标状态。
+- [ ] D4-3 全新 Session 只给一个普通维护任务（新增 `exported_by` 字段），不提 D3、不贴规则；应能自己发现规则文档、跑 `./verify.sh`、不修改 `golden/` 期望值。
+- [ ] D4-4 `./scripts/inject_demo4_regression.sh` 确定性重新引入历史 bug（导出改回直接用 `rows`），不依赖模型犯错；浏览器 REJECTED 查询 1 条、导出也变成 1 条。
+- [ ] D4-5 `(cd workspaces/demo4-sedimentation && ./verify.sh)` 必须确定性 `OVERALL: BLOCKED`，输出包含 `Export eligibility Golden Case: FAIL` 和 `GC-02 REJECTED`；没有人重新讲业务规则或人工判断。
+- [ ] D4-6 `./scripts/restore_demo4_fixed.sh` 只恢复导出逻辑，不触碰沉淀资产；浏览器恢复导出 0 条，`./verify.sh` 回到 `OVERALL: PASS`。
+- [ ] `scripts/acceptance_check.py` 覆盖完整链路（reset → 沉淀态 PASS → 注入 BLOCK → 恢复 PASS → reset）且可重复运行；旧 settlement/FX_LOSS 相关脚本与素材（`restore_demo4_before.sh`、`restore_demo4_learned.sh`、`instructor/golden/`、`instructor/baselines/demo4-learned/`）已删除。

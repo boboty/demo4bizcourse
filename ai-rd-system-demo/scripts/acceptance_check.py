@@ -221,8 +221,10 @@ def main() -> int:
         and 'data-copy="demo2-spec"' in html_runbook
         and 'data-copy="d3-validator-first"' in html_runbook
         and 'data-copy="d4-retro"' in html_runbook
-        and 'data-copy="d4-variant"' in html_runbook
-        and 'data-copy="d4-refine"' in html_runbook
+        and 'data-copy="d4-fresh-task"' in html_runbook
+        and 'data-copy="d4-inject"' in html_runbook
+        and 'data-copy="d4-verify-block"' in html_runbook
+        and 'data-copy="d4-restore"' in html_runbook
         and "navigator.clipboard.writeText" in html_runbook,
     )
 
@@ -315,60 +317,129 @@ def main() -> int:
         )
 
     demo4 = WORKSPACES / "demo4-sedimentation"
-    demo4_baseline = ROOT / "instructor/baselines/demo4-sedimentation"
-    initial_agents = (demo4 / "AGENTS.md").read_text(encoding="utf-8")
-    initial_checklist = (demo4 / "validation/checklist.md").read_text(encoding="utf-8")
-    precedence = "先评估“汇损 + 退税”组合候选"
-    check("Demo 4 reset state has no precedence rule", precedence not in initial_agents and precedence not in initial_checklist)
+    demo4_pre_baseline = ROOT / "instructor/baselines/demo4-sedimentation"
+    demo4_sedimented_baseline = ROOT / "instructor/baselines/demo4-sedimented"
 
-    source_report = (demo4_baseline / "reports/demo3-validation.md").read_text(encoding="utf-8")
+    reset_demo4 = run([str(ROOT / "scripts/reset_demo4.sh")], ROOT)
+    check("Demo 4 reset script runs", reset_demo4.returncode == 0, reset_demo4.stderr.strip())
     check(
-        "Demo 4 source report contains final verified rule",
-        "Overall: `PASS`" in source_report
-        and "FX_LOSS_PLUS_TAX_REFUND" in source_report
-        and "组合候选金额 = 汇损金额 + 退税金额" in source_report
-        and "TAX_REFUND_ONLY" in source_report,
+        "Demo 4 reset state has no sedimented assets yet (D3 fixed, nothing sedimented)",
+        not (demo4 / "docs/rules/export_eligibility.md").exists() and not (demo4 / "golden").exists(),
+    )
+    pre_verify_sh = (demo4 / "verify.sh").read_text(encoding="utf-8")
+    check(
+        "Demo 4 reset verify.sh is dev-only, no Golden gate yet",
+        "pytest" in pre_verify_sh and "golden" not in pre_verify_sh,
+    )
+    pre_result = run([sys.executable, "-m", "pytest", "-q"], demo4)
+    check(
+        "Demo 4 reset state: developer tests already green (D3 fix carried over)",
+        pre_result.returncode == 0 and "19 passed" in pre_result.stdout,
+        pre_result.stdout.strip().splitlines()[-1] if pre_result.stdout else pre_result.stderr.strip(),
     )
 
-    learned_agents = (ROOT / "instructor/golden/AGENTS.learned.md").read_text(encoding="utf-8")
-    learned_checklist = (ROOT / "instructor/golden/validation_checklist.learned.md").read_text(encoding="utf-8")
-    required_semantics = [
-        precedence,
-        "FX_LOSS_PLUS_TAX_REFUND",
-        "汇损金额 + 退税金额",
-        "TAX_REFUND_ONLY",
+    rule_doc = (demo4_sedimented_baseline / "docs/rules/export_eligibility.md").read_text(encoding="utf-8")
+    required_rule_tokens = [
+        "只有 `APPROVED`、`FUNDED` 允许进入放款处理导出",
+        "`SUBMITTED`、`REJECTED` 仍然必须可以在列表查询里正常查到，但不得出现在导出结果里",
+        "tenant 数据权限范围",
+        "Owner",
+        "如何验证",
     ]
+    check("Demo 4 sedimented rule doc covers the confirmed rules", all(token in rule_doc for token in required_rule_tokens))
+
+    golden_cases = json.loads((demo4_sedimented_baseline / "golden/cases.json").read_text(encoding="utf-8"))
     check(
-        "Demo 4 learned assets contain executable rule",
-        all(token in learned_agents for token in required_semantics)
-        and "FX_LOSS_PLUS_TAX_REFUND" in learned_checklist
-        and "汇损金额 + 退税金额" in learned_checklist
-        and "TAX_REFUND_ONLY" in learned_checklist,
+        "Demo 4 Golden Case covers GC-01..GC-04 with independently-derived expected ids",
+        {c["id"] for c in golden_cases} >= {"GC-01", "GC-02", "GC-03", "GC-04"}
+        and all({"expected_list_ids", "expected_export_ids"} <= set(c) for c in golden_cases),
+    )
+    golden_script_text = (demo4_sedimented_baseline / "golden/check_export_eligibility.py").read_text(encoding="utf-8")
+    check(
+        "Demo 4 Golden Case is HTTP black-box, not a copy of developer unit tests",
+        "import app.financing" not in golden_script_text
+        and "from app.financing" not in golden_script_text
+        and "urlopen" in golden_script_text,
     )
 
-    retro_prompt = (ROOT / "instructor/prompts/demo4/04-retro.md").read_text(encoding="utf-8")
+    sedimented_verify_sh = (demo4_sedimented_baseline / "verify.sh").read_text(encoding="utf-8")
     check(
-        "Demo 4 retro prompt requires complete semantics",
-        "FX_LOSS_PLUS_TAX_REFUND" in retro_prompt
-        and "汇损金额 + 退税金额" in retro_prompt
-        and "TAX_REFUND_ONLY" in retro_prompt,
+        "Demo 4 sedimented verify.sh is the single entry unifying pytest and the Golden gate",
+        "pytest" in sedimented_verify_sh
+        and "golden" in sedimented_verify_sh
+        and "OVERALL" in sedimented_verify_sh,
     )
 
-    with tempfile.TemporaryDirectory(prefix="demo4-acceptance-") as temp:
-        learned = Path(temp)
-        shutil.copytree(demo4, learned / "workspace")
-        shutil.copy(ROOT / "instructor/golden/AGENTS.learned.md", learned / "workspace/AGENTS.md")
-        shutil.copy(ROOT / "instructor/golden/validation_checklist.learned.md", learned / "workspace/validation/checklist.md")
-        learned_text = (learned / "workspace/AGENTS.md").read_text(encoding="utf-8")
-        variant = json.loads("{\"fx\":2400,\"refund\":8600,\"excluded\":false}")
-        rule_complete = all(token in learned_text for token in required_semantics)
-        combined = rule_complete and not variant["excluded"]
-        mode = "FX_LOSS_PLUS_TAX_REFUND" if combined else "TAX_REFUND_ONLY"
-        amount = variant["fx"] + variant["refund"] if combined else variant["refund"]
-        check(
-            "Demo 4 new-session variant resolves 11000 from complete rule",
-            rule_complete and mode == "FX_LOSS_PLUS_TAX_REFUND" and amount == 11000,
-        )
+    sedimented_agents = (demo4_sedimented_baseline / "AGENTS.md").read_text(encoding="utf-8")
+    rule_marker = required_rule_tokens[0]
+    check(
+        "Demo 4 sedimented AGENTS.md points to the rule doc and verify.sh without duplicating rule text",
+        "docs/rules/export_eligibility.md" in sedimented_agents
+        and "./verify.sh" in sedimented_agents
+        and rule_marker not in sedimented_agents,
+    )
+    rule_marker_locations = {
+        str(path.relative_to(demo4_sedimented_baseline))
+        for path, text in text_files(demo4_sedimented_baseline)
+        if rule_marker in text
+    }
+    check(
+        "Demo 4 confirmed-rule text lives in exactly one discoverable file, not copy-pasted",
+        rule_marker_locations == {"docs/rules/export_eligibility.md"},
+        ", ".join(sorted(rule_marker_locations)),
+    )
+
+    # 端到端资产链路，作用在真实的 workspaces/demo4-sedimentation 上，和课堂用的是同一套脚本：
+    # 沉淀态 verify.sh PASS → 注入历史回归确定性 BLOCK → 恢复后再次 PASS。
+    sediment_result = run([str(ROOT / "scripts/restore_demo4_sedimented.sh")], ROOT)
+    check(
+        "Demo 4 restore-sedimented: verify.sh is PASS (rule/golden/verify all wired up)",
+        sediment_result.returncode == 0 and "OVERALL: PASS" in sediment_result.stdout,
+        sediment_result.stdout.strip().splitlines()[-1] if sediment_result.stdout else sediment_result.stderr.strip(),
+    )
+
+    inject_result = run([str(ROOT / "scripts/inject_demo4_regression.sh")], ROOT)
+    check("Demo 4 inject-regression script runs deterministically", inject_result.returncode == 0, inject_result.stdout.strip())
+
+    blocked_result = run([str(demo4 / "verify.sh")], demo4)
+    check(
+        "Demo 4 injected regression: verify.sh deterministically BLOCKED, Golden Case names REJECTED",
+        blocked_result.returncode != 0
+        and "Export eligibility Golden Case: FAIL" in blocked_result.stdout
+        and "GC-02" in blocked_result.stdout
+        and "REJECTED" in blocked_result.stdout
+        and "OVERALL: BLOCKED" in blocked_result.stdout,
+        blocked_result.stdout.strip().splitlines()[-1] if blocked_result.stdout else blocked_result.stderr.strip(),
+    )
+
+    restore_fixed_result = run([str(ROOT / "scripts/restore_demo4_fixed.sh")], ROOT)
+    check(
+        "Demo 4 restore-fixed: verify.sh is PASS again without touching sedimented assets",
+        restore_fixed_result.returncode == 0 and "OVERALL: PASS" in restore_fixed_result.stdout,
+        restore_fixed_result.stdout.strip().splitlines()[-1] if restore_fixed_result.stdout else restore_fixed_result.stderr.strip(),
+    )
+    check(
+        "Demo 4 restore-fixed left the sedimented assets untouched",
+        tree_digest(demo4) == tree_digest(demo4_sedimented_baseline),
+    )
+
+    # 恢复到 D4-1 的起点（未沉淀），保证本脚本可重复运行、不残留课堂状态。
+    run([str(ROOT / "scripts/reset_demo4.sh")], ROOT)
+
+    demo4_leak_text = "\n".join(text for _, text in text_files(demo4_pre_baseline)) + "\n".join(
+        text for _, text in text_files(demo4_sedimented_baseline)
+    )
+    check(
+        "Demo 4 has no leftover old settlement/FX_LOSS content",
+        "settlement" not in demo4_leak_text and "FX_LOSS" not in demo4_leak_text,
+    )
+    check(
+        "Demo 4 old settlement scripts/assets are gone",
+        not (ROOT / "scripts/restore_demo4_before.sh").exists()
+        and not (ROOT / "scripts/restore_demo4_learned.sh").exists()
+        and not (ROOT / "instructor/golden").exists()
+        and not (ROOT / "instructor/baselines/demo4-learned").exists(),
+    )
 
     for name in NAMES:
         workspace = WORKSPACES / name

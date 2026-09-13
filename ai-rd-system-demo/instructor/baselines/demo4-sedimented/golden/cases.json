@@ -1,0 +1,34 @@
+[
+  {
+    "id": "GC-01",
+    "label": "APPROVED",
+    "user": "alice",
+    "query": { "status": "APPROVED", "customer_name": null },
+    "expected_list_ids": ["FA-1002", "FA-1005"],
+    "expected_export_ids": ["FA-1002", "FA-1005"]
+  },
+  {
+    "id": "GC-02",
+    "label": "REJECTED",
+    "user": "alice",
+    "query": { "status": "REJECTED", "customer_name": null },
+    "expected_list_ids": ["FA-1004"],
+    "expected_export_ids": []
+  },
+  {
+    "id": "GC-03",
+    "label": "MIXED",
+    "user": "alice",
+    "query": { "status": null, "customer_name": null },
+    "expected_list_ids": ["FA-1001", "FA-1002", "FA-1003", "FA-1004", "FA-1005"],
+    "expected_export_ids": ["FA-1002", "FA-1003", "FA-1005"]
+  },
+  {
+    "id": "GC-04",
+    "label": "TENANT_SCOPE",
+    "user": "bob",
+    "query": { "status": null, "customer_name": null },
+    "expected_list_ids": ["FA-2001", "FA-2002", "FA-2003"],
+    "expected_export_ids": ["FA-2001", "FA-2003"]
+  }
+]

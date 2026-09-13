@@ -1,0 +1,57 @@
+diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/AGENTS.md /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/AGENTS.md
+--- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/AGENTS.md	2026-09-13 23:48:48
++++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/AGENTS.md	2026-09-13 23:50:17
+@@ -2,7 +2,13 @@
+ 
+ - 当前目录就是完整项目上下文，不读取父目录或兄弟 workspace，也不要在仓库里寻找课堂材料。
+ - 本工程统一使用 Python 3.12 和 pytest；不引入新的第三方依赖。
+-- 修改 Python 后运行 `../../.venv/bin/python -m pytest -q`（或 `./verify.sh`）。
+-- 当前状态：D3 独立验收发现并修复了一次放款处理导出资格问题（不允许的状态被一起导出）；
+-  修复已经落进 `app/financing/service.py` 和 `tests/test_export_eligibility.py`，业务行为正确、
+-  开发测试全绿。这份文件目前还没有记录这次修复背后的规则、独立验证方式或统一验证入口。
++- 改动放款处理导出（`export_applications` / `POST /api/financing-applications/export`）相关逻辑前，
++  先读 `docs/rules/export_eligibility.md`——这是唯一的规则事实源，不要在别处重复整份规则文本。
++- 任何改动之后，运行 `./verify.sh`。它会依次跑开发测试（`pytest -q`）和放款导出资格 Golden Case
++  （`golden/check_export_eligibility.py`）；两者都通过才算完成，缺一不可。
++- `golden/` 下的期望结果来自业务事实，不是开发测试的复制。如果 `./verify.sh` 因为 Golden Case
++  失败，先假设业务规则没有变，去检查实现改动；不要为了让它变绿而回头修改 `golden/cases.json`。
++- 这条规则的由来：D3 独立验收发现开发方第一次实现和自检都没有见过这条导出资格规则，把不该导出的
++  状态一起导出了。修复本身已经在 `app/financing/service.py` 和 `tests/test_export_eligibility.py`
++  里；`docs/rules/`、`golden/` 和这份 `./verify.sh` 是为了让下一次开发者或 Agent 不需要重新踩这次
++  坑、也不需要重新等一次独立验收才发现这条规则。
+Only in /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation: docs
+Only in /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation: golden
+diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/verify.sh /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/verify.sh
+--- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/verify.sh	2026-09-13 23:48:54
++++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/verify.sh	2026-09-13 23:50:07
+@@ -1,11 +1,27 @@
+ #!/usr/bin/env bash
+-# 开发侧验证：目前只跑 pytest。这个项目还没有独立于开发测试之外的 Golden Case /
+-# policy gate，也没有把放款处理导出资格规则沉淀成项目资产——那是本次任务要做的事。
+-set -euo pipefail
++# 项目标准验证入口：开发测试 + 放款处理导出资格 Golden Case（独立 policy gate）
++# 都从这里进入。新 Agent 不需要知道 D3 那次事故的细节，只需要知道——改完必须跑这个。
++set -uo pipefail
+ cd "$(dirname "${BASH_SOURCE[0]}")"
+ if [ -x "../../.venv/bin/python" ]; then
+   PYTHON="../../.venv/bin/python"
+ else
+   PYTHON="python3"
+ fi
++
++echo "== pytest（开发侧测试）=="
+ "${PYTHON}" -m pytest -q
++pytest_status=$?
++
++echo
++echo "== golden/check_export_eligibility.py（独立 Golden Case / policy gate）=="
++"${PYTHON}" golden/check_export_eligibility.py
++golden_status=$?
++
++echo
++if [ "${pytest_status}" -eq 0 ] && [ "${golden_status}" -eq 0 ]; then
++  echo "OVERALL: PASS"
++  exit 0
++fi
++echo "OVERALL: BLOCKED"
++exit 1

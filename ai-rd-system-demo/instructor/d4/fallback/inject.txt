@@ -1,0 +1,3 @@
+已注入历史回归：放款处理导出重新直接使用当前查询结果（未过滤放款导出资格）。
+浏览器验证：状态筛选 REJECTED 时，查询和导出会同时显示 1 条。
+确定性验证：(cd workspaces/demo4-sedimentation && ./verify.sh) 应该以 OVERALL: BLOCKED 结束。

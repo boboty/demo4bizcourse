@@ -1,0 +1,58 @@
+[
+  {
+    "id": "FA-1001",
+    "customer_name": "华星科技",
+    "status": "SUBMITTED",
+    "amount": 800000,
+    "tenant": "NORTH"
+  },
+  {
+    "id": "FA-1002",
+    "customer_name": "华星科技",
+    "status": "APPROVED",
+    "amount": 1200000,
+    "tenant": "NORTH"
+  },
+  {
+    "id": "FA-1003",
+    "customer_name": "晨海贸易",
+    "status": "FUNDED",
+    "amount": 650000,
+    "tenant": "NORTH"
+  },
+  {
+    "id": "FA-1004",
+    "customer_name": "北辰电子",
+    "status": "REJECTED",
+    "amount": 500000,
+    "tenant": "NORTH"
+  },
+  {
+    "id": "FA-1005",
+    "customer_name": "晨海贸易",
+    "status": "APPROVED",
+    "amount": 920000,
+    "tenant": "NORTH"
+  },
+  {
+    "id": "FA-2001",
+    "customer_name": "南湾制造",
+    "status": "APPROVED",
+    "amount": 730000,
+    "tenant": "SOUTH"
+  },
+  {
+    "id": "FA-2002",
+    "customer_name": "南湾制造",
+    "status": "SUBMITTED",
+    "amount": 410000,
+    "tenant": "SOUTH"
+  },
+  {
+    "id": "FA-2003",
+    "customer_name": "远帆供应链",
+    "status": "FUNDED",
+    "amount": 1880000,
+    "tenant": "SOUTH"
+  }
+]

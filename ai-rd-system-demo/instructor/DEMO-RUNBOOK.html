@@ -87,7 +87,7 @@ codex</div><p>发送唯一一句接手指令，不做任何补充：</p><div cla
 <div class="warn">D1 只用开发侧 <code>verify.sh</code>（本质是 pytest），不使用 Golden Case / 独立 Validator / 外部 Source of Truth——那是第三讲；不引入 Skill / 规则生命周期 / 防复发资产——那是第四讲。原来"先做五个预测"的讲师 QA 方式，以及 Task → Plan → 项目环境 → 自检要求 三级对比实验（Level 1/2/3），都保留在 <a href="D1-RUNBOOK.md">D1-RUNBOOK.md</a> 末尾和 <a href="D1-HANDOFF-RUNBOOK.html">D1-HANDOFF-RUNBOOK.html</a>（不是课堂主入口），课堂时间紧张时整段跳过。</div>
 </section>
 
-<section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1 / 2 / 4 的课堂操作，暂不改其运行逻辑；Demo 3 已经按当前课程重新设计（见上方 Demo 3 小节），不再使用本节的"汇损/退税候选"或旧 HTTP 黑盒结构。后续按当前课程逐讲升级 Demo 4 时，再继续替换。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
+<section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1 / 2 的课堂操作，暂不改其运行逻辑；Demo 3、Demo 4 已经按当前课程重新设计（见上方 Demo 3、Demo 4 小节），都沿用同一套融资申请页面，不再使用本节的"汇损/退税候选"或旧 HTTP 黑盒结构。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
 
 <section id="demo1" class="demo"><span class="badge">Demo 1 · demo12-financing · 15 min</span><h2>一句话 Direct Task</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo12-financing
@@ -182,58 +182,30 @@ GC-04 TENANT_SCOPE（bob，不筛状态）：export expected 2, actual 3
 <div class="card"><h3>Demo 3 收口</h3><ol><li><b>你能验证到哪里，AI 才能安全自治到哪里。</b>自检和开发测试的边界，就是开发方自己理解的边界。</li><li><b>写代码的 AI，不适合完全自己验自己。</b>推翻"看起来全绿"的，是一个从独立业务事实源重新算一遍的角色，不是更严格的 prompt。</li><li><b>能用确定事实验证，就不要先用另一个概率模型验证。</b>Validator 靠的是规则卡 + Golden Case + 黑盒 HTTP 这三个确定性输入，不是"问另一个模型觉得对不对"。</li></ol><p class="warn">接第四讲：这次我们知道怎么把它抓出来了。但下次还要重新发现一次吗？</p><p class="small">彩排兜底：<code>./scripts/restore_demo3_fixed.sh</code> 直接把 <code>workspaces/demo3-developer</code> 切到修复后状态；<code>./scripts/demo3_save_fallback.sh</code> 保存的一次真实预跑证据（diff、开发测试、自检、独立验收前后对照）在 <code>instructor/d3/fallback/</code>，live fix 现场失败时可以直接展示。</p></div>
 </section>
 
-<section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>不是“写进文件”，而是“下一次还能正确执行”</h2><div class="callout">故事线：Bug 已修 → 想把经验留下 → 第一次规则压缩过头 → 新会话读到了规则却仍算错 → 补全可执行语义 → 再用全新会话验证 → 沉淀才算完成。</div>
+<section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 20 min</span><h2>下一次不必从头再来，才真正形成团队能力</h2><div class="callout">课堂沿用 D1→D3 的融资申请页面和"放款处理导出"错误，不再是旧的"汇损/退税候选"结算故事。D3 证明了独立验收能抓出问题；D4 要回答更高一层的问题——一次事故结束之后，工程系统本身到底留下了什么？固定顺序：从 D3 fixed 状态开始 → Agent 做事故复盘与资产沉淀 → 关闭旧 Session，全新 Session 做一个普通维护任务，验证资产可发现 → 故意把旧 bug 插回来 → 系统自己（<code>./verify.sh</code>）拦住，不靠讲师复述业务规则 → 恢复正确实现。</div>
 
-<div class="card"><h3>4A · 铺垫：Bug 修完，项目真的学会了吗？</h3><p>先不要敲命令。接着 Demo 3 问学员一句：</p><div class="warn"><b>“如果我现在把所有 Codex 会话都关掉，明天换一个人、换一个新会话，这次经验还在吗？”</b></div><p>这里区分三件事：会话记忆会消失；代码修复只解决这一次；真正希望留下的是<strong>项目级规则和验收标准</strong>，让下一次任务天然继承。</p><p>口播：我们不是要保存聊天记录，而是把已经被验证过的业务事实，变成下一次工作的默认约束。</p></div>
-
-<div class="card"><h3>4B · 原本设想 vs 真实彩排偏差</h3><p><b>原本设想：</b>把 Demo 3 的经验写进 <code>AGENTS.md</code> 和 <code>validation/checklist.md</code>，关掉会话，再开一个新会话处理新数据；如果还能得到正确结果，就证明规则留下来了。</p><p>第一次彩排确实沉淀了一句：</p><div class="code">候选优先级：组合候选先评估；只有组合候选被明确排除时，才允许回退到退税单候选。</div><p>然后全新会话面对“汇损 2400、退税 8600、组合未排除”，它准确复述了这条规则，却回答：</p><div class="blocker"><b>汇损候选（组合候选） / 2400</b><br>规则读到了，但结果仍然错了。</div><p>这不是模型没加载 <code>AGENTS.md</code>。恰恰相反，它已经证明自己读到了。问题在于我们把规则压缩得太狠，只说了<strong>谁优先</strong>，却没有定义<strong>组合候选到底是什么、返回什么 mode、金额怎么算</strong>。</p><div class="evidence"><div><b>触发条件</b>什么时候进入组合候选</div><div><b>执行语义</b>返回什么 mode、金额怎么算</div><div><b>回退条件</b>什么时候才允许退税单候选</div></div><div class="callout">新的判断：<b>不是所有写进 AGENTS.md 的东西都叫沉淀。规则本身也必须完整到足以执行。</b></div></div>
-
-<div class="card"><h3>4C · 最终版现场：先恢复“还没学会”的项目</h3><div class="code" id="d4-start">./scripts/reset_demo4.sh
+<div class="card"><h3>4A · 起点：D3 已经修好了，那系统本身呢？</h3><div class="code" id="d4-start">./scripts/reset_demo4.sh
 cd workspaces/demo4-sedimentation
-cat AGENTS.md
-cat validation/checklist.md
-cat reports/demo3-validation.md</div><button class="copy-btn" data-copy="d4-start">复制 Demo4 起始命令</button><p>讲师只让学员看两点：项目规则里还没有候选判定规则；Demo 3 报告已经包含最终 PASS 和经过独立验收确认的完整业务事实。也就是说，<strong>经验已经发生，但还没有进入项目默认规则</strong>。</p></div>
+../../.venv/bin/python -m pytest -q
+cat AGENTS.md</div><button class="copy-btn" data-copy="d4-start">复制 Demo4 起始命令</button><div class="callout">预期：<code>19 passed</code>。<code>AGENTS.md</code> 只说明当前是"D3 修复后、业务行为正确"的状态，还没有规则资产、Golden Case 或统一验证入口——这些正是本次要沉淀的东西。</div><p>另开终端启动固定端口页面：</p><div class="code">./scripts/demo4_serve.sh</div><p class="small">浏览器打开 <a href="http://127.0.0.1:8050/" target="_blank" rel="noreferrer">http://127.0.0.1:8050/</a>：状态切到 <b>REJECTED</b>，列表正常查到 1 条，点"放款处理导出"显示<b>共 0 条记录</b>——和 D3 收口时一致。</p><p>开场只问学员一句：</p><div class="warn"><b>“这次已经修好了。那系统本身，哪里变得更强了？”</b></div></div>
 
-<div class="card"><h3>4D · 第一个会话：把“已验证事实”沉淀成可执行规则</h3><p>在 <code>workspaces/demo4-sedimentation</code> 新开 Luna + High。复制下面的复盘任务：</p><div class="prompt" id="d4-retro">请复盘 reports/demo3-validation.md 中已经通过独立验收的最终结论，把可复用经验沉淀成项目资产。
+<div class="card"><h3>4B · 让 Agent 做事故复盘与资产沉淀</h3><p>在 <code>workspaces/demo4-sedimentation</code> 新开 Luna + High（不给它 D3 的历史聊天记录，只给下面这一句任务，不追加命令行式的文件名指令）：</p><div class="prompt" id="d4-retro">D3 的独立验收刚发现并修复了一次放款导出资格错误。请复盘这次问题，把下一次开发者或 Agent 不必重新理解、重新踩坑所需要的规则、验证和工程入口沉淀进项目。不要改变当前正确业务行为。完成后说明你留下了哪些长期资产，并运行项目标准验证。</div><button class="copy-btn" data-copy="d4-retro">复制事故复盘任务</button><p>允许 Agent 自己判断具体组织方式（文件名、目录结构），课堂验收看它最终有没有覆盖四类资产：</p><div class="evidence"><div><b>已确认规则</b>进 repo 内一个明确、可发现、有人负责的文件，不只留在聊天记录。</div><div><b>Golden Case</b>从业务事实出发验证外部行为，独立于开发单元测试，不是复制一份 <code>test_export_eligibility.py</code>。</div><div><b>标准验证入口</b>一个 <code>./verify.sh</code>，普通测试和 Golden/policy gate 都从这里进入。</div><div><b>可发现的工程记忆</b><code>AGENTS.md</code> 指向前三者，不在多处重复整份规则原文。</div></div><div class="warn">课堂重点不是看它写多少 Markdown，而是最后问一句：<b>如果现在把这个 Session 全关掉，下一次还有什么留下来？</b></div><p>展示它的改动（<code>git diff</code> 或直接 <code>cat</code> 新增文件）后，<b>关闭这个会话</b>。确定性兜底：如果现场沉淀不完整或跑偏，讲师可以直接运行 <code>./scripts/restore_demo4_sedimented.sh</code> 切到已经验证过的沉淀参考态，再继续后面的流程。</p></div>
 
-不要只写一句抽象的“组合候选优先”。沉淀后的规则必须让一个完全新的会话在没有历史聊天的情况下，能够唯一确定正确执行结果。
+<div class="card"><h3>4C · 关闭旧 Session，证明资产不依赖聊天</h3><p>明确讲给学员听：</p><div class="warn">现在，刚才那个 Session 的聊天记录不存在了。接下来这个新 Session 只给一个普通开发任务，看它能不能自己发现约束。</div><p>仍在 <code>workspaces/demo4-sedimentation</code>，新开一个完全新的 Luna + High，只发送：</p><div class="prompt" id="d4-fresh-task">放款处理导出的返回结果里，请新增一个字段 exported_by，值等于当前请求用户（X-User 请求头）。除了新增这个字段，不要改变其他导出行为。完成后运行项目要求的验证，并说明你是如何确认这次改动没有破坏放款导出资格规则的。</div><button class="copy-btn" data-copy="d4-fresh-task">复制全新 Session 维护任务</button><div class="callout"><b>课堂暂停点：</b>它有没有主动读到规则文件、主动跑 <code>./verify.sh</code>（而不是只跑 <code>pytest</code>）、并且没有去改 Golden Case 的期望值让它变绿？如果做到了，只说一句：<b>它没有见过刚才的沉淀过程，但项目记住了，不是会话记住了。</b></div></div>
 
-必须完成两项：
-1. 在 AGENTS.md 追加候选判定规则，至少写清：
-   - 什么时候进入组合候选；
-   - 组合未被排除时应选择准确模式 FX_LOSS_PLUS_TAX_REFUND；
-   - 组合候选金额 = 汇损金额 + 退税金额；
-   - 只有组合候选被明确排除时，才允许回退到 TAX_REFUND_ONLY。
-2. 在 validation/checklist.md 追加一条可执行验收项，检查同样四件事：触发条件、模式、金额公式、回退条件。
+<div class="card"><h3>4D · 故意把旧 bug 插回来</h3><p>这一步不依赖模型碰巧犯错，用确定性脚本重新引入 D3 那个历史错误：放款导出重新直接使用当前查询结果，于是 REJECTED 又被导出。</p><div class="code" id="d4-inject">./scripts/inject_demo4_regression.sh</div><button class="copy-btn" data-copy="d4-inject">复制注入回归命令</button><p>回到浏览器 <a href="http://127.0.0.1:8050/" target="_blank" rel="noreferrer">http://127.0.0.1:8050/</a>（<code>demo4_serve.sh</code> 用 <code>--reload</code> 运行，改动会自动生效，刷新即可），状态选 <b>REJECTED</b>：</p><div class="blocker">列表查询仍然是 1 条，但这次点"放款处理导出"，页面也显示<b>共 1 条记录</b>——同一个历史 bug 又出现了。这就是产品线。</div></div>
 
-要求：
-- 不写故事；
-- 不写这次 case 的具体金额；
-- 只沉淀以后还能复用、能够直接指导执行和验收的规则；
-- 保持简洁；
-- 完成后展示修改内容；
-- 不要继续测试新会话是否读取，复验必须由我另开全新会话完成。</div><button class="copy-btn" data-copy="d4-retro">复制复盘沉淀任务</button><div class="callout">预期：AGENTS 里同时出现 <code>FX_LOSS_PLUS_TAX_REFUND</code>、金额相加公式和 <code>TAX_REFUND_ONLY</code> 回退条件；checklist 也能检查同样内容。</div><p>展示 diff 后，<b>关闭这个会话</b>。这一步很重要：下一步不能靠聊天记忆。</p></div>
+<div class="card"><h3>4E · 系统自己拦住</h3><p>不重新讲 D3，不重新拿业务规则卡，不让讲师人工判断对错。直接运行项目标准入口：</p><div class="code" id="d4-verify-block">cd workspaces/demo4-sedimentation
+./verify.sh</div><button class="copy-btn" data-copy="d4-verify-block">复制 verify 命令</button><div class="blocker">必须确定性 FAIL，且能看到明确指向业务规则的输出：<br><br><code>GC-02&nbsp;&nbsp;REJECTED&nbsp;&nbsp;&nbsp;&nbsp;FAIL&nbsp;&nbsp;export expected rows: 0 ids=[], actual: 1 ids=['FA-1004']</code><br><code>Export eligibility Golden Case: FAIL</code><br><code>OVERALL: BLOCKED</code></div><p>即使普通 <code>pytest</code> 也会因为 D3 留下的 <code>test_export_eligibility.py</code> 回归测试而失败——这本身也是沉淀的一部分，不要因为"pytest 又红了"就觉得 D4 没有新增价值；<code>./verify.sh</code> 让这次 Golden/policy gate 的结果单独、清楚地可见，不会被淹没在一堆 pytest 输出里。</p><div class="warn">课堂暂停：<b>注意，这次没有人重新发现这个业务规则。系统自己记得。</b>这是 D4 的高潮。</div></div>
 
-<div class="card"><h3>4E · 全新会话：用新数据验收“沉淀”</h3><p>仍停留在同一个 workspace，但新开一个完全新的 Luna + High。只发送：</p><div class="prompt" id="d4-variant">请读取 tasks/task-b-variant.md 并回答。</div><button class="copy-btn" data-copy="d4-variant">复制新会话任务</button><p>不要补充 Demo 3，不贴规则，不解释刚才改过什么。变体输入是汇损 2400、退税 8600、组合未排除。</p><div class="callout"><b>最终正确结果：</b><br>模式：<code>FX_LOSS_PLUS_TAX_REFUND</code><br>金额：<code>11000</code><br>依据：组合未被排除时选组合模式，金额 = 汇损金额 + 退税金额；只有组合被排除才回退 <code>TAX_REFUND_ONLY</code>。</div><p>这时问学员：“这个新会话见过刚才那次复盘吗？”——没有。它知道规则，是因为<strong>项目记住了，不是会话记住了</strong>。</p></div>
+<div class="card"><h3>4F · 恢复正确实现</h3><div class="code" id="d4-restore">./scripts/restore_demo4_fixed.sh</div><button class="copy-btn" data-copy="d4-restore">复制恢复命令</button><p>只恢复导出逻辑本身，不触碰刚才沉淀下来的规则文件、Golden Case 和 <code>verify.sh</code>。刷新浏览器：REJECTED 仍能查询，导出回到 <b>共 0 条记录</b>；终端里 <code>./verify.sh</code> 回到 <code>OVERALL: PASS</code>，Golden Case 全部 PASS。</p></div>
 
-<div class="card"><h3>4F · 如果现场仍答错：不要喂答案，修沉淀资产</h3><p>如果新会话能复述优先级但 mode 或金额仍错误，不要在新会话里直接纠正答案。把结果当成对沉淀资产的验收失败，重新开一个复盘修正会话，发送：</p><div class="prompt" id="d4-refine">新会话已经证明它读到了项目规则，但仍然无法唯一得到正确结果，说明当前沉淀规则方向正确但执行语义不完整。
-
-请只修正项目沉淀资产，不修改任务输入，不修改业务代码，不写具体 case 金额。
-
-检查并补全：
-1. 触发条件：什么时候进入“汇损 + 退税”组合候选；
-2. 准确模式：组合未被排除时必须返回 FX_LOSS_PLUS_TAX_REFUND；
-3. 金额公式：组合候选金额 = 汇损金额 + 退税金额；
-4. 回退条件：只有组合候选被明确排除时才允许返回 TAX_REFUND_ONLY。
-
-同步更新 AGENTS.md 和 validation/checklist.md。完成后展示修改，不要在当前会话继续验证；复验必须由另一个全新会话完成。</div><button class="copy-btn" data-copy="d4-refine">复制沉淀修正任务</button><p>修完后再次关闭会话，再开第三个全新会话执行同一个 <code>tasks/task-b-variant.md</code>。同一把尺子再次量，直到得到 11000。</p></div>
-
-<div class="card"><h3>Demo 4 收口｜什么时候才算“沉淀”</h3><ol><li><b>写进文件，不等于沉淀完成。</b></li><li><b>只有新会话面对新输入还能正确执行，规则才算真正留下来。</b></li><li><b>沉淀本身，也需要验收。</b></li></ol><p>最后落一句：<b>会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</b></p><p class="small">确定性兜底：从仓库根目录执行 <code>./scripts/restore_demo4_learned.sh</code> 可恢复已经补全 mode、金额公式和回退条件的最终沉淀态。</p></div>
+<div class="card"><h3>Demo 4 收口</h3><ol><li><b>D3 解决的是：这次怎么证明做对。</b></li><li><b>D4 解决的是：下次怎么更难再做错。</b></li><li>写代码的 Agent 会换、会话会关掉，但规则、Golden Case 和 <code>verify.sh</code> 留在工程现场——新 Session 不需要重新踩坑，也不需要讲师重新复述业务规则。</li></ol><p class="callout"><b>下一次不必从头再来，才真正形成团队能力。</b></p><p class="small">确定性兜底：<code>./scripts/restore_demo4_sedimented.sh</code> 直接把 <code>workspaces/demo4-sedimentation</code> 切到"资产沉淀已完成"的参考目标状态；<code>./scripts/demo4_save_fallback.sh</code> 保存的一次真实预跑证据（沉淀态 diff、PASS → 注入 BLOCK → 恢复 PASS 的完整 <code>verify.sh</code> 输出）在 <code>instructor/d4/fallback/</code>，live 沉淀现场失败时可以直接展示。</p></div>
 </section>
 
 <section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py
 .venv/bin/python scripts/d0_verify.py
-./scripts/d1_handoff_verify_setup.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、D1 handoff checkpoint（3 提交、feature-list、verify.sh、页面层——接手前只有客户筛选控件、reference 页面三项能力齐全、无第三讲资产泄漏）、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 developer/validator 隔离、放款导出 Golden Case wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
+./scripts/d1_handoff_verify_setup.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、D1 handoff checkpoint（3 提交、feature-list、verify.sh、页面层——接手前只有客户筛选控件、reference 页面三项能力齐全、无第三讲资产泄漏）、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 developer/validator 隔离、放款导出 Golden Case wrong/fixed 状态和 Demo 4 规则/Golden Case/verify.sh 沉淀资产与注入回归后的确定性 BLOCK；不执行真实课堂任务。</p></section>
 </main>
 <script>
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));

@@ -1,0 +1,80 @@
+== pytest（开发侧测试）==
+....FFFF...........                                                      [100%]
+=================================== FAILURES ===================================
+________________ test_rejected_status_filter_exports_zero_rows _________________
+
+    def test_rejected_status_filter_exports_zero_rows():
+        r = client.post(
+            "/api/financing-applications/export?status=REJECTED",
+            headers={"X-User": "alice"},
+        )
+        payload = r.json()["payload"]
+        assert payload["filters"]["status"] == "REJECTED"
+>       assert payload["rows"] == []
+E       AssertionError: assert [{'amount': 5...: 'REJECTED'}] == []
+E         
+E         Left contains one more item: {'amount': 500000, 'customer_name': '北辰电子', 'id': 'FA-1004', 'status': 'REJECTED'}
+E         Use -v to get more diff
+
+tests/test_export_eligibility.py:21: AssertionError
+_____________ test_submitted_is_still_queryable_but_not_exportable _____________
+
+    def test_submitted_is_still_queryable_but_not_exportable():
+        listed = client.get("/api/financing-applications?status=SUBMITTED", headers={"X-User": "alice"}).json()
+        assert listed["total"] == 1
+        exported = client.post(
+            "/api/financing-applications/export?status=SUBMITTED",
+            headers={"X-User": "alice"},
+        ).json()
+>       assert exported["payload"]["rows"] == []
+E       AssertionError: assert [{'amount': 8... 'SUBMITTED'}] == []
+E         
+E         Left contains one more item: {'amount': 800000, 'customer_name': '华星科技', 'id': 'FA-1001', 'status': 'SUBMITTED'}
+E         Use -v to get more diff
+
+tests/test_export_eligibility.py:31: AssertionError
+_______________ test_mixed_export_keeps_only_approved_and_funded _______________
+
+    def test_mixed_export_keeps_only_approved_and_funded():
+        r = client.post("/api/financing-applications/export", headers={"X-User": "alice"})
+        payload = r.json()["payload"]
+>       assert {row["id"] for row in payload["rows"]} == {"FA-1002", "FA-1003", "FA-1005"}
+E       AssertionError: assert {'FA-1001', '...4', 'FA-1005'} == {'FA-1002', '...3', 'FA-1005'}
+E         
+E         Extra items in the left set:
+E         'FA-1004'
+E         'FA-1001'
+E         Use -v to get more diff
+
+tests/test_export_eligibility.py:37: AssertionError
+_____________ test_tenant_scope_and_eligibility_both_hold_for_bob ______________
+
+    def test_tenant_scope_and_eligibility_both_hold_for_bob():
+        r = client.post("/api/financing-applications/export", headers={"X-User": "bob"})
+        payload = r.json()["payload"]
+        assert payload["tenant_scope"] == ["SOUTH"]
+>       assert {row["id"] for row in payload["rows"]} == {"FA-2001", "FA-2003"}
+E       AssertionError: assert {'FA-2001', '...2', 'FA-2003'} == {'FA-2001', 'FA-2003'}
+E         
+E         Extra items in the left set:
+E         'FA-2002'
+E         Use -v to get more diff
+
+tests/test_export_eligibility.py:45: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_export_eligibility.py::test_rejected_status_filter_exports_zero_rows
+FAILED tests/test_export_eligibility.py::test_submitted_is_still_queryable_but_not_exportable
+FAILED tests/test_export_eligibility.py::test_mixed_export_keeps_only_approved_and_funded
+FAILED tests/test_export_eligibility.py::test_tenant_scope_and_eligibility_both_hold_for_bob
+4 failed, 15 passed in 0.15s
+
+== golden/check_export_eligibility.py（独立 Golden Case / policy gate）==
+Export eligibility Golden Case
+GC-01  APPROVED       PASS
+GC-02  REJECTED       FAIL  export expected rows: 0 ids=[], actual: 1 ids=['FA-1004']
+GC-03  MIXED          FAIL  export expected rows: 3 ids=['FA-1002', 'FA-1003', 'FA-1005'], actual: 5 ids=['FA-1001', 'FA-1002', 'FA-1003', 'FA-1004', 'FA-1005']
+GC-04  TENANT_SCOPE   FAIL  export expected rows: 2 ids=['FA-2001', 'FA-2003'], actual: 3 ids=['FA-2001', 'FA-2002', 'FA-2003']
+
+Export eligibility Golden Case: FAIL
+
+OVERALL: BLOCKED
