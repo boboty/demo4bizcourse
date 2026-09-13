@@ -37,7 +37,7 @@ GC-03 MIXED          PASS
 GC-04 TENANT_SCOPE   PASS
 
 Overall: PASS
-Root cause classification: 同上（条件遗漏，非代码 bug）。
+Root cause classification: 业务条件遗漏导致的实现错误；根因是独立业务事实未进入开发上下文，开发实现与测试共享不完整理解。
 ```
 
 ## 已经通过独立验收确认的事实（供后续沉淀引用）
