@@ -60,6 +60,22 @@ def main() -> int:
     verify_result = subprocess.run(["bash", str(WORKSPACE / "verify.sh")], cwd=WORKSPACE, text=True, capture_output=True, check=False)
     check("./verify.sh passes on the frozen handoff checkpoint", verify_result.returncode == 0, verify_result.stdout.strip().splitlines()[-1] if verify_result.stdout else verify_result.stderr.strip())
 
+    # 页面层检查：接手前（workspace/stage-1）应该能看到客户名称筛选控件，且真的把值传给后端；
+    # 状态筛选和导出控件此时还不应该存在——否则课堂上"上一棒做到哪里"这条线就不直观了。
+    checkpoint_html = (WORKSPACE / "static/index.html").read_text(encoding="utf-8")
+    check(
+        "checkpoint page has a customer-name filter control wired to the real API",
+        'id="customer-name-input"' in checkpoint_html and "customer_name" in checkpoint_html and "/api/financing-applications" in checkpoint_html,
+    )
+    check(
+        "checkpoint page does not yet have status-filter or export controls",
+        "<select" not in checkpoint_html and "export-btn" not in checkpoint_html and "/export" not in checkpoint_html,
+    )
+    check(
+        "checkpoint has a page-layer test file (tests/test_static_page.py)",
+        (WORKSPACE / "tests/test_static_page.py").is_file(),
+    )
+
     check("reference completed implementation exists", REFERENCE.is_dir())
     if REFERENCE.is_dir():
         ref_result = run_pytest(REFERENCE)
@@ -70,6 +86,30 @@ def main() -> int:
             check("reference feature-list.json marks all three features done", all(v == "done" for v in ref_statuses.values()), json.dumps(ref_statuses, ensure_ascii=False))
         except Exception as exc:  # noqa: BLE001
             check("reference feature-list.json is valid", False, str(exc))
+
+        # 页面层检查：reference/fallback 必须是"三项能力都能在浏览器里真实操作"的完整态，
+        # 不能只是后端做完、页面还停在旧版本。
+        reference_html = (REFERENCE / "static/index.html").read_text(encoding="utf-8")
+        check(
+            "reference page has customer-name filter control",
+            'id="customer-name-input"' in reference_html,
+        )
+        check(
+            "reference page has status-filter control (select) wired to the real API",
+            "<select" in reference_html and 'id="status-select"' in reference_html and "status" in reference_html,
+        )
+        check(
+            "reference page has an export button wired to the real export endpoint",
+            'id="export-btn"' in reference_html and "/api/financing-applications/export" in reference_html,
+        )
+        check(
+            "reference page renders the real export job result (not a fake front-end message)",
+            "job.id" in reference_html and "job.status" in reference_html and "job.payload" in reference_html,
+        )
+        check(
+            "reference has a page-layer test file (tests/test_static_page.py)",
+            (REFERENCE / "tests/test_static_page.py").is_file(),
+        )
 
     prompt = HANDOFF / "prompts/handoff.md"
     check("handoff prompt exists and is short (<= 200 chars)", prompt.is_file() and 0 < len(prompt.read_text(encoding="utf-8").strip()) <= 200)

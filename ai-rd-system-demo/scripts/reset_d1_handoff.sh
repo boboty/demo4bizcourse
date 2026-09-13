@@ -25,7 +25,7 @@ rsync -a --exclude '.git/' --exclude '__pycache__/' --exclude '.pytest_cache/' "
 git_commit "chore: start financing filter+export task (baseline + TASK/PROGRESS/DECISIONS scaffolding)"
 
 rsync -a --exclude '.git/' --exclude '__pycache__/' --exclude '.pytest_cache/' "$baseline_root/stage-1/" "$workspace/"
-git_commit "feat(financing): add customer_name filter; log decision D-001/D-002/D-003 and handoff state"
+git_commit "feat(financing): add customer_name filter (service + API + UI); log decision D-001/D-002/D-003/D-004 and handoff state"
 
 git -C "$workspace" commit -q --allow-empty -m "chore: session ended — see PROGRESS.md for next step"
 

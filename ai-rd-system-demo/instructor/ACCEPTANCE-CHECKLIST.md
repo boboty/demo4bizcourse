@@ -8,13 +8,16 @@
 
 ## D1｜工程现场接力（主 demo）
 - [ ] `workspaces/d1-handoff/` reset 后有且仅有 3 个 Git 提交，最后一条显式标记 session 已结束。
-- [ ] Checkpoint 里 `feature-list.json` 显示客户名称筛选 `done`，状态筛选/导出 `pending`；`./verify.sh` 全绿（5 passed）。
-- [ ] 讲师先做五个预测（任务/已完成项/下一步/一个决策/正确验证命令），再启动全新 session。
-- [ ] 全新 session 用 `codex exec --ephemeral`（或真正新开的交互会话），不携带任何历史聊天记录。
-- [ ] `instructor/d1/handoff/results/latest/result.json` 的 `predictions` 五项分别记录命中与否，不做一刀切 PASS/FAIL。
+- [ ] Checkpoint 里 `feature-list.json` 显示客户名称筛选 `done`（含 `ui`），状态筛选/导出 `pending`；`./verify.sh` 全绿（7 passed）。
+- [ ] **页面层**：`./scripts/d1_handoff_serve.sh` 启动后，浏览器打开接手起点页面能看到——客户名称筛选控件存在且真实生效；状态筛选控件和导出按钮都不存在。
+- [ ] 课堂顺序是 D1-1（先看上一棒页面）→ D1-2（关掉上一棒）→ D1-3（新 Session 接手）→ D1-4（回浏览器看结果）→ D1-5（收口），不再以"先做五个预测"开场；五项预测保留作讲师 QA，可用 `scripts/d1_handoff_run.sh` 自动化复核。
+- [ ] 全新 session 用 `codex exec --ephemeral`（或真正新开的交互会话），不携带任何历史聊天记录，且只从 `workspaces/d1-handoff` 内读取上下文。
+- [ ] **页面层**：Fresh Session 完成后，浏览器刷新能看到——状态筛选生效、客户名称+状态组合筛选生效、导出按钮调用真实 `/api/financing-applications/export` 并在页面展示真实 job id/status/筛选条件。
+- [ ] `instructor/d1/handoff/results/latest/result.json` 的 `predictions` 五项分别记录命中与否，不做一刀切 PASS/FAIL（讲师 QA 用，非课堂主画面）。
 - [ ] `health_check_timing.ran_verify_or_pytest_before_first_edit`、`state_written_back`、`stayed_in_workspace` 均有记录。
 - [ ] D1 不展示 Golden Case、独立 Validator 或规则沉淀资产；这些分别属于第三讲、第四讲。
-- [ ] 预跑 `scripts/d1_handoff_prerun.sh` 结果见 `instructor/d1/handoff/PRERUN-REPORT.md`，且 `scripts/d1_handoff_verify_setup.py` 为 `OVERALL: PASS`。
+- [ ] 预跑 `scripts/d1_handoff_prerun.sh` 结果见 `instructor/d1/handoff/PRERUN-REPORT.md`；3 次完整"reset→浏览器接手前→Fresh Session→浏览器接手后→verify.sh"链路见 `instructor/d1/handoff/UI-PRERUN-REPORT.md`；`scripts/d1_handoff_verify_setup.py` 为 `OVERALL: PASS`（含页面层检查）。
+- [ ] `instructor/reference/d1-handoff-completed/`（fallback）页面本身具备客户筛选、状态筛选、导出三项可操作能力，`./scripts/d1_handoff_restore_fixed.sh` 恢复后浏览器刷新即可验证，不止是"测试全绿"。
 
 ## D1 补充实验｜Task → Plan → 项目环境 → 自检要求（Level 1/2/3）
 - [ ] Level 1/2/3 都从同一个 `instructor/d1/task.txt` 和冻结融资 baseline 开始。

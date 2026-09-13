@@ -1,22 +1,26 @@
 {
   "task": "给融资申请列表增加客户名称和融资状态筛选，并支持导出。",
+  "definition_of_done": "每个 feature 的 status 只有在 requires 列出的层全部完成时才能标记为 done：后端行为（service + API 参数）+ 页面入口（用户能在浏览器里实际用到，具体实现方式不做规定）+ 对应开发侧测试，缺一不可。",
   "features": [
     {
       "id": "customer_name_filter",
       "title": "客户名称模糊筛选",
       "status": "done",
-      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_customer_filter.py"]
+      "requires": ["service", "api", "ui", "tests"],
+      "evidence": ["app/financing/service.py", "app/main.py", "static/index.html", "tests/test_customer_filter.py", "tests/test_static_page.py"]
     },
     {
       "id": "status_filter",
       "title": "融资状态精确筛选（可与客户名称组合）",
       "status": "pending",
+      "requires": ["service", "api", "ui", "tests"],
       "depends_on": ["customer_name_filter"]
     },
     {
       "id": "export_endpoint",
       "title": "导出当前筛选结果（复用既有 ExportQueue，保留权限范围）",
       "status": "pending",
+      "requires": ["service", "api", "ui", "tests"],
       "depends_on": ["customer_name_filter", "status_filter"]
     }
   ]
