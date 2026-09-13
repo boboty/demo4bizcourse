@@ -12,15 +12,15 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-workspace="$repo_root/workspaces/d1-handoff"
+workspace="${repo_root}/workspaces/d1-handoff"
 port="${D1_HANDOFF_PORT:-8010}"
 
-if [ ! -d "$workspace" ]; then
+if [ ! -d "${workspace}" ]; then
   echo "workspaces/d1-handoff 不存在，先运行 ./scripts/reset_d1_handoff.sh" >&2
   exit 1
 fi
 
-cd "$workspace"
-echo "D1 handoff 页面：http://127.0.0.1:$port/"
-echo "（workspace=$workspace；Python 代码改动会自动重启，static/index.html 改动刷新浏览器即可）"
-exec "$repo_root/.venv/bin/python" -m uvicorn app.main:app --reload --port "$port"
+cd "${workspace}"
+echo "D1 handoff 页面：http://127.0.0.1:${port}/"
+echo "（workspace=${workspace}；Python 代码改动会自动重启，static/index.html 改动刷新浏览器即可）"
+exec "${repo_root}/.venv/bin/python" -m uvicorn app.main:app --reload --port "${port}"
