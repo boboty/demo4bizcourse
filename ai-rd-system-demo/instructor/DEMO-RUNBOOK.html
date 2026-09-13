@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI 研发体系建设｜课堂 Runbook</title>
+<title>AI 研发实践｜课堂 Runbook</title>
 <style>
 :root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav button,.copy-btn{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}.copy-btn{margin:0 0 9px}.nav button:hover,.copy-btn:hover{background:var(--soft)}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:38px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:30px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}.evidence{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.evidence>div{background:#f8f6ef;border:1px solid var(--line);border-radius:12px;padding:12px}.evidence b{display:block;color:var(--green);margin-bottom:4px}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid,.evidence{grid-template-columns:1fr}.hero h1{font-size:30px}}
 </style>
 </head>
 <body>
-<header><div class="top"><div class="brand">AI 研发体系建设 · Runbook</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="baseline">共同基准</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
+<header><div class="top"><div class="brand">AI 研发实践 · Runbook</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="d0">D0 连续执行</button><button data-go="baseline">既有 Demo</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
 <main>
-<section class="hero" id="baseline"><div><h1>4 讲 · 4 Demo</h1><div class="map">看见 AI → 交办 AI → 验证 AI → 沉淀 AI</div><p>Demo 1 与 Demo 2 共用一个完整的融资申请 workspace；课堂只改变任务交办方式。</p><div class="warn">不要从 ai-rd-system-demo/ 根目录启动 Codex 会话。每次都从 Runbook 指定目录新开 Luna + High。</div></div><div><b>共同控制变量</b><ul><li>同一个 <code>demo12-financing</code> workspace。</li><li>同一个 baseline 和 <code>AGENTS.md</code>。</li><li>同一个 Luna + High。</li><li>同一套讲师独立验收。</li><li>标准公开，验收实现独立。</li></ul></div></section>
+<section class="hero" id="top"><div><h1>从一次红灯开始，看见 Agent 连续工作</h1><div class="map">连续执行 → 工程现场 → 独立验证 → 能力沉淀</div><p>D0 是当前课程第一讲的真机入口。先证明一件事：失败反馈能进入 Agent 的下一步决策，而不是只生成一次答案。</p><div class="warn">所有 Agent 会话都从 Runbook 指定的 workspace 启动，不要从 <code>ai-rd-system-demo/</code> 根目录直接开会话。</div></div><div><b>D0 课堂唯一观察链</b><ul><li><b>Run → FAIL</b>：先运行真实测试。</li><li><b>Read/Search → Observe</b>：失败信息驱动定位。</li><li><b>Edit → Run → PASS</b>：不靠讲师追加提示继续完成。</li><li>最终不是“AI 会写代码”，而是“反馈开始驱动执行”。</li></ul></div></section>
 
 <section id="prep" class="demo"><span class="badge">课前准备 · 环境检查</span><h2>先确认环境，再开始 Demo</h2><div class="grid"><div class="card"><h3>首次环境安装</h3><div class="code">cd ai-rd-system-demo
 brew install python@3.12  # 已安装可跳过
@@ -29,13 +29,45 @@ which pytest</div><p>每次开新终端或重新进入课堂前都确认路径�
 source .venv/bin/activate
 which python
 python --version
-python scripts/acceptance_check.py</div><div class="callout">正常：所有检查为 <code>PASS</code>，最后显示 <code>OVERALL: PASS</code>。</div><div class="blocker">异常：停止课堂，先检查是否使用根目录 <code>.venv</code>、旧服务是否占用端口。不要因为 import 失败临时 pip install，不要在课堂中访问 PyPI 修环境。</div></div><div class="grid"><div class="card"><h3>Demo12 baseline 检查</h3><div class="code">./scripts/reset_demo1.sh
+python scripts/acceptance_check.py
+python scripts/d0_verify.py</div><div class="callout">正常：两份检查都以 <code>OVERALL: PASS</code> 结束。<code>d0_verify.py</code> 会重置 D0，所以只在课前运行。</div><div class="blocker">异常：停止课堂，先检查是否使用根目录 <code>.venv</code>。不要因为 import 失败临时 pip install，不要在课堂中访问 PyPI 修环境。</div></div><div class="grid"><div class="card"><h3>Demo12 baseline 检查</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo12-financing
-../../.venv/bin/python -m pytest -q</div><p>正常：baseline 测试通过。import 失败时首先检查是否使用根目录 <code>.venv</code>。</p></div><div class="card"><h3>查看 baseline 页面</h3><div class="code">cd workspaces/demo12-financing
+../../.venv/bin/python -m pytest -q</div><p>这是后续既有 Demo 的检查，不是 D0 必经步骤。正常：baseline 测试通过。</p></div><div class="card"><h3>查看 baseline 页面</h3><div class="code">cd workspaces/demo12-financing
 ../../.venv/bin/python -m uvicorn app.main:app --reload --port 8000</div><p>浏览器打开 <a href="http://127.0.0.1:8000/" target="_blank" rel="noreferrer">http://127.0.0.1:8000/</a>。正常：看到融资申请基础列表；异常：检查 venv、端口和 workspace。</p></div></div><div class="card"><h3>服务启动方式</h3><p>Demo 3 developer 测试全绿后，在另一个终端启动固定端口黑盒服务：</p><div class="code">cd workspaces/demo3-developer
 ./bin/start-blackbox</div><p>服务地址：<code>http://127.0.0.1:8765</code>。端口被占用时先停止旧服务；不要在课堂中访问 PyPI 修环境。</p></div></section>
 
-<section class="card"><h2>业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
+<section id="d0" class="demo"><span class="badge">D0 · d0-first-loop · 第一讲</span><h2>连续执行：从真实红灯到自己修复</h2><div class="callout">课堂链路固定看这一条：<b>Run → FAIL → Read/Search → Observe → Edit → Run → PASS</b>。不要期待模型“碰巧先写错”；红灯已经冻结在 baseline 里。</div>
+<div class="grid"><div class="card"><h3>1 · Reset，并让全场先看到红灯</h3><div class="code" id="d0-start">./scripts/reset_d0.sh
+cd workspaces/d0-first-loop
+../../.venv/bin/python -m pytest -q</div><button class="copy-btn" data-copy="d0-start">复制 D0 起始命令</button><div class="blocker"><b>预期：</b><code>4 failed, 4 passed</code></div><p>这不是演示脚本打印出来的文字，而是项目里真实存在的测试失败。这里不要解释失败原因，让 Agent 自己读。</p></div><div class="card"><h3>2 · 从这个 workspace 启动 Agent</h3><div class="code"># 当前目录必须是
+workspaces/d0-first-loop
+
+# 课堂默认
+codex</div><p>启动后只发下面这一份任务，不追加第二条提示：</p><div class="prompt" id="d0-task">同事把“放款后生成还款计划”这个需求做到一半就休假了。接口和测试他已经先写好了，但测试还没跑通。
+
+请你接手完成：
+
+1. 先运行一遍测试，确认现在的状态；
+2. 根据失败信息定位问题并修复，让全部测试通过；
+3. 不要修改或删除测试来让它变绿；
+4. 只改完成这个需求所必需的代码，不要做与本任务无关的重构。</div><button class="copy-btn" data-copy="d0-task">复制 D0 任务</button></div></div>
+<div class="card"><h3>3 · 现场只盯这五个节点</h3><div class="evidence"><div><b>Run / FAIL</b>它先跑测试，看到 <code>4 failed, 4 passed</code>。</div><div><b>Read / Search</b>它打开 <code>app/repayment/service.py</code> 和测试，而不是凭感觉改。</div><div><b>Observe</b>它自己说出尾差或非法期数校验问题。<br><strong>这里停一下，这是整段最值钱的画面。</strong></div><div><b>Edit</b>改动收敛在 <code>app/repayment/service.py</code>，不动测试。</div><div><b>Run / PASS</b>它自己复跑，最终看到 <code>8 passed</code>。</div><div><b>讲师纪律</b>中途不要替它解释、不要告诉它改哪里、不要追加修复提示。</div></div><div class="warn"><b>课堂暂停点：</b>当 Agent 根据失败信息说出下一步准备改哪里时，停 10–20 秒让学员看屏幕。要证明的是：<b>下一步动作来自上一轮反馈。</b></div></div>
+<div class="grid"><div class="card"><h3>4 · 成功收口</h3><div class="code" id="d0-pass"># Agent 自己最后应复跑：
+../../.venv/bin/python -m pytest -q
+
+# 预期：8 passed</div><button class="copy-btn" data-copy="d0-pass">复制 PASS 检查</button><p>收口只讲一句：</p><div class="callout"><b>刚才真正变化的，不是 AI 会不会写代码，而是它开始根据工程反馈连续执行。</b></div><p>接第二讲的问题：如果项目更大、任务更长、一次做不完，它换一个 Session 还能知道自己站在哪里吗？</p></div><div class="card"><h3>5 · 现场跑偏时的 fallback</h3><div class="code" id="d0-fallback"># 看同 baseline、同任务的一次真实成功运行
+cat instructor/d0/fallback/final.md
+cat instructor/d0/fallback/workspace.diff
+cat instructor/d0/fallback/result.json
+
+# 直接恢复到正确目标状态
+./scripts/d0_restore_fixed.sh
+
+# 需要重演时回起点
+./scripts/reset_d0.sh</div><button class="copy-btn" data-copy="d0-fallback">复制 D0 fallback</button><p class="small">fallback 不是另一个项目，也不是模拟结果；它来自同一个 baseline、同一个任务的一次真实跑通。</p></div></div>
+</section>
+
+<section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1–4 的课堂操作，暂不改其运行逻辑。后续按当前课程逐讲升级时，再逐步替换。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
 
 <section id="demo1" class="demo"><span class="badge">Demo 1 · demo12-financing · 15 min</span><h2>一句话 Direct Task</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo12-financing
@@ -189,7 +221,7 @@ cat reports/demo3-validation.md</div><button class="copy-btn" data-copy="d4-star
 <div class="card"><h3>Demo 4 收口｜什么时候才算“沉淀”</h3><ol><li><b>写进文件，不等于沉淀完成。</b></li><li><b>只有新会话面对新输入还能正确执行，规则才算真正留下来。</b></li><li><b>沉淀本身，也需要验收。</b></li></ol><p>最后落一句：<b>会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</b></p><p class="small">确定性兜底：从仓库根目录执行 <code>./scripts/restore_demo4_learned.sh</code> 可恢复已经补全 mode、金额公式和回退条件的最终沉淀态。</p></div>
 </section>
 
-<section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py</div><p class="small">检查结构、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
+<section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
 </main>
 <script>
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));
