@@ -6,5 +6,3 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# Local backup of the historical nested git metadata
-/ai-rd-system-demo/.git.local-backup-20260913
