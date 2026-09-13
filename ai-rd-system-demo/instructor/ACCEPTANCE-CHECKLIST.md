@@ -43,13 +43,13 @@
 - [ ] 学员实战 25 分钟：5+12+5+3。
 
 ## Demo 3
-- [ ] 在 `workspaces/demo3-developer/` 运行 `../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py`，wrong state 全绿。
-- [ ] developer 测试全绿后启动 `./bin/start-blackbox`，固定端口为 `127.0.0.1:8765`。
-- [ ] 在 `workspaces/demo3-validator/` 先形成 Independent Expectation，再运行 `../../.venv/bin/python bin/actual-output validation/cases.json`；wrong state 必须发现 BLOCKER。
+- [ ] 在 `workspaces/demo3-developer/` 运行 `../../.venv/bin/python -m pytest -q` 和 `bin/self-check`，wrong state 全绿 / PASS（自检看不到导出规则）。
+- [ ] developer 测试全绿后启动 `./scripts/demo3_serve.sh`，固定端口为 `127.0.0.1:8030`；浏览器三项功能都能点，REJECTED 仍可查询但会被错误导出。
+- [ ] 在 `workspaces/demo3-validator/` 先形成 Independent Expectation，再运行 `../../.venv/bin/python bin/actual-output validation/cases.json`（或讲师自查用 `./scripts/demo3_validator.sh`）；wrong state 必须发现 BLOCKER。
 - [ ] validator 的实际结果只来自 HTTP，不包含 developer 路径或实现模块名。
-- [ ] GC-01 的差异必须是 6200 combined vs 5000 refund-only。
+- [ ] GC-02（REJECTED）导出必须是 expected 0 vs actual 1；GC-03（混合结果）必须是 expected 只含 APPROVED/FUNDED vs actual 含全部状态。
 - [ ] 验收角色在形成期望前看不到实现、开发测试和开发聊天。
-- [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致。
+- [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致，且 REJECTED/SUBMITTED 仍能在列表查询中查到。
 
 ## Demo 4
 - [ ] 复盘新增的是规则与检查项，不是这次案例金额。

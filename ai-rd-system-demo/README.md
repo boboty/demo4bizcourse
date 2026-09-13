@@ -8,8 +8,8 @@
 workspaces/
 ├── d0-first-loop/           第一讲连续执行：半成品还款计划 + 真实红灯
 ├── demo12-financing/        Demo 1 / Demo 2 共用融资申请 baseline
-├── demo3-developer/         任务 B 历史错误实现 + 开发侧测试 + HTTP 黑盒服务
-├── demo3-validator/         Source of Truth + Golden Case + HTTP 黑盒客户端
+├── demo3-developer/         融资申请放款导出历史实现（开发测试全绿，导出 eligibility 有 bug）
+├── demo3-validator/         放款导出规则 Source of Truth + Golden Case + HTTP 黑盒客户端
 └── demo4-sedimentation/     正确修复状态 + 复盘输入 + 新会话变体
 instructor/                  Runbook、独立验收、Golden、角色资产和 reset 快照
 handouts/                    课堂讲义
@@ -108,13 +108,14 @@ cd ../..
 ## 其他课堂操作
 
 ```bash
-# Demo 3：developer 与 validator 是两个 workspace
+# Demo 3：developer 与 validator 是两个 workspace，主流程见 DEMO-RUNBOOK.html
 ./scripts/restore_demo3_wrong.sh
+./scripts/demo3_serve.sh          # 另开终端，保持 127.0.0.1:8030 运行
 cd workspaces/demo3-developer
-../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
-./bin/start-blackbox  # 保持 127.0.0.1:8765 运行
-cd ../demo3-validator
-../../.venv/bin/python bin/actual-output validation/cases.json
+../../.venv/bin/python -m pytest -q
+../../.venv/bin/python bin/self-check
+cd ../..
+./scripts/demo3_validator.sh      # 独立验收脚本化对照，wrong state 应为 BLOCKER
 
 # Demo 4：同一 workspace，复盘后关闭旧会话并新开会话
 cd ../..
