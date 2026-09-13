@@ -9,8 +9,7 @@
 | `ai-dev-course-demo/` | 用户列表/筛选/Excel 导出 API 与课堂演示页面（FastAPI） |
 | `finance-agent-course-demo/` | 离线财务业务智能体课堂演示套件（FastAPI） |
 | `ai-test-loop-demo/` | AI 测试闭环：生成测试全绿、独立验收拒绝、修复后沉淀测试能力（FastAPI） |
-| `ai-rd-system-demo/` | 既有 AI 研发体系课堂 Demo：独立 workspace、黑盒验收与规则沉淀 |
-| `ai-rd-system-lab/` | 通用 AI 研发体系建设实验场：连续执行、工程现场、独立验证、能力沉淀与综合实战 |
+| `ai-rd-system-demo/` | AI 研发体系建设课堂 Demo：连续执行、工程环境、独立验证与能力沉淀 |
 | `token-task-lab/` | 通用“任务 → 调用链 → Token”教学实验台；天津货代为首个场景，可扩展到财务/研发/测试 |
 
 ## 课堂演示检查点

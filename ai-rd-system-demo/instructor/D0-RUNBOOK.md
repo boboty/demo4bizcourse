@@ -7,7 +7,7 @@
 课堂要看见的链路：
 
 ```text
-Read → Search → Run → FAIL → Observe → Edit → Run → PASS
+Run → FAIL → Read/Search → Observe → Edit → Run → PASS
 ```
 
 D0 只证明这一件事。工程环境（Plan、项目记忆、代码规范、自检）是第二讲 D1 的内容；Golden Case 与独立验证是第三讲；规则沉淀是第四讲。D0 不碰这些。
