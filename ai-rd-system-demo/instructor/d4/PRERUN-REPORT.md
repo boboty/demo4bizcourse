@@ -1,6 +1,38 @@
 # D4 预跑报告
 
-## 本轮：3 次真实 D4 live Agent 彩排
+## 补充彩排：verify.sh 必须完整跑完两段验证（2026-09-14，第二次补验）
+
+上一轮彩排（见下一节）发现：3 次里有 2 次 Agent 写的 `verify.sh` 用 `set -euo pipefail`
+顺序执行两步，pytest 先失败时脚本提前退出，Golden Case 那一步根本没跑到，也就看不到独立的
+`Golden Case: FAIL` 结论。为此在 D4-2 任务文本、Runbook 的 `d4-retro` 提示和参考沉淀态
+`AGENTS.md` 里都补了一条明确的验收要求：**统一验证入口必须完整跑完开发测试和独立
+Golden/policy gate 两部分，任一项失败都不能导致另一项被跳过，最后要有一个汇总的
+PASS/BLOCKED 结论**——不限制具体 shell 写法，也不要求去掉 `set -e`，只约束这个可观察行为。
+参考沉淀态（`instructor/baselines/demo4-sedimented/`）本身已经是这样实现的，未做改动。
+
+补了新约束之后，又新开 3 个全新 Agent 会话重新做一次 D4-2（`reset → D4-2 → 注入 → verify.sh
+→ 恢复 → verify.sh`），只做 D4-2 部分，不重跑三轮完整的 D4-2+D4-3：
+
+| Rehearsal | D4-2 耗时 | 两段是否都跑到（注入后实测） | 注入后可见的失败信息 | 最终汇总行 | 恢复后 |
+|---|---|---|---|---|---|
+| A | 3m28s | 是——`Developer tests: FAIL` 和 `Golden/policy gate: BLOCKED` 都单独打印 | pytest `4 failed`；Golden 逐条 `GC-02/03/04 FAIL` | `Overall: BLOCKED` | `Overall: PASS` |
+| B | 2m58s | 是——`Developer tests: FAIL (exit 1)` 和 `Golden/policy gate: BLOCKED (exit 1)` 都单独打印 | pytest `4 failed`；Golden 逐条 `GC-02/03/04 FAIL`，另有 `Golden/policy gate overall: BLOCKER` | `Overall: BLOCKED` | `Overall: PASS` |
+| C | 3m44s | 是——`Developer tests: FAIL (exit 1)` 和 `Export eligibility Golden Case: FAIL/BLOCKED (exit 1)` 都单独打印 | pytest `4 failed`；Golden 逐条 `GC-02/03/04 FAIL`，且这次原样打印了 `Export eligibility Golden Case: FAIL` | `OVERALL: BLOCKED`（Rehearsal C 的措辞与讲师参考实现的字样完全一致） | `OVERALL: PASS` |
+
+三次的 `verify.sh` 都自己验证了"pytest 失败不会跳过 Golden 步骤"——Rehearsal A 的 Agent
+甚至主动做了一次自测（临时改坏一个断言，确认 Golden 步骤仍然执行）；三次都用 `set -uo
+pipefail`（去掉 `-e`）分别捕获两段的退出码后再统一判断，没有一次再出现"提前退出、Golden 步骤
+没跑到"的情况。三次都无需追加提示。
+
+随后用同一个已沉淀工作区（Rehearsal C 留下的状态）做了一次 D4-3 快速验证，确认新约束
+没有影响 Fresh Session 的自主发现能力：全新会话在没有被告知规则的情况下，自己读到了
+`docs/rules/export_eligibility.md` 和 `golden/run_golden_cases.py`，运行了 `./verify.sh`
+（两段都过），没有修改任何 Golden/期望值文件，耗时 1m8s，无需追加提示。
+
+结论：新增的验收要求生效，"两段验证都必须跑完、最后统一汇总"这条可观察行为在 3 次独立
+live 沉淀里都得到满足，且没有以任何固定 shell 写法作为前提；D4-3 的自主发现能力不受影响。
+
+## 此前一轮：3 次真实 D4 live Agent 彩排
 
 不同于此前只跑 `scripts/acceptance_check.py` 的自动化链路，这三次是三个完全独立、彼此
 没有历史聊天记录的真实 Agent 会话（每次 D4-2、D4-3 各另开一个全新 Agent），在真实
@@ -101,11 +133,13 @@ D4-2、D4-3 收到的任务文本，与 `instructor/prompts/demo4/01-retro-sedim
   两步 verify.sh），这是允许的（任务本身允许 Agent 自行组织），但其中两次（Run 1、Run 3）的
   `verify.sh` 用 `set -euo pipefail` 顺序执行两步，导致 pytest 先失败时 Golden 步骤根本没有
   运行、也就不会打印独立的 Golden 结果行。**阻断信号本身仍然确定**（非零退出码 + 具体失败的
-  业务断言），但如果课堂现场想要看到和参考实现完全一致的
-  `Export eligibility Golden Case: FAIL` / `OVERALL: BLOCKED` 字样，不能保证每次 live 沉淀
-  都产出这种呈现方式；届时可以用 `./scripts/restore_demo4_sedimented.sh` 切到讲师参考实现
-  （`instructor/baselines/demo4-sedimented/verify.sh`，两步都会跑完再报总状态）来保证这段
-  措辞可复现。
+  业务断言），但呈现方式不保证每次 live 沉淀都一致。
+  **更新（见上方"补充彩排"一节）：** 已经在 D4-2 任务文本、Runbook 和参考沉淀态 `AGENTS.md`
+  里补了明确的验收要求——两段验证必须都跑完、最后统一汇总 PASS/BLOCKED，不限制 shell 写法。
+  补充后新开的 3 次 D4-2 彩排里，三次的 `verify.sh` 都满足了这条要求（pytest 失败后 Golden
+  步骤依然执行、都打印了独立的失败/BLOCKED 信息），这个风险目前按验证到的样本已经解决；
+  仍然只是 3+3 共 6 次样本，不是数学上的保证，`./scripts/restore_demo4_sedimented.sh` 依旧是
+  live 沉淀不达标时的兜底。
 
 ## 补充：自动化回归（`scripts/acceptance_check.py`）
 
