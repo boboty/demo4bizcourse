@@ -1,0 +1,52 @@
+diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo3-developer/app/financing/service.py /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo3-developer/app/financing/service.py
+--- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo3-developer/app/financing/service.py	2026-09-13 21:58:25
++++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo3-developer/app/financing/service.py	2026-09-13 22:20:17
+@@ -7,7 +7,16 @@
+ 
+ EXPORT_FIELDS = ("id", "customer_name", "status", "amount")
+ 
++# 放款处理导出规则（来自独立业务事实源 export_eligibility_source_of_truth.md）：
++# 只有 APPROVED / FUNDED 允许进入放款导出；SUBMITTED / REJECTED 仍可在列表查询，
++# 但不得进入导出 payload。这条规则只约束导出，不改变列表查询和 tenant 权限范围。
++EXPORT_ELIGIBLE_STATUSES = {"APPROVED", "FUNDED"}
+ 
++
++def _eligible_for_export(rows: list[dict]) -> list[dict]:
++    return [row for row in rows if row["status"] in EXPORT_ELIGIBLE_STATUSES]
++
++
+ def _filter_by_customer_name(rows: list[dict], customer_name: Optional[str]) -> list[dict]:
+     if not customer_name:
+         return rows
+@@ -47,9 +56,14 @@
+     customer_name: Optional[str] = None,
+     status: Optional[str] = None,
+ ) -> ExportJob:
+-    """导出当前筛选结果（不分页），并在 payload 里保留筛选条件和用户权限范围。"""
++    """导出当前筛选结果中允许放款导出的部分（不分页），并在 payload 里保留筛选条件和用户权限范围。
++
++    列表查询（list_applications）不受本函数影响：SUBMITTED / REJECTED 依旧可以被筛选查到，
++    只是不会出现在这里返回的导出 payload 里。
++    """
+     rows = _filtered_rows(user=user, customer_name=customer_name, status=status)
+-    export_rows = [{field: row[field] for field in EXPORT_FIELDS} for row in rows]
++    eligible_rows = _eligible_for_export(rows)
++    export_rows = [{field: row[field] for field in EXPORT_FIELDS} for row in eligible_rows]
+     payload = {
+         "filters": {"customer_name": customer_name, "status": status},
+         "requested_by": user,
+diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo3-developer/static/index.html /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo3-developer/static/index.html
+--- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo3-developer/static/index.html	2026-09-13 21:58:57
++++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo3-developer/static/index.html	2026-09-13 22:20:48
+@@ -100,7 +100,9 @@
+   const job = await r.json();
+   const box = document.querySelector('#export-result');
+   box.style.display = 'block';
+-  box.innerHTML = `导出任务已创建：job id <b>${job.id}</b> · status <b>${job.status}</b> · 筛选条件 customer_name=<b>${job.payload.filters.customer_name || '(空)'}</b>，status=<b>${job.payload.filters.status || '(空)'}</b> · 共 <b>${job.payload.rows.length}</b> 条记录`;
++  const count = job.payload.rows.length;
++  const zeroNote = count === 0 ? '（当前筛选状态不满足放款导出条件，无可导出记录）' : '';
++  box.innerHTML = `导出任务已创建：job id <b>${job.id}</b> · status <b>${job.status}</b> · 筛选条件 customer_name=<b>${job.payload.filters.customer_name || '(空)'}</b>，status=<b>${job.payload.filters.status || '(空)'}</b> · 共 <b>${count}</b> 条记录 ${zeroNote}`;
+ });
+ 
+ load();
+Only in /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo3-developer/tests: test_export_eligibility.py

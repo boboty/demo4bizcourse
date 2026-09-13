@@ -1,35 +1,67 @@
 #!/usr/bin/env python3
+"""黑盒输出入口：只通过运行中的开发服务的真实 HTTP 接口取得实际输出。
+不 import 开发工程的任何 Python 模块，不读取开发 workspace 路径。"""
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+DEFAULT_BASE_URL = "http://127.0.0.1:8030"
 
-URL = "http://127.0.0.1:8765/evaluate"
+
+def _get(base_url: str, path: str, user: str) -> dict:
+    request = Request(f"{base_url}{path}", headers={"X-User": user})
+    with urlopen(request, timeout=5) as response:
+        return json.load(response)
+
+
+def _post(base_url: str, path: str, user: str) -> dict:
+    request = Request(f"{base_url}{path}", data=b"", headers={"X-User": user}, method="POST")
+    with urlopen(request, timeout=5) as response:
+        return json.load(response)
+
+
+def _query_string(query: dict) -> str:
+    params = {k: v for k, v in query.items() if v}
+    return urlencode(params)
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("usage: bin/actual-output <cases.json>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print("usage: bin/actual-output <cases.json> [base_url]", file=sys.stderr)
         return 2
     cases = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    base_url = sys.argv[2] if len(sys.argv) == 3 else DEFAULT_BASE_URL
+
     output = []
     try:
         for case in cases:
-            request = Request(
-                URL,
-                data=json.dumps(case, ensure_ascii=False).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-                method="POST",
+            qs = _query_string(case["query"])
+            list_body = _get(base_url, f"/api/financing-applications?page_size=100&{qs}", case["user"])
+            export_body = _post(base_url, f"/api/financing-applications/export?{qs}", case["user"])
+            export_rows = export_body["payload"]["rows"]
+            output.append(
+                {
+                    "id": case["id"],
+                    "label": case["label"],
+                    "user": case["user"],
+                    "query": case["query"],
+                    "list_total": list_body["total"],
+                    "list_ids": sorted(item["id"] for item in list_body["items"]),
+                    "export_count": len(export_rows),
+                    "export_ids": sorted(row["id"] for row in export_rows),
+                    "export_statuses": sorted({row["status"] for row in export_rows}),
+                    "tenant_scope": export_body["payload"]["tenant_scope"],
+                }
             )
-            with urlopen(request, timeout=5) as response:
-                output.append({"id": case["id"], **json.load(response)})
     except (OSError, URLError, ValueError) as exc:
         print(f"blackbox request failed: {exc}", file=sys.stderr)
         return 1
+
     print(json.dumps(output, ensure_ascii=False, indent=2))
     return 0
 

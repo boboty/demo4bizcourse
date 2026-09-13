@@ -88,7 +88,7 @@ codex</div><p>发送唯一一句接手指令，不做任何补充：</p><div cla
 <div class="warn">D1 只用开发侧 <code>verify.sh</code>（本质是 pytest），不使用 Golden Case / 独立 Validator / 外部 Source of Truth——那是第三讲；不引入 Skill / 规则生命周期 / 防复发资产——那是第四讲。原来"先做五个预测"的讲师 QA 方式，以及 Task → Plan → 项目环境 → 自检要求 三级对比实验（Level 1/2/3），都保留在 <a href="D1-RUNBOOK.md">D1-RUNBOOK.md</a> 末尾和 <a href="D1-HANDOFF-RUNBOOK.html">D1-HANDOFF-RUNBOOK.html</a>（不是课堂主入口），课堂时间紧张时整段跳过。</div>
 </section>
 
-<section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1–4 的课堂操作，暂不改其运行逻辑。后续按当前课程逐讲升级时，再逐步替换。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
+<section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1 / 2 / 4 的课堂操作，暂不改其运行逻辑；Demo 3 已经按当前课程重新设计（见上方 Demo 3 小节），不再使用本节的"汇损/退税候选"或旧 HTTP 黑盒结构。后续按当前课程逐讲升级 Demo 4 时，再继续替换。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
 
 <section id="demo1" class="demo"><span class="badge">Demo 1 · demo12-financing · 15 min</span><h2>一句话 Direct Task</h2><div class="grid"><div class="card"><h3>课堂操作</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo12-financing
@@ -136,61 +136,51 @@ cd ../..
 .venv/bin/python instructor/checks/task_a_acceptance.py
 ./scripts/capture_diff.sh demo2</div><div class="callout">开发 Agent 只运行开发侧测试；退出 workspace 后，讲师运行同一套独立验收。独立验收脚本不出现在 workspace。</div></div></section>
 
-<section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>测试全绿，还是错了</h2><div class="callout">真实彩排固定顺序：3 passed → 展示业务尺子 → 学员算出 6200 → Validator 一句话执行 → BLOCKER → 揭示同源同错 → 第一次开 Developer 修复 → 4 passed → 重启黑盒 → 原 Validator 复验 PASS。</div>
+<section id="demo3" class="demo"><span class="badge">Demo 3 · developer + validator · 45 min</span><h2>你能验证到哪里，AI 才能安全自治到哪里</h2><div class="callout">课堂沿用 D1 的融资申请页面，不再用"汇损/退税候选"。固定顺序：reset → 页面三项功能都能用 + 开发测试全绿 + 自检 PASS → 揭示独立业务规则卡 → 新开 Validator → BLOCKER → 揭开"自检为什么看不到" → 第一次开 Developer 修复 → 测试转绿、页面纠正 → 回原 Validator 复验 PASS。</div>
 
-<div class="card"><h3>3A · 历史开发状态：先看到 3 passed</h3><div class="code" id="d3-start">./scripts/restore_demo3_wrong.sh
+<div class="card"><h3>3A · 起点：页面能用、测试全绿、自检也是 PASS</h3><div class="code" id="d3-start">./scripts/reset_demo3_developer.sh
+./scripts/reset_demo3_validator.sh
 cd workspaces/demo3-developer
-../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py</div><button class="copy-btn" data-copy="d3-start">复制启动命令</button><div class="callout">预期：<code>3 passed</code>。此时不要开 Developer Codex。这只是一个已经开发完成的历史状态。</div><p>口播：这是一个已经开发完成的历史任务。实现有了，开发测试也是全绿的。先别急着说它对。</p><p>另开终端启动黑盒并保持运行：</p><div class="code" id="d3-blackbox">cd workspaces/demo3-developer
-./bin/start-blackbox</div><button class="copy-btn" data-copy="d3-blackbox">复制黑盒启动命令</button><p class="small">预期：blackbox listening on http://127.0.0.1:8765</p></div>
+../../.venv/bin/python -m pytest -q
+../../.venv/bin/python bin/self-check</div><button class="copy-btn" data-copy="d3-start">复制起点命令</button><div class="callout">预期：<code>13 passed</code>，自检最后一行 <code>SELF-CHECK: PASS</code>。此时不要开 Developer Codex——这是一个已经"完成"的历史开发状态。</div><p>另开终端启动固定端口页面并保持运行：</p><div class="code" id="d3-serve">./scripts/demo3_serve.sh</div><button class="copy-btn" data-copy="d3-serve">复制启动命令</button><p class="small">浏览器打开 <a href="http://127.0.0.1:8030/" target="_blank" rel="noreferrer">http://127.0.0.1:8030/</a>：客户名称筛选、融资状态筛选、放款处理导出三项都能点。把状态切到 <b>REJECTED</b>，列表正常显示 1 条；点"放款处理导出"，页面显示导出任务已创建、<b>共 1 条记录</b>。</p><div class="warn">先不要说这是对是错。工程线三份证据——页面能用、测试全绿、自检 PASS——现在全部指向"没问题"。</div></div>
 
-<div class="card"><h3>3B · 先把业务尺子摆出来</h3><div class="code" id="d3-source">cat ../demo3-validator/rules/settlement_source_of_truth.md
-cat ../demo3-validator/validation/cases.json</div><button class="copy-btn" data-copy="d3-source">复制业务事实查看命令</button><p>只抓 GC-01：汇损 1200、退税 5000、组合未排除。Source of Truth 明确规定：两者同时满足先评估组合；组合未排除时返回 <code>FX_LOSS_PLUS_TAX_REFUND</code>；金额相加；只有组合被排除才回退 <code>TAX_REFUND_ONLY</code>。</p><div class="warn"><b>课堂暂停：</b>按照这份业务规则，GC-01 应该是多少？<br><br>预期学员回答：<b>1200 + 5000 = 6200，FX_LOSS_PLUS_TAX_REFUND</b></div><p class="small">6200 不是讲师宣布的，也不是 Validator 猜的；它来自 Source of Truth + Golden Case 输入。</p></div>
+<div class="card"><h3>3B · 讲师拿出独立业务规则卡</h3><div class="code" id="d3-rule">cat workspaces/demo3-validator/rules/export_eligibility_source_of_truth.md
+cat workspaces/demo3-validator/rules/tenant_access_source_of_truth.md</div><button class="copy-btn" data-copy="d3-rule">复制规则查看命令</button><p>放款处理导出规则：<b>APPROVED</b> 允许、<b>FUNDED</b> 允许、<b>SUBMITTED</b> 禁止、<b>REJECTED</b> 禁止；这条规则只约束"放款导出"，不约束"页面查询"。这份规则卡只放在 <code>workspaces/demo3-validator</code> 里，开发方第一次实现和自检时从未见过它。</p><div class="warn"><b>课堂暂停：</b>刚才 REJECTED 导出显示"共 1 条记录"，按这份规则应该是多少？<br><br>预期学员回答：<b>0 条</b>。</div></div>
 
-<div class="card"><h3>3C · 新开独立 Validator</h3><div class="code" id="d3-validator-cd">cd ../demo3-validator
-# 从这里新开 Luna + High</div><button class="copy-btn" data-copy="d3-validator-cd">复制切换命令</button><p>只发送一句：</p><div class="prompt" id="d3-validator-first">执行 validation/independent-validation.md。</div><button class="copy-btn" data-copy="d3-validator-first">复制 Validator 指令</button><p>不要在 Runbook 里重写 Validator 规则。文件本身已经定义角色、隔离、先算期望再取黑盒实际结果的顺序。</p><div class="blocker"><b>预期第一次验收：</b><br>Overall: BLOCKER<br>GC-01 Expected: FX_LOSS_PLUS_TAX_REFUND / 6200<br>GC-01 Actual: TAX_REFUND_ONLY / 5000<br>GC-02 ~ GC-04: PASS</div><p>报告：<code>validation/report.md</code>。模型仍是 Luna + High，改变的是理解来源是否独立。</p></div>
+<div class="card"><h3>3C · 新开独立 Validator</h3><div class="code" id="d3-validator-cd">cd workspaces/demo3-validator
+# 从这里新开 Luna + High</div><button class="copy-btn" data-copy="d3-validator-cd">复制切换命令</button><p>只发送一句：</p><div class="prompt" id="d3-validator-first">执行 validation/independent-validation.md。</div><button class="copy-btn" data-copy="d3-validator-first">复制 Validator 指令</button><p>不要在 Runbook 里重写 Validator 规则。文件本身已经定义角色、隔离范围，以及"先算期望，再用 <code>bin/actual-output</code> 取黑盒 HTTP 实际输出"的顺序。</p><div class="blocker"><b>预期第一次验收（真实 demo 数据，讲师预跑实测）：</b><br>GC-01 APPROVED&nbsp;&nbsp;&nbsp;PASS<br>GC-02 REJECTED&nbsp;&nbsp;&nbsp;FAIL &nbsp;export expected 0, actual 1<br>GC-03 MIXED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FAIL &nbsp;export expected 3, actual 5<br>GC-04 TENANT_SCOPE&nbsp;FAIL &nbsp;export expected 2, actual 3<br><br>Overall: BLOCKER</div><p>报告写入 <code>validation/report.md</code>。脚本化对照（讲师自查用，不替代现场 Agent）：<code>./scripts/demo3_validator.sh</code>。</p></div>
 
-<div class="card"><h3>3D · 揭开为什么测试全绿还是错</h3><div class="code" id="d3-evidence">cd ../demo3-developer
-sed -n '1,220p' app/settlement/service.py
-sed -n '1,240p' tests/test_settlement_developer.py</div><button class="copy-btn" data-copy="d3-evidence">复制证据查看命令</button><p>只抓 GC-01。实现里只要退税成立就直接返回 5000；开发测试也把 5000 写成正确答案。</p><div class="evidence"><div><b>Source of Truth</b>两者都成立 + 组合未排除 → <strong>6200</strong></div><div><b>开发实现</b>直接返回 <strong>5000</strong></div><div><b>开发测试</b>也把 <strong>5000</strong> 当正确答案</div></div><p>口播：为什么代码错了，测试还能全绿？因为这个历史开发状态里，开发实现和开发测试来自同一个需求理解源。代码按这个理解写，测试也按这个理解验证，所以一起错、一起绿。</p><div class="callout">这不是测试没覆盖。第一条测试已经覆盖了两个候选同时存在的场景；问题是测试自己也把错误答案当成了正确答案。</div><p><b>落点：</b>测试全绿，只能证明实现符合这套测试；如果测试和实现来自同一个错误理解，它证明不了业务理解本身是对的。<br><b>命名：</b>同源验证抓不到共同理解偏差。</p></div>
+<div class="card"><h3>3D · 揭开：为什么工程线三份证据都说它对，自检却看不到这个错</h3><div class="code" id="d3-evidence">cd workspaces/demo3-developer
+cat SELF-CHECK.md
+sed -n '1,60p' app/financing/service.py</div><button class="copy-btn" data-copy="d3-evidence">复制证据查看命令</button><div class="evidence"><div><b>页面</b>REJECTED 导出显示"共 1 条记录"，看起来完全正常</div><div><b>开发测试</b><code>pytest -q</code> 全绿，覆盖了筛选、分页、tenant 权限</div><div><b>自检</b><code>SELF-CHECK.md</code> 逐条检查筛选、权限、导出复用队列——但清单里根本没有"哪些状态允许放款导出"这一条</div></div><p>口播：不是自检写得不认真，是自检的验证边界本来就到不了这里。开发方在第一次实现和自检时，从未见过独立业务事实源里的这条放款导出规则；测试和自检都只能证明"实现符合开发方自己的理解"，证明不了"这个理解本身覆盖了所有业务规则"。</p><div class="callout"><b>停一下，把这句话留给学员：</b>刚才所有开发证据都说它对了。现在到底哪一份证据推翻了它？——是一个从独立业务事实源、用黑盒 HTTP 重新算了一遍的 Validator。</div></div>
 
-<div class="card"><h3>3E · 此时才第一次新开 Developer Agent</h3><p>工作目录仍是 <code>workspaces/demo3-developer</code>，新开 Luna + High。把独立验收发现作为缺陷单交回开发责任：</p><div class="prompt" id="d3-defect">独立验收发现一个 BLOCKER，请修复当前实现和开发侧测试。
+<div class="card"><h3>3E · 此时才第一次把缺陷交回 Developer</h3><p>工作目录仍是 <code>workspaces/demo3-developer</code>，新开 Luna + High（或沿用同一个开发会话）。把独立验收发现和规则卡一起交回开发责任：</p><div class="prompt" id="d3-defect">独立验收发现一个 BLOCKER，请修复当前实现和开发侧测试。
 
-业务规则：
-- 当汇损候选和退税候选同时具备资格时，必须先评估“汇损 + 退税”组合候选。
-- 如果组合候选未被排除，应返回 FX_LOSS_PLUS_TAX_REFUND。
-- 金额 = 汇损金额 + 退税金额。
-- 只有组合候选被明确排除后，才允许回退到 TAX_REFUND_ONLY。
-- 如果只有退税候选具备资格，则返回 TAX_REFUND_ONLY。
-- 如果退税候选不具备资格，本演示返回 NO_CANDIDATE。
+放款处理导出规则（来自独立业务事实源，开发方之前没有见过）：
+- APPROVED：允许放款导出
+- FUNDED：允许放款导出
+- SUBMITTED：禁止放款导出
+- REJECTED：禁止放款导出
+- 这条规则只约束"放款导出"，不约束"列表查询"：SUBMITTED / REJECTED 仍然必须能在列表里正常查到。
 
-独立验收发现：
-GC-01：
-fx_loss_eligible = true
-fx_loss_amount = 1200
-tax_refund_eligible = true
-tax_refund_amount = 5000
-combined_excluded = false
-
-当前系统实际：
-TAX_REFUND_ONLY / 5000
-
-正确结果：
-FX_LOSS_PLUS_TAX_REFUND / 6200
+独立验收发现（真实 demo 数据）：
+GC-02 REJECTED：export expected 0, actual 1
+GC-03 MIXED（不筛状态）：export expected 3, actual 5
+GC-04 TENANT_SCOPE（bob，不筛状态）：export expected 2, actual 3
 
 请：
-1. 检查当前实现和开发测试为什么会得到错误结果。
-2. 修正实现。
-3. 修正开发侧测试。
-4. 运行：../../.venv/bin/python -m pytest -q tests/test_settlement_developer.py
-5. 汇报修改和测试结果。</div><button class="copy-btn" data-copy="d3-defect">复制 Developer 缺陷单</button><div class="callout">真实彩排预期：<code>4 passed</code>。修复共同理解偏差，不只是改代码，还要把同源的错误测试一起纠正。</div></div>
+1. 检查当前实现为什么会把不允许的状态导出。
+2. 只修改"放款导出"的 eligibility，不要修改列表查询行为，不要用前端隐藏按钮来绕过后端规则。
+3. 保留 customer_name / status 组合筛选，保留 tenant scope。
+4. 补充开发侧测试覆盖修复后的行为。
+5. 运行：../../.venv/bin/python -m pytest -q
+6. 汇报修改和测试结果。</div><button class="copy-btn" data-copy="d3-defect">复制 Developer 缺陷单</button><div class="callout">讲师预跑实测：修复后 <code>19 passed</code>（13 条原有 + 6 条新增的 eligibility 测试）。<code>demo3_serve.sh</code> 用 <code>--reload</code> 跑，改完代码会自动重启，不需要手动重启服务。</div></div>
 
-<div class="card"><h3>3F · 修复后必须重启黑盒</h3><div class="warn"><b>不要漏这一步。</b>旧黑盒是在修复前启动的，内存里仍可能是旧实现。</div><div class="code" id="d3-restart"># 回到运行黑盒的终端
-Ctrl+C
-./bin/start-blackbox</div><button class="copy-btn" data-copy="d3-restart">复制重启提示</button><p>预期：<code>blackbox listening on http://127.0.0.1:8765</code>。如果复验仍看到 5000，先检查旧服务是否真的停止并重启。</p></div>
+<div class="card"><h3>3F · 回到浏览器看纠正后的结果</h3><p>刷新 <a href="http://127.0.0.1:8030/" target="_blank" rel="noreferrer">http://127.0.0.1:8030/</a>（如果终端没显示 reload 完成，回到那个终端 Ctrl+C 后重新执行 <code>./scripts/demo3_serve.sh</code>）。状态仍选 <b>REJECTED</b>：</p><ol><li>列表依旧能查到这条 REJECTED 记录——查询没有被规则影响；</li><li>再次点"放款处理导出"，页面这次显示 <b>共 0 条记录（当前筛选状态不满足放款导出条件，无可导出记录）</b>。</li></ol><div class="callout">同一个页面、同一个按钮，结果从"共 1 条记录"变成"共 0 条记录"——产品线的高潮发生在浏览器里，不是只在终端。</div></div>
 
-<div class="card"><h3>3G · 回原来的 Validator 会话复验</h3><p>不要新开 Validator，也不要告诉它 Developer 具体改了哪一行。回到刚才那个 Validator Codex 会话，只发送：</p><div class="prompt" id="d3-validator-recheck">开发方已提交修复，请按 validation/independent-validation.md 重新执行独立验收。</div><button class="copy-btn" data-copy="d3-validator-recheck">复制复验指令</button><div class="callout"><b>预期：</b><br>GC-01 PASS · FX_LOSS_PLUS_TAX_REFUND / 6200<br>GC-02 PASS<br>GC-03 PASS<br>GC-04 PASS<br><br>Overall: PASS</div><p>报告继续更新 <code>validation/report.md</code>。</p></div>
+<div class="card"><h3>3G · 回原来的 Validator 会话复验</h3><p>不要新开 Validator，也不要告诉它 Developer 具体改了哪一行。回到刚才那个 Validator Codex 会话，只发送：</p><div class="prompt" id="d3-validator-recheck">开发方已提交修复，请按 validation/independent-validation.md 重新执行独立验收。</div><button class="copy-btn" data-copy="d3-validator-recheck">复制复验指令</button><div class="callout"><b>讲师预跑实测：</b><br>GC-01 APPROVED&nbsp;&nbsp;&nbsp;PASS<br>GC-02 REJECTED&nbsp;&nbsp;&nbsp;PASS<br>GC-03 MIXED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PASS<br>GC-04 TENANT_SCOPE&nbsp;PASS<br><br>Overall: PASS</div><p>报告继续更新 <code>validation/report.md</code>。</p></div>
 
-<div class="card"><h3>Demo 3 收口</h3><ol><li><b>救回这一次的，不是更多测试，而是第二个独立理解源。</b></li><li><b>写代码的 AI，不适合完全自己验自己。</b></li><li><b>关键不是换一个更强的模型，而是验证要有独立的理解来源。</b></li></ol><p>Developer 和 Validator 都是 Luna + High。可补一句：你们注意，我这里没有偷偷换一个更强的模型。还是同一档模型，只是不给它看开发者的答案，让它重新从业务事实算一遍。</p><p class="small">彩排兜底：先停止黑盒，从仓库根目录执行 <code>./scripts/restore_demo3_fixed.sh</code>，然后重新启动黑盒，再通过 Validator HTTP 入口复验。</p></div>
+<div class="card"><h3>Demo 3 收口</h3><ol><li><b>你能验证到哪里，AI 才能安全自治到哪里。</b>自检和开发测试的边界，就是开发方自己理解的边界。</li><li><b>写代码的 AI，不适合完全自己验自己。</b>推翻"看起来全绿"的，是一个从独立业务事实源重新算一遍的角色，不是更严格的 prompt。</li><li><b>能用确定事实验证，就不要先用另一个概率模型验证。</b>Validator 靠的是规则卡 + Golden Case + 黑盒 HTTP 这三个确定性输入，不是"问另一个模型觉得对不对"。</li></ol><p class="warn">接第四讲：这次我们知道怎么把它抓出来了。但下次还要重新发现一次吗？</p><p class="small">彩排兜底：<code>./scripts/restore_demo3_fixed.sh</code> 直接把 <code>workspaces/demo3-developer</code> 切到修复后状态；<code>./scripts/demo3_save_fallback.sh</code> 保存的一次真实预跑证据（diff、开发测试、自检、独立验收前后对照）在 <code>instructor/d3/fallback/</code>，live fix 现场失败时可以直接展示。</p></div>
 </section>
 
 <section id="demo4" class="demo"><span class="badge">Demo 4 · demo4-sedimentation · 15 min</span><h2>不是“写进文件”，而是“下一次还能正确执行”</h2><div class="callout">故事线：Bug 已修 → 想把经验留下 → 第一次规则压缩过头 → 新会话读到了规则却仍算错 → 补全可执行语义 → 再用全新会话验证 → 沉淀才算完成。</div>
@@ -244,7 +234,7 @@ cat reports/demo3-validation.md</div><button class="copy-btn" data-copy="d4-star
 
 <section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py
 .venv/bin/python scripts/d0_verify.py
-./scripts/d1_handoff_verify_setup.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、D1 handoff checkpoint（3 提交、feature-list、verify.sh、页面层——接手前只有客户筛选控件、reference 页面三项能力齐全、无第三讲资产泄漏）、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
+./scripts/d1_handoff_verify_setup.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、D1 handoff checkpoint（3 提交、feature-list、verify.sh、页面层——接手前只有客户筛选控件、reference 页面三项能力齐全、无第三讲资产泄漏）、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 developer/validator 隔离、放款导出 Golden Case wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
 </main>
 <script>
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));

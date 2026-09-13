@@ -1,34 +1,26 @@
 [
   {
     "id": "GC-01",
-    "fx_loss_eligible": true,
-    "fx_loss_amount": 1200,
-    "tax_refund_eligible": true,
-    "tax_refund_amount": 5000,
-    "combined_excluded": false
+    "label": "APPROVED",
+    "user": "alice",
+    "query": { "status": "APPROVED", "customer_name": null }
   },
   {
     "id": "GC-02",
-    "fx_loss_eligible": true,
-    "fx_loss_amount": 1200,
-    "tax_refund_eligible": true,
-    "tax_refund_amount": 5000,
-    "combined_excluded": true
+    "label": "REJECTED",
+    "user": "alice",
+    "query": { "status": "REJECTED", "customer_name": null }
   },
   {
     "id": "GC-03",
-    "fx_loss_eligible": false,
-    "fx_loss_amount": 0,
-    "tax_refund_eligible": true,
-    "tax_refund_amount": 5000,
-    "combined_excluded": false
+    "label": "MIXED",
+    "user": "alice",
+    "query": { "status": null, "customer_name": null }
   },
   {
     "id": "GC-04",
-    "fx_loss_eligible": true,
-    "fx_loss_amount": 1200,
-    "tax_refund_eligible": false,
-    "tax_refund_amount": 0,
-    "combined_excluded": false
+    "label": "TENANT_SCOPE",
+    "user": "bob",
+    "query": { "status": null, "customer_name": null }
   }
 ]

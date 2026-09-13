@@ -1,0 +1,10 @@
+[
+  { "id": "FA-1001", "customer_name": "华星科技", "status": "SUBMITTED", "tenant": "NORTH" },
+  { "id": "FA-1002", "customer_name": "华星科技", "status": "APPROVED", "tenant": "NORTH" },
+  { "id": "FA-1003", "customer_name": "晨海贸易", "status": "FUNDED", "tenant": "NORTH" },
+  { "id": "FA-1004", "customer_name": "北辰电子", "status": "REJECTED", "tenant": "NORTH" },
+  { "id": "FA-1005", "customer_name": "晨海贸易", "status": "APPROVED", "tenant": "NORTH" },
+  { "id": "FA-2001", "customer_name": "南湾制造", "status": "APPROVED", "tenant": "SOUTH" },
+  { "id": "FA-2002", "customer_name": "南湾制造", "status": "SUBMITTED", "tenant": "SOUTH" },
+  { "id": "FA-2003", "customer_name": "远帆供应链", "status": "FUNDED", "tenant": "SOUTH" }
+]

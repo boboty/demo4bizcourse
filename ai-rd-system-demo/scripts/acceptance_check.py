@@ -59,34 +59,34 @@ def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
 
 
-def start_blackbox(root: Path) -> subprocess.Popen[str]:
+def start_dev_server(root: Path, port: int) -> subprocess.Popen[str]:
     env = os.environ.copy()
     existing_pythonpath = env.get("PYTHONPATH")
     env["PYTHONPATH"] = str(root) + (os.pathsep + existing_pythonpath if existing_pythonpath else "")
     process = subprocess.Popen(
-        [sys.executable, "-m", "app.settlement.blackbox_server"],
+        [sys.executable, "-m", "uvicorn", "app.main:app", "--port", str(port)],
         cwd=root,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
-    deadline = time.monotonic() + 5
+    deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
         if process.poll() is not None:
             detail = (process.stderr.read() if process.stderr else "").strip()
-            raise RuntimeError(f"blackbox server exited: {detail}")
+            raise RuntimeError(f"dev server exited: {detail}")
         try:
-            with urlopen("http://127.0.0.1:8765/health", timeout=0.2) as response:
+            with urlopen(f"http://127.0.0.1:{port}/api/financing-applications", timeout=0.3) as response:
                 if response.status == 200:
                     return process
         except OSError:
             time.sleep(0.05)
     process.terminate()
-    raise RuntimeError("blackbox server did not become ready")
+    raise RuntimeError("dev server did not become ready")
 
 
-def stop_blackbox(process: subprocess.Popen[str]) -> None:
+def stop_dev_server(process: subprocess.Popen[str]) -> None:
     if process.poll() is None:
         process.terminate()
         try:
@@ -237,75 +237,81 @@ def main() -> int:
     developer = WORKSPACES / "demo3-developer"
     result = run([sys.executable, "-m", "pytest", "-q"], developer)
     check("Demo 3 developer tests green", result.returncode == 0, result.stdout.strip().splitlines()[-1] if result.stdout else result.stderr.strip())
+    self_check = run([sys.executable, "bin/self-check"], developer)
+    check(
+        "Demo 3 developer self-check is PASS but blind to the export rule",
+        self_check.returncode == 0
+        and "SELF-CHECK: PASS" in self_check.stdout
+        and "APPROVED" not in self_check.stdout
+        and "FUNDED" not in self_check.stdout,
+        self_check.stdout.strip().splitlines()[-1] if self_check.stdout else self_check.stderr.strip(),
+    )
     developer_text = "\n".join(text for _, text in text_files(developer))
-    developer_forbidden = ["settlement_expected", "independent_check", "validation/cases", "golden"]
+    developer_forbidden = [
+        "export_eligibility_source_of_truth",
+        "known_applications",
+        "validation/cases",
+        "golden",
+        "EXPORT_ELIGIBLE_STATUSES",
+        "放款处理导出规则",
+    ]
     leaks = [token for token in developer_forbidden if token in developer_text]
     check("Demo 3 developer has no independent expected-result assets", not leaks, ", ".join(leaks))
 
     validator = WORKSPACES / "demo3-validator"
-    check("Demo 3 validator has no developer source", not (validator / "app").exists() and not (validator / "tests/test_settlement_developer.py").exists())
+    check(
+        "Demo 3 validator has no developer source",
+        not (validator / "app").exists() and not (validator / "tests/test_export_eligibility.py").exists(),
+    )
+    # "../demo3-developer" 会出现在 independent-validation.md 的隔离说明里（明确指示不要读它），
+    # 这是正常的；真正不该出现的是任何指向开发工程 Python 模块/路径的代码级引用。
     validator_text = "\n".join(text for _, text in text_files(validator))
     actual_output_text = (validator / "bin/actual-output").read_text(encoding="utf-8")
-    validator_path_leaks = [token for token in ("demo3-developer", "app.settlement", "app/settlement") if token in validator_text]
-    actual_output_path_leaks = [token for token in ("demo3-developer", "../", "app.settlement", "app/settlement") if token in actual_output_text]
+    validator_path_leaks = [token for token in ("app.financing", "app/financing") if token in validator_text]
+    actual_output_path_leaks = [token for token in ("demo3-developer", "app.financing", "app/financing") if token in actual_output_text]
     check(
         "Demo 3 validator is HTTP-only and path-isolated",
         not validator_path_leaks and not actual_output_path_leaks,
         ", ".join(validator_path_leaks + actual_output_path_leaks),
     )
-    expected = {
-        "GC-01": {"mode": "FX_LOSS_PLUS_TAX_REFUND", "amount": 6200.0},
-        "GC-02": {"mode": "TAX_REFUND_ONLY", "amount": 5000.0},
-        "GC-03": {"mode": "TAX_REFUND_ONLY", "amount": 5000.0},
-        "GC-04": {"mode": "NO_CANDIDATE", "amount": 0.0},
-    }
-    wrong_server = start_blackbox(developer)
+
+    demo3_validator_script = ROOT / "scripts/demo3_validator.py"
+    wrong_port = 8039
+    wrong_server = start_dev_server(developer, wrong_port)
     try:
-        result = run([sys.executable, str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+        wrong_result = run(
+            [sys.executable, str(demo3_validator_script), "--base-url", f"http://127.0.0.1:{wrong_port}", "--validator-dir", str(validator)],
+            ROOT,
+        )
     finally:
-        stop_blackbox(wrong_server)
-    actual = json.loads(result.stdout) if result.returncode == 0 else []
-    actual_by_id = {item["id"]: item for item in actual}
-    wrong_gc01 = actual_by_id.get("GC-01", {})
+        stop_dev_server(wrong_server)
     check(
-        "Demo 3 wrong HTTP GC-01",
-        result.returncode == 0
-        and wrong_gc01 == {"id": "GC-01", "mode": "TAX_REFUND_ONLY", "amount": 5000.0},
+        "Demo 3 wrong HTTP: list still shows REJECTED, export still leaks it (BLOCKER)",
+        wrong_result.returncode == 1
+        and "GC-01" in wrong_result.stdout
+        and "PASS" in wrong_result.stdout.splitlines()[1]
+        and "GC-02" in wrong_result.stdout
+        and "FAIL" in wrong_result.stdout
+        and "Overall: BLOCKER" in wrong_result.stdout,
+        wrong_result.stdout.strip(),
     )
-    validator_lines = ["Independent expectation"]
-    for case_id, item in expected.items():
-        got = actual_by_id.get(case_id, {})
-        actual_amount = got.get("amount", "MISSING")
-        if isinstance(actual_amount, (int, float)):
-            actual_amount = f"{actual_amount:.0f}"
-        validator_lines.append(f"{case_id} expected = {item['amount']:.0f} / {item['mode']}")
-        validator_lines.append(f"{case_id} actual = {actual_amount} / {got.get('mode', 'MISSING')}")
-    mismatches = [case_id for case_id, item in expected.items() if actual_by_id.get(case_id) != {"id": case_id, **item}]
-    validator_lines.append("Overall = BLOCKER" if mismatches else "Overall = PASS")
-    validator_output = "\n".join(validator_lines)
-    check(
-        "Demo 3 validator catches GC-01 blocker",
-        result.returncode == 0
-        and "GC-01" in mismatches
-        and "GC-01 expected = 6200 / FX_LOSS_PLUS_TAX_REFUND" in validator_output
-        and "GC-01 actual = 5000 / TAX_REFUND_ONLY" in validator_output
-        and "Overall = BLOCKER" in validator_output,
-        validator_output.strip(),
-    )
+
     with tempfile.TemporaryDirectory(prefix="demo3-fixed-http-") as temp:
         fixed_root = Path(temp) / "fixed"
         shutil.copytree(ROOT / "instructor/baselines/demo3-fixed", fixed_root)
-        fixed_server = start_blackbox(fixed_root)
+        fixed_port = 8040
+        fixed_server = start_dev_server(fixed_root, fixed_port)
         try:
-            fixed_result = run([sys.executable, str(validator / "bin/actual-output"), str(validator / "validation/cases.json")], validator)
+            fixed_result = run(
+                [sys.executable, str(demo3_validator_script), "--base-url", f"http://127.0.0.1:{fixed_port}", "--validator-dir", str(validator)],
+                ROOT,
+            )
         finally:
-            stop_blackbox(fixed_server)
-        fixed_actual = json.loads(fixed_result.stdout) if fixed_result.returncode == 0 else []
-        fixed_by_id = {item["id"]: item for item in fixed_actual}
+            stop_dev_server(fixed_server)
         check(
-            "Demo 3 fixed HTTP GC-01",
-            fixed_result.returncode == 0
-            and fixed_by_id.get("GC-01") == {"id": "GC-01", "mode": "FX_LOSS_PLUS_TAX_REFUND", "amount": 6200.0},
+            "Demo 3 fixed HTTP: export eligibility Golden Case is PASS",
+            fixed_result.returncode == 0 and "Overall: PASS" in fixed_result.stdout,
+            fixed_result.stdout.strip(),
         )
 
     demo4 = WORKSPACES / "demo4-sedimentation"

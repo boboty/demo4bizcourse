@@ -223,7 +223,9 @@ cd ../..
 
 ## Demo 3｜两个独立上下文｜45 min
 
-### 固定顺序
+> 第三讲已经重新设计为融资申请「放款处理导出」场景，主入口见 [DEMO-RUNBOOK.html](DEMO-RUNBOOK.html) 的 Demo 3 小节；本节沿用的"汇损 + 退税候选"是更早期的材料，只作历史参考，不再是课堂主线。
+
+### 固定顺序（历史材料）
 
 `restore wrong → 开发测试 3 passed → 启动 HTTP 黑盒 → 展示 Source of Truth → 学员算出 6200 → 新开 validator → BLOCKER → 揭示实现与测试同源同错 → 第一次新开 developer 修复 → 4 passed → 重启 HTTP 黑盒 → 回原 validator 复验 PASS`
 

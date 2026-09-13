@@ -1,0 +1,8 @@
+PASS pytest -q 全部通过
+PASS 客户名称 + 状态组合筛选生效
+PASS 空结果正确处理
+PASS tenant 数据权限未被筛选绕过
+PASS 导出复用既有异步队列，携带筛选条件和权限范围
+PASS 页面三项功能都有真实入口
+
+SELF-CHECK: PASS
