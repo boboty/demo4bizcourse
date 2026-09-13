@@ -9,3 +9,7 @@ workspaces/d1-level2/
 workspaces/d1-level3/
 validation/actual.json
 validation/report.md
+
+# D0 现场运行与预跑产物
+instructor/d0/results/
+instructor/d0/preruns/

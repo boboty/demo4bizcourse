@@ -1,11 +1,12 @@
 # AI 研发体系建设｜课堂 Demo 仓库
 
-本仓库保留一个 Git 仓库。Demo 1 与 Demo 2 共用同一个完整工程目录，课堂只改变任务交办方式；Demo 3、Demo 4 仍使用各自独立 workspace。不要从仓库根目录启动 Codex 会话。
+本仓库保留一个 Git 仓库。Demo 1 与 Demo 2 共用同一个完整工程目录，课堂只改变任务交办方式；D0、Demo 3、Demo 4 使用各自独立 workspace。不要从仓库根目录启动 Agent 会话。
 
 ## 目录结构
 
 ```text
 workspaces/
+├── d0-first-loop/           第一讲连续执行：半成品还款计划 + 真实红灯
 ├── demo12-financing/        Demo 1 / Demo 2 共用融资申请 baseline
 ├── demo3-developer/         任务 B 历史错误实现 + 开发侧测试 + HTTP 黑盒服务
 ├── demo3-validator/         Source of Truth + Golden Case + HTTP 黑盒客户端
@@ -16,6 +17,20 @@ scripts/                     reset / restore / diff 脚本
 ```
 
 `demo12-financing` 自带独立 `AGENTS.md`，不包含 Demo 任务文本、Spec、验收脚本、Golden 或参考实现。Demo 1 的一句话和 Demo 2 的完整 Spec 只从 `instructor/DEMO-RUNBOOK.md` 或 HTML Runbook 复制。
+
+## D0｜连续执行（第一讲）
+
+D0 只证明一件事：Agent 能在真实反馈下连续工作——读项目、改代码、跑验证、读到失败、自己定位、改完再验证直到通过。工程环境、独立验证、规则沉淀都不在 D0 里，它们是 D1／第三讲／第四讲的内容。
+
+```bash
+./scripts/reset_d0.sh                     # 起点固定为 4 failed, 4 passed
+cd workspaces/d0-first-loop
+../../.venv/bin/python -m pytest -q       # 现场确认红灯
+cd ../..
+./scripts/d0_run.sh                       # 启动 Agent 并保存 trace / diff / result.json
+```
+
+完整课堂流程、观察点、兜底与 checkpoint 见 [instructor/D0-RUNBOOK.md](instructor/D0-RUNBOOK.md)。课前 QA 用 `scripts/d0_verify.py`，稳定性证据见 `instructor/d0/PRERUN-REPORT.md` 与 `instructor/d0/fallback/`。
 
 ## D1｜工程环境如何改变 AI 开发
 
@@ -106,4 +121,12 @@ cd workspaces/demo4-sedimentation
 .venv/bin/python scripts/acceptance_check.py
 ```
 
-该检查验证目录隔离、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态、Demo 4 规则沉淀和各 workspace 测试；不执行真实课堂任务，也不让 Codex 完成任务 A/B。
+该检查验证目录隔离、D0 reset／起点红灯／目标状态、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态、Demo 4 规则沉淀和各 workspace 测试；不执行真实课堂任务，也不让 Agent 完成任务 A/B。
+
+D0 单独课前 QA：
+
+```bash
+.venv/bin/python scripts/d0_verify.py
+```
+
+`d0-first-loop` 的起点故意包含真实的失败测试，因此不进入上面的"standalone pytest"全绿清单。

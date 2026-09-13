@@ -5,3 +5,8 @@
 __pycache__/
 .pytest_cache/
 *.egg-info/
+/ai-rd-system-demo/.git.local-backup-20260913
+# ai-rd-system-demo/.gitignore
+/instructor/d0/results/
+/instructor/d0/preruns/
+/instructor/d0/captures/

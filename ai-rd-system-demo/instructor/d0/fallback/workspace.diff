@@ -1,0 +1,29 @@
+--- baseline/app/repayment/service.py
++++ workspace/app/repayment/service.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass
++from decimal import Decimal, ROUND_HALF_UP
+ 
+ DECIMALS = 2
+ 
+@@ -20,5 +21,16 @@
+     交接备注：接口和测试已经先写好了，这里目前只做了最简单的均摊，
+     还没跑通验收，先不要合并。
+     """
+-    per_period = round(total_amount / periods, DECIMALS)
+-    return [Installment(period=index + 1, amount=per_period).as_dict() for index in range(periods)]
++    if periods <= 0:
++        raise ValueError("periods must be greater than 0")
++
++    unit = Decimal("1").scaleb(-DECIMALS)
++    total = Decimal(str(total_amount)).quantize(unit, rounding=ROUND_HALF_UP)
++    per_period = (total / periods).quantize(unit, rounding=ROUND_HALF_UP)
++
++    schedule = [
++        Installment(period=index + 1, amount=float(per_period)).as_dict()
++        for index in range(periods)
++    ]
++    schedule[-1]["amount"] = float(total - per_period * (periods - 1))
++    return schedule

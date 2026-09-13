@@ -6,6 +6,15 @@
 
 所有命令默认从 `ai-rd-system-demo/` 根目录执行；每个代码块中的 `cd` 都是课堂操作的一部分。
 
+## 第一讲 D0｜连续执行
+
+第一讲只证明 Agent 能在真实反馈下连续工作：读项目 → 改代码 → 跑验证 → 读到失败 → 自己定位 → 改完再验证直到通过。完整流程见 [D0-RUNBOOK.md](D0-RUNBOOK.md)，本文件后续章节从第二讲的工程环境开始。
+
+```bash
+./scripts/reset_d0.sh          # 起点固定为 4 failed, 4 passed
+./scripts/d0_run.sh            # 启动 Agent 并保存 trace / diff / result.json
+```
+
 ## 课前准备｜先确认环境，再开始 Demo
 
 课堂统一使用仓库根目录的 `.venv`，Python 版本统一为 3.12。不要为各 workspace 创建独立虚拟环境，也不要污染系统 Python。

@@ -29,8 +29,11 @@ def check(name: str, condition: bool, detail: str = "") -> None:
         problems.append(name)
 
 
+GENERATED_PARTS = {"results", "preruns", "captures"}
+
+
 def text_files(root: Path):
-    ignored = {".git", ".venv", "__pycache__", ".pytest_cache"}
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache"} | GENERATED_PARTS
     for path in root.rglob("*"):
         if path.is_file() and not ignored.intersection(path.parts):
             try:
@@ -45,7 +48,7 @@ def digest(path: Path) -> str:
 
 def tree_digest(root: Path) -> str:
     entries = []
-    ignored = {".git", ".venv", "__pycache__", ".pytest_cache"}
+    ignored = {".git", ".venv", "__pycache__", ".pytest_cache"} | GENERATED_PARTS
     for path in sorted(root.rglob("*")):
         if path.is_file() and not ignored.intersection(path.parts):
             entries.append((str(path.relative_to(root)), digest(path)))
@@ -171,6 +174,23 @@ def main() -> int:
             "instructor/d1/task.txt",
         },
         ", ".join(sorted(direct_task_locations)),
+    )
+
+    d0_workspace = WORKSPACES / "d0-first-loop"
+    check("D0 workspace exists: d0-first-loop", d0_workspace.is_dir())
+    check("D0 workspace AGENTS: d0-first-loop", (d0_workspace / "AGENTS.md").is_file())
+    if (d0_workspace / "AGENTS.md").is_file():
+        d0_agents = (d0_workspace / "AGENTS.md").read_text(encoding="utf-8")
+        check(
+            "D0 workspace isolation rule: d0-first-loop",
+            "当前目录就是本次 D0 的完整项目上下文" in d0_agents
+            and "不读取父目录或兄弟 workspace" in d0_agents,
+        )
+    d0_setup = run([sys.executable, str(ROOT / "scripts/d0_verify.py")], ROOT)
+    check(
+        "D0 reset, 起点红灯, 目标状态与隔离",
+        d0_setup.returncode == 0,
+        d0_setup.stdout.strip().splitlines()[-1] if d0_setup.stdout else d0_setup.stderr.strip(),
     )
 
     d1_setup = run([sys.executable, str(ROOT / "scripts/d1_verify_setup.py")], ROOT)

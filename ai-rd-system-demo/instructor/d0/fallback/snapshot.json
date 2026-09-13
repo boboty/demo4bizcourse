@@ -1,0 +1,8 @@
+{
+  "kind": "SAVED_EVIDENCE",
+  "source": "/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/d0/results/latest",
+  "baseline_digest": "3837e418b6c5544585b9e1855bfd38200a07c5f993eaa5d3e07fedefd79386f6",
+  "elapsed_seconds": 52.083,
+  "agent": "codex",
+  "note": "同一个 D0 baseline、同一个任务下真实跑通的一次运行；不是另一个项目的录像。"
+}
