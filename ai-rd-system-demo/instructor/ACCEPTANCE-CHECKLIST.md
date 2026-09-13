@@ -6,7 +6,17 @@
 - [ ] 每个 Demo 都能用一句承重判断收口。
 - [ ] 所有操作有 reset / deterministic fallback。
 
-## D1｜工程环境如何改变 AI 开发
+## D1｜工程现场接力（主 demo）
+- [ ] `workspaces/d1-handoff/` reset 后有且仅有 3 个 Git 提交，最后一条显式标记 session 已结束。
+- [ ] Checkpoint 里 `feature-list.json` 显示客户名称筛选 `done`，状态筛选/导出 `pending`；`./verify.sh` 全绿（5 passed）。
+- [ ] 讲师先做五个预测（任务/已完成项/下一步/一个决策/正确验证命令），再启动全新 session。
+- [ ] 全新 session 用 `codex exec --ephemeral`（或真正新开的交互会话），不携带任何历史聊天记录。
+- [ ] `instructor/d1/handoff/results/latest/result.json` 的 `predictions` 五项分别记录命中与否，不做一刀切 PASS/FAIL。
+- [ ] `health_check_timing.ran_verify_or_pytest_before_first_edit`、`state_written_back`、`stayed_in_workspace` 均有记录。
+- [ ] D1 不展示 Golden Case、独立 Validator 或规则沉淀资产；这些分别属于第三讲、第四讲。
+- [ ] 预跑 `scripts/d1_handoff_prerun.sh` 结果见 `instructor/d1/handoff/PRERUN-REPORT.md`，且 `scripts/d1_handoff_verify_setup.py` 为 `OVERALL: PASS`。
+
+## D1 补充实验｜Task → Plan → 项目环境 → 自检要求（Level 1/2/3）
 - [ ] Level 1/2/3 都从同一个 `instructor/d1/task.txt` 和冻结融资 baseline 开始。
 - [ ] Level 1 只有只读 Plan；Level 2 额外加载真实项目记忆和代码规范；Level 3 再加载开发侧自检要求。
 - [ ] Level 1/2 不修改代码、不运行开发测试；Level 3 保存 Plan v3 后才执行真实开发任务。

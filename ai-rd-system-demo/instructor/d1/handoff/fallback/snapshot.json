@@ -1,0 +1,7 @@
+{
+  "kind": "SAVED_EVIDENCE",
+  "source": "/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/d1/handoff/results/latest",
+  "elapsed_seconds": 125.59,
+  "predictions_hit": "5/5",
+  "note": "同一个 d1-handoff checkpoint、同一句接手指令下真实跑通的一次运行；不是另一个项目的录像。"
+}

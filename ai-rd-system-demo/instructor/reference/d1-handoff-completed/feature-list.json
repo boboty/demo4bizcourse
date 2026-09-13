@@ -1,0 +1,23 @@
+{
+  "task": "给融资申请列表增加客户名称和融资状态筛选，并支持导出。",
+  "features": [
+    {
+      "id": "customer_name_filter",
+      "title": "客户名称模糊筛选",
+      "status": "done",
+      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_customer_filter.py"]
+    },
+    {
+      "id": "status_filter",
+      "title": "融资状态精确筛选（可与客户名称组合）",
+      "status": "done",
+      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_status_filter_and_export.py"]
+    },
+    {
+      "id": "export_endpoint",
+      "title": "导出当前筛选结果（复用既有 ExportQueue，保留权限范围）",
+      "status": "done",
+      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_status_filter_and_export.py"]
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+--- handoff/DECISIONS.md
++++ workspace/DECISIONS.md
+@@ -20,7 +20,14 @@
+ - 决策：本项目的可选参数一律用 `typing.Optional[...]`，不使用 PEP 604 的 `|` 写法；`verify.sh` 优先使用仓库共享 `.venv`，找不到时才退回系统 `python3`。
+ - 影响：后续新增字段（例如 `status` 筛选）时延续同一写法，避免同一个环境问题重复出现。
+ 
+-## 待确认（不是决策，是留给下一个 session 的开放问题）
++## D-004：融资状态按原始值做大小写敏感的精确匹配
+ 
+-- 状态筛选的合法取值目前只能从 `app/financing/data.json` 的样例反推（`SUBMITTED` / `APPROVED` / `FUNDED` / `REJECTED`），没有看到集中定义的枚举来源；实现前建议先确认是否已有权威定义，否则按现有取值做精确匹配即可。
+-- 导出任务的 payload 字段格式（导出哪些列、字段顺序）目前没有在 `PROJECT-MEMORY.md` 或既有代码里找到约定，需要在实现导出时自己定一版，并把决定写进本文件。
++- 背景：项目没有集中定义融资状态枚举，现有数据使用 `SUBMITTED` / `APPROVED` / `FUNDED` / `REJECTED`，需求仅要求精确匹配。
++- 决策：筛选值直接与记录中的 `status` 做大小写敏感等值比较；不额外校验枚举，未知值按无匹配结果处理。
++- 影响：保持实现最小且不把样例值固化为业务规则；未来若建立权威枚举，可在 API 层补参数校验。
++
++## D-005：融资导出任务保存权限内筛选结果快照及审计上下文
++
++- 背景：既有 `ExportQueue` 只保存任务 payload，没有消费者或文件格式契约；需求要求导出当前筛选结果并携带发起用户权限范围。
++- 决策：新增 `POST /api/financing-applications/export`，列表和导出复用同一条“tenant 权限 → 客户名称筛选 → 状态筛选”数据链。任务类型为 `financing_applications`，payload 包含 `requested_by`、排序后的 `tenant_scope`、`filters`、固定 `columns`（`id`、`customer_name`、`status`、`amount`、`tenant`）和完整的筛选结果 `rows` 快照。
++- 影响：导出不受列表分页影响，且任务创建后数据语义稳定；将来增加后台消费者时可直接按 `columns` 和 `rows` 生成文件，并用用户及 tenant scope 审计权限上下文。
+--- handoff/PROGRESS.md
++++ workspace/PROGRESS.md
+@@ -2,7 +2,7 @@
+ 
+ > 本文件记录"这件事现在做到哪里"，每次 session 结束前更新。长期项目事实见 `PROJECT-MEMORY.md`；历史记录见 Git History。
+ 
+-## 状态：进行中（上一个 session 已结束，等待接手）
++## 状态：已完成
+ 
+ ## 已完成
+ 
+@@ -11,13 +11,20 @@
+   - `app/main.py` 暴露 `customer_name` query 参数，透传给 service。
+   - 测试：`tests/test_customer_filter.py`（命中、空结果、分页+权限组合三个用例）。
+   - 决策依据见 `DECISIONS.md` D-001、D-002。
++- [x] 融资状态筛选（精确匹配）
++  - `app/financing/service.py` 在 tenant 权限过滤之后按 `status` 大小写敏感精确匹配，并与客户名称筛选组合生效。
++  - `app/main.py` 的列表接口新增 `status` query 参数。
++- [x] 当前筛选结果异步导出
++  - `POST /api/financing-applications/export` 复用既有 `ExportQueue`，返回 `202` 和已入队任务。
++  - payload 保存当前筛选结果快照、固定列顺序、筛选条件、发起用户和 tenant scope；列表与导出复用同一权限及筛选数据链。
++  - 既有 `GET /api/export-jobs/{job_id}` 可查询任务。
++- [x] 测试：新增 `tests/test_status_filter_and_export.py`，覆盖状态精确匹配、组合筛选、空结果、导出筛选快照、任务查询和 tenant 隔离。
+ 
+ ## 未完成 / 下一步
+ 
+-- [ ] 融资状态筛选（精确匹配），需要能与客户名称筛选组合生效
+-- [ ] 导出接口：复用既有 `app/common/export_jobs.py` 的 `ExportQueue`；导出的必须是"当前筛选条件下的结果"，并携带发起用户的权限范围（tenant scope），不能导出用户无权限看到的数据
+-- [ ] 上述两项完成后，补充对应 pytest 用例，并重新跑 `./verify.sh` 确认全绿
++- 本次任务无剩余开发项。
++- 若后续需要真正生成下载文件，应在现有队列消费者中处理 payload；当前基础工程的 `ExportQueue` 只定义入队和任务查询，不执行后台文件生成。
+ 
+ ## 最近一次验证结果
+ 
+-`./verify.sh` 收尾时是全绿（5 passed：2 条 baseline 用例 + 3 条 customer_name 筛选用例）。接手后请先重新跑一遍，不要假设环境状态没变。
++2026-09-13 执行 `./verify.sh` 全绿：9 passed（2 条 baseline + 3 条客户名称筛选 + 4 条状态筛选及导出用例）。同时 `git diff --check` 通过。
+--- handoff/app/financing/service.py
++++ workspace/app/financing/service.py
+@@ -1,6 +1,8 @@
+ from typing import Optional
+ 
++from app.common.export_jobs import ExportJob, export_queue
+ from app.common.pagination import paginate
++from app.common.security import allowed_tenants
+ from app.financing.repository import all_applications_for_user
+ 
+ 
+@@ -11,14 +13,49 @@
+     return [row for row in rows if needle in row["customer_name"].lower()]
+ 
+ 
++def _filter_by_status(rows: list[dict], status: Optional[str]) -> list[dict]:
++    if not status:
++        return rows
++    return [row for row in rows if row["status"] == status]
++
++
++def _filtered_applications(
++    *,
++    user: str,
++    customer_name: Optional[str] = None,
++    status: Optional[str] = None,
++) -> list[dict]:
++    rows = all_applications_for_user(user)
++    rows = _filter_by_customer_name(rows, customer_name)
++    return _filter_by_status(rows, status)
++
++
+ def list_applications(
+     *,
+     user: str,
+     page: int = 1,
+     page_size: int = 5,
+     customer_name: Optional[str] = None,
++    status: Optional[str] = None,
+ ) -> dict:
+     """筛选顺序：先取 tenant 权限内数据，再筛选，最后分页（见 DECISIONS.md D-001）。"""
+-    rows = all_applications_for_user(user)
+-    rows = _filter_by_customer_name(rows, customer_name)
++    rows = _filtered_applications(user=user, customer_name=customer_name, status=status)
+     return paginate(rows, page, page_size).as_dict()
++
++
++def export_applications(
++    *,
++    user: str,
++    customer_name: Optional[str] = None,
++    status: Optional[str] = None,
++) -> ExportJob:
++    """将当前用户权限内、当前筛选条件下的结果快照加入既有导出队列。"""
++    rows = _filtered_applications(user=user, customer_name=customer_name, status=status)
++    payload = {
++        "requested_by": user,
++        "tenant_scope": sorted(allowed_tenants(user)),
++        "filters": {"customer_name": customer_name, "status": status},
++        "columns": ["id", "customer_name", "status", "amount", "tenant"],
++        "rows": rows,
++    }
++    return export_queue.enqueue("financing_applications", payload)
+--- handoff/app/main.py
++++ workspace/app/main.py
+@@ -4,7 +4,7 @@
+ from fastapi import FastAPI, Header, HTTPException, Query
+ from fastapi.responses import FileResponse
+ from app.common.export_jobs import export_queue
+-from app.financing.service import list_applications
++from app.financing.service import export_applications, list_applications
+ 
+ app = FastAPI(title="AI R&D System Demo", version="0.1.0")
+ _STATIC = Path(__file__).resolve().parent.parent / "static" / "index.html"
+@@ -18,12 +18,32 @@
+     page: int = Query(1, ge=1),
+     page_size: int = Query(5, ge=1, le=100),
+     customer_name: Optional[str] = Query(None),
++    status: Optional[str] = Query(None),
+     x_user: str = Header("alice"),
+ ):
+     try:
+-        return list_applications(user=x_user, page=page, page_size=page_size, customer_name=customer_name)
++        return list_applications(
++            user=x_user,
++            page=page,
++            page_size=page_size,
++            customer_name=customer_name,
++            status=status,
++        )
+     except ValueError as exc:
+         raise HTTPException(status_code=400, detail=str(exc)) from exc
++
++
++@app.post("/api/financing-applications/export", status_code=202)
++def create_financing_export(
++    customer_name: Optional[str] = Query(None),
++    status: Optional[str] = Query(None),
++    x_user: str = Header("alice"),
++):
++    return export_applications(
++        user=x_user,
++        customer_name=customer_name,
++        status=status,
++    ).as_dict()
+ 
+ @app.get("/api/export-jobs/{job_id}")
+ def get_export_job(job_id: str):
+--- handoff/feature-list.json
++++ workspace/feature-list.json
+@@ -10,14 +10,16 @@
+     {
+       "id": "status_filter",
+       "title": "融资状态精确筛选（可与客户名称组合）",
+-      "status": "pending",
+-      "depends_on": ["customer_name_filter"]
++      "status": "done",
++      "depends_on": ["customer_name_filter"],
++      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_status_filter_and_export.py"]
+     },
+     {
+       "id": "export_endpoint",
+       "title": "导出当前筛选结果（复用既有 ExportQueue，保留权限范围）",
+-      "status": "pending",
+-      "depends_on": ["customer_name_filter", "status_filter"]
++      "status": "done",
++      "depends_on": ["customer_name_filter", "status_filter"],
++      "evidence": ["app/financing/service.py", "app/main.py", "tests/test_status_filter_and_export.py"]
+     }
+   ]
+ }
+--- handoff/tests/test_status_filter_and_export.py
++++ workspace/tests/test_status_filter_and_export.py
+@@ -0,0 +1,70 @@
++from fastapi.testclient import TestClient
++
++from app.main import app
++
++client = TestClient(app)
++
++
++def test_status_filter_matches_exactly_and_combines_with_customer_name():
++    exact = client.get(
++        "/api/financing-applications?status=APPROVED",
++        headers={"X-User": "alice"},
++    ).json()
++    wrong_case = client.get(
++        "/api/financing-applications?status=approved",
++        headers={"X-User": "alice"},
++    ).json()
++    combined = client.get(
++        "/api/financing-applications?customer_name=%E6%99%A8%E6%B5%B7&status=APPROVED",
++        headers={"X-User": "alice"},
++    ).json()
++
++    assert exact["total"] == 2
++    assert all(item["status"] == "APPROVED" for item in exact["items"])
++    assert wrong_case["total"] == 0
++    assert combined["total"] == 1
++    assert combined["items"][0]["id"] == "FA-1005"
++
++
++def test_status_filter_empty_result():
++    body = client.get(
++        "/api/financing-applications?status=UNKNOWN",
++        headers={"X-User": "alice"},
++    ).json()
++
++    assert body["total"] == 0
++    assert body["items"] == []
++
++
++def test_export_enqueues_complete_filtered_result_with_permission_scope():
++    response = client.post(
++        "/api/financing-applications/export?customer_name=%E5%8D%8E%E6%98%9F&status=APPROVED",
++        headers={"X-User": "admin"},
++    )
++    job = response.json()
++
++    assert response.status_code == 202
++    assert job["job_type"] == "financing_applications"
++    assert job["status"] == "QUEUED"
++    assert job["payload"]["requested_by"] == "admin"
++    assert job["payload"]["tenant_scope"] == ["NORTH", "SOUTH"]
++    assert job["payload"]["filters"] == {
++        "customer_name": "华星",
++        "status": "APPROVED",
++    }
++    assert [row["id"] for row in job["payload"]["rows"]] == ["FA-1002"]
++
++    fetched = client.get(f"/api/export-jobs/{job['id']}")
++    assert fetched.status_code == 200
++    assert fetched.json() == job
++
++
++def test_export_never_includes_rows_outside_requesting_user_scope():
++    job = client.post(
++        "/api/financing-applications/export?status=APPROVED",
++        headers={"X-User": "bob"},
++    ).json()
++
++    assert job["payload"]["tenant_scope"] == ["SOUTH"]
++    assert [row["id"] for row in job["payload"]["rows"]] == ["FA-2001"]
++    assert all(row["tenant"] == "SOUTH" for row in job["payload"]["rows"])

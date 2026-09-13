@@ -14,3 +14,9 @@ validation/report.md
 instructor/d0/results/
 instructor/d0/preruns/
 instructor/d0/captures/
+
+# D1 工程现场接力 demo：运行时 workspace 与预跑产物
+workspaces/d1-handoff/
+instructor/d1/handoff/results/
+instructor/d1/handoff/preruns/
+instructor/d1/handoff/postsync-confirm/

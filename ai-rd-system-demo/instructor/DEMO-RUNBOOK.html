@@ -9,7 +9,7 @@
 </style>
 </head>
 <body>
-<header><div class="top"><div class="brand">AI 研发实践 · Runbook</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="d0">D0 连续执行</button><button data-go="baseline">既有 Demo</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
+<header><div class="top"><div class="brand">AI 研发实践 · Runbook</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="d0">D0 连续执行</button><button data-go="d1">D1 Fresh Session</button><button data-go="baseline">既有 Demo</button><button data-go="demo1">Demo 1</button><button data-go="demo2">Demo 2</button><button data-go="demo3">Demo 3</button><button data-go="demo4">Demo 4</button></div></div></header>
 <main>
 <section class="hero" id="top"><div><h1>从一次红灯开始，看见 Agent 连续工作</h1><div class="map">连续执行 → 工程现场 → 独立验证 → 能力沉淀</div><p>D0 是当前课程第一讲的真机入口。先证明一件事：失败反馈能进入 Agent 的下一步决策，而不是只生成一次答案。</p><div class="warn">所有 Agent 会话都从 Runbook 指定的 workspace 启动，不要从 <code>ai-rd-system-demo/</code> 根目录直接开会话。</div></div><div><b>D0 课堂唯一观察链</b><ul><li><b>Run → FAIL</b>：先运行真实测试。</li><li><b>Read/Search → Observe</b>：失败信息驱动定位。</li><li><b>Edit → Run → PASS</b>：不靠讲师追加提示继续完成。</li><li>最终不是“AI 会写代码”，而是“反馈开始驱动执行”。</li></ul></div></section>
 
@@ -30,7 +30,8 @@ source .venv/bin/activate
 which python
 python --version
 python scripts/acceptance_check.py
-python scripts/d0_verify.py</div><div class="callout">正常：两份检查都以 <code>OVERALL: PASS</code> 结束。<code>d0_verify.py</code> 会重置 D0，所以只在课前运行。</div><div class="blocker">异常：停止课堂，先检查是否使用根目录 <code>.venv</code>。不要因为 import 失败临时 pip install，不要在课堂中访问 PyPI 修环境。</div></div><div class="grid"><div class="card"><h3>Demo12 baseline 检查</h3><div class="code">./scripts/reset_demo1.sh
+python scripts/d0_verify.py
+./scripts/d1_handoff_verify_setup.py</div><div class="callout">正常：三份检查都以 <code>OVERALL: PASS</code> 结束。<code>d0_verify.py</code>、<code>d1_handoff_verify_setup.py</code> 会分别重置 D0 / D1 handoff，所以只在课前运行。</div><div class="blocker">异常：停止课堂，先检查是否使用根目录 <code>.venv</code>。不要因为 import 失败临时 pip install，不要在课堂中访问 PyPI 修环境。</div></div><div class="grid"><div class="card"><h3>Demo12 baseline 检查</h3><div class="code">./scripts/reset_demo1.sh
 cd workspaces/demo12-financing
 ../../.venv/bin/python -m pytest -q</div><p>这是后续既有 Demo 的检查，不是 D0 必经步骤。正常：baseline 测试通过。</p></div><div class="card"><h3>查看 baseline 页面</h3><div class="code">cd workspaces/demo12-financing
 ../../.venv/bin/python -m uvicorn app.main:app --reload --port 8000</div><p>浏览器打开 <a href="http://127.0.0.1:8000/" target="_blank" rel="noreferrer">http://127.0.0.1:8000/</a>。正常：看到融资申请基础列表；异常：检查 venv、端口和 workspace。</p></div></div><div class="card"><h3>服务启动方式</h3><p>Demo 3 developer 测试全绿后，在另一个终端启动固定端口黑盒服务：</p><div class="code">cd workspaces/demo3-developer
@@ -65,6 +66,31 @@ cat instructor/d0/fallback/result.json
 
 # 需要重演时回起点
 ./scripts/reset_d0.sh</div><button class="copy-btn" data-copy="d0-fallback">复制 D0 fallback</button><p class="small">fallback 不是另一个项目，也不是模拟结果；它来自同一个 baseline、同一个任务的一次真实跑通。</p></div></div>
+</section>
+
+<section id="d1" class="demo"><span class="badge">D1 · d1-handoff · 第二讲</span><h2>工程现场接力：新 Session 能不能找到自己的坐标</h2><div class="callout">课堂只问一件事：一个<b>没有上一轮聊天记录</b>的全新 Session，能不能仅凭工程现场——<code>TASK.md</code> / <code>PROGRESS.md</code> / <code>DECISIONS.md</code> / <code>feature-list.json</code> / <code>verify.sh</code> / Git History——重新找到当前任务、已完成项、关键决策和下一步，并把状态写回去。</div>
+<div class="grid"><div class="card"><h3>0 · 先做五个预测</h3><p>启动新 Session 之前，先看一眼工程现场，预测它会不会命中：</p><ol><li>识别当前任务（客户名称 + 状态筛选 + 导出）</li><li>识别已完成项（客户名称筛选已做完）</li><li>识别下一步（状态筛选 + 导出）</li><li>识别一个关键决策（D-001/D-002/D-003 任一条）</li><li>使用正确的验证命令（<code>./verify.sh</code>）</li></ol><div class="callout">即使某一项没命中，demo 也不算失败——没命中的项恰好用来讨论"工程现场还缺什么"。</div></div><div class="card"><h3>1 · Reset，看一眼接手起点</h3><div class="code" id="d1-start">./scripts/reset_d1_handoff.sh
+cd workspaces/d1-handoff
+cat PROGRESS.md
+git log --oneline
+cd ../..</div><button class="copy-btn" data-copy="d1-start">复制 D1 起始命令</button><p>固定重放 3 个真实提交：任务开始 → <b>客户名称筛选已完成</b>（带 3 条决策记录）→ 空提交显式标记"session ended"。</p></div></div>
+<div class="grid"><div class="card"><h3>2 · 从这个 workspace 新开一个 Session</h3><div class="code"># 当前目录必须是
+workspaces/d1-handoff
+
+# 课堂默认，新开一个会话，不带任何历史聊天记录
+codex</div><p>启动后只发下面这一句接手指令，不做任何补充：</p><div class="prompt" id="d1-task">接手当前任务。先判断项目现在做到哪里、当前是否健康、下一步应该做什么；确认后继续完成下一步，并把最新状态写回项目。</div><button class="copy-btn" data-copy="d1-task">复制接手指令</button><p class="small">脚本等价写法（与手动新开会话观察点完全一致）：<code>./scripts/d1_handoff_run.sh --no-reset</code>。想看实时轨迹：<code>tail -f instructor/d1/handoff/results/latest/trace.jsonl</code>。</p></div><div class="card"><h3>3 · 现场只盯这十个节点</h3><div class="evidence"><div><b>读工程状态</b>命令引用 TASK.md / PROGRESS.md / DECISIONS.md / feature-list.json / git log。</div><div><b>识别当前任务</b>消息同时出现客户名称、状态、导出三个范围。</div><div><b>识别已完成项</b>消息说"客户名称筛选已完成"。</div><div><b>识别一个决策</b>引用 D-001/D-002/D-003 或复述"权限→筛选→分页"。<br><strong>这里停一下，说明它不只读了结论，也读了原因。</strong></div><div><b>判断下一步</b>消息点名"状态筛选"和"导出"，来自 PROGRESS.md，不是猜的。</div><div><b>先做健康检查</b>执行 <code>./verify.sh</code>，发生在第一次改代码之前。</div><div><b>完成真实小步骤</b><code>app/financing/service.py</code>、<code>app/main.py</code> 出现新增代码。</div><div><b>读取机器反馈</b>改完后再次运行 <code>verify.sh</code> 并等结果。</div><div><b>写回工程状态</b>PROGRESS.md / DECISIONS.md / feature-list.json 内容变化。</div><div><b>没有越界</b>trace 里没有出现其他 workspace 或 <code>instructor/reference</code> 路径。</div></div></div></div>
+<div class="grid"><div class="card"><h3>4 · 成功收口</h3><div class="code" id="d1-pass">cat instructor/d1/handoff/results/latest/final.md
+cat instructor/d1/handoff/results/latest/result.json</div><button class="copy-btn" data-copy="d1-pass">复制收口检查</button><p><code>result.json.predictions</code> 分别记录五项预测是否命中（附证据），不是一刀切 PASS/FAIL。</p><p>收口只讲一句：</p><div class="callout"><b>这个新 Session 没有上一轮聊天记录，但它仍然知道自己站在哪里。</b></div><p>接第三讲的问题：它靠工程现场重新找到了坐标——但它做的东西，谁来确认是对的？</p></div><div class="card"><h3>5 · 现场跑偏时的 fallback</h3><div class="code" id="d1-fallback"># 看同一个 checkpoint、同一句接手指令的一次真实成功运行
+cat instructor/d1/handoff/fallback/final.md
+cat instructor/d1/handoff/fallback/workspace.diff
+cat instructor/d1/handoff/fallback/result.json
+
+# 直接恢复到"下一步已完成"目标状态
+./scripts/d1_handoff_restore_fixed.sh
+
+# 需要重演时回接手起点
+./scripts/reset_d1_handoff.sh</div><button class="copy-btn" data-copy="d1-fallback">复制 D1 fallback</button><p class="small">fallback 不是另一个项目，也不是模拟结果；它来自同一个 checkpoint、同一句接手指令的一次真实跑通。10 次预跑：10/10 完整链路，五项预测全部 10/10 命中，详见 <code>instructor/d1/handoff/PRERUN-REPORT.md</code>。</p></div></div>
+<div class="warn">D1 只用开发侧 <code>verify.sh</code>（本质是 pytest），不使用 Golden Case / 独立 Validator / 外部 Source of Truth——那是第三讲；不引入 Skill / 规则生命周期 / 防复发资产——那是第四讲。原来的 Task → Plan → 项目环境 → 自检要求 三级对比实验（Level 1/2/3）作为补充实验保留在 <a href="D1-RUNBOOK.md">D1-RUNBOOK.md</a> 末尾，课堂时间紧张时可以整段跳过；逐行操作细节的开发/调试参考见 <a href="D1-HANDOFF-RUNBOOK.html">D1-HANDOFF-RUNBOOK.html</a>（不是课堂主入口）。</div>
 </section>
 
 <section class="card" id="baseline"><h2>既有 Demo 资产</h2><p>下面保留原有 Demo 1–4 的课堂操作，暂不改其运行逻辑。后续按当前课程逐讲升级时，再逐步替换。</p><h2>Demo 1 / Demo 2 业务需求基准</h2><p>融资申请列表需要支持客户名称和融资状态筛选，并支持导出。两次演示都从同一个未实现该需求的 baseline 开始。</p><h2>独立质控 / 业务验收标准</h2><div class="callout">标准公开，验收实现独立。开发 Agent 只运行开发侧 <code>../../.venv/bin/python -m pytest -q</code>；讲师退出 workspace 后运行同一套独立验收。</div><ul><li>客户名称模糊筛选，融资状态精确筛选。</li><li>覆盖单条件、多条件、空结果。</li><li>保留既有数据权限，筛选和导出不能越权。</li><li>导出走已有异步任务通道，导出当前筛选结果。</li><li>导出任务保留 <code>customer_name</code>、<code>status</code> 和当前用户权限范围。</li><li>导出字段严格为 <code>id</code>、<code>customer_name</code>、<code>status</code>、<code>amount</code>。</li><li>前端具备客户筛选、状态筛选和导出操作；只验收行为，不绑定 HTML <code>id</code>、<code>class</code> 或变量名。</li></ul></section>
@@ -221,7 +247,9 @@ cat reports/demo3-validation.md</div><button class="copy-btn" data-copy="d4-star
 <div class="card"><h3>Demo 4 收口｜什么时候才算“沉淀”</h3><ol><li><b>写进文件，不等于沉淀完成。</b></li><li><b>只有新会话面对新输入还能正确执行，规则才算真正留下来。</b></li><li><b>沉淀本身，也需要验收。</b></li></ol><p>最后落一句：<b>会话是新的，模型可以换，规则还在。模型的归模型，沉淀的归沉淀。</b></p><p class="small">确定性兜底：从仓库根目录执行 <code>./scripts/restore_demo4_learned.sh</code> 可恢复已经补全 mode、金额公式和回退条件的最终沉淀态。</p></div>
 </section>
 
-<section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
+<section class="card"><h3>自动验收</h3><div class="code">.venv/bin/python scripts/acceptance_check.py
+.venv/bin/python scripts/d0_verify.py
+./scripts/d1_handoff_verify_setup.py</div><p class="small">检查结构、D0 reset/红灯/目标状态、D1 handoff checkpoint（3 提交、feature-list、verify.sh、无第三讲资产泄漏）、Demo 1/2 共用 baseline、两次 reset 摘要一致、Demo12 无任务泄漏、Demo 3 HTTP wrong/fixed 状态和 Demo 4 规则沉淀；不执行真实课堂任务。</p></section>
 </main>
 <script>
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));

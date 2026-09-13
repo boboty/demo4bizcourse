@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D1｜工程现场接力 Runbook</title>
+<!-- 开发/调试参考，不是课堂入口。课堂统一使用 instructor/DEMO-RUNBOOK.html 的 D1 Fresh Session 小节。 -->
+<style>
+:root{--bg:#f5f2e9;--paper:#fffdf7;--ink:#18332a;--muted:#66766f;--line:#d8d0bf;--green:#0c7a54;--soft:#e4f2ea;--warn:#fff0cf;--bad:#f9e3df}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}header{position:sticky;top:0;background:#f5f2e9ee;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:2}.top,main{max-width:1100px;margin:auto}.top{padding:14px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.brand{font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav button,.copy-btn{border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:7px 12px;font-weight:700;color:var(--ink);cursor:pointer}.copy-btn{margin:0 0 9px}.nav button:hover,.copy-btn:hover{background:var(--soft)}main{padding:30px 22px 70px}.hero,.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hero>div,.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;margin:12px 0}.hero{grid-template-columns:1.4fr 1fr}.hero h1{font-size:36px;line-height:1.15;margin:0 0 10px}.map,.goal{color:var(--green);font-weight:800}.demo{scroll-margin-top:80px;margin-top:36px}.demo h2{font-size:28px;margin:0}.badge{display:inline-block;background:var(--ink);color:white;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800}.code,.prompt{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:13px 15px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}.code{background:#17362d;color:#fffdf7}.prompt{background:#eef5ef;border:1px solid #c9ddd0}.callout,.warn,.blocker{padding:13px 15px;border-radius:10px;margin:12px 0;font-weight:700}.callout{background:var(--soft);border-left:5px solid var(--green)}.warn{background:var(--warn);border-left:5px solid #a46600}.blocker{background:var(--bad);border-left:5px solid #a33b2e}.small{color:var(--muted);font-size:14px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14.5px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:#f1ede0}li{margin:6px 0}a{color:var(--green);font-weight:700}@media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.hero h1{font-size:28px}table{font-size:13px}}
+</style>
+</head>
+<body>
+<header><div class="top"><div class="brand">D1 · 工程现场接力</div><div class="nav"><button data-go="prep">课前准备</button><button data-go="asset">工程现场</button><button data-go="predict">五个预测</button><button data-go="run">接手运行</button><button data-go="observe">观察点</button><button data-go="fallback">兜底</button></div></div></header>
+<main>
+
+<section class="hero" id="prep"><div><h1>一个没有聊天记录的新 Session，还能找到自己站在哪里吗？</h1><div class="map">读工程现场 → 判断健康度 → 判断下一步 → 完成 → 写回状态</div><p>D1 的主 demo：全新 Codex session（<code>--ephemeral</code>，零历史记录）从同一个融资申请工程的"中途接手点"出发，只凭工程现场资产重新建立坐标。</p></div><div><b>课前准备</b><div class="code">source .venv/bin/activate
+./scripts/d1_handoff_verify_setup.py</div><div class="callout">正常：<code>OVERALL: PASS</code>。只需确认 Codex 已登录，不需要额外 API key / endpoint / 模型变量。</div></div></section>
+
+<section id="asset" class="demo"><span class="badge">工程现场设计</span><h2>固定的"中途接手"起点</h2><p><code>workspaces/d1-handoff/</code> 每次 reset 都重放同样的 3 次提交：</p><table><tr><th>提交</th><th>含义</th></tr><tr><td><code>chore: start financing filter+export task…</code></td><td>任务刚开始，脚手架文件都在，功能还没做</td></tr><tr><td><code>feat(financing): add customer_name filter…</code></td><td><b>客户名称筛选已完成</b>并有测试，<code>DECISIONS.md</code> 记了 3 条决策</td></tr><tr><td><code>chore: session ended — see PROGRESS.md…</code></td><td>空提交，显式标记"上一个 session 到这里结束"</td></tr></table><table><tr><th>文件</th><th>作用</th></tr><tr><td><code>TASK.md</code></td><td>原始任务 + 开发侧验收方向</td></tr><tr><td><code>PROGRESS.md</code></td><td>当前做到哪里：已完成客户名称筛选，未完成状态筛选和导出</td></tr><tr><td><code>DECISIONS.md</code></td><td>为什么这么做：筛选顺序、模糊匹配语义、类型注解写法</td></tr><tr><td><code>feature-list.json</code></td><td>机器可读的功能级完成情况</td></tr><tr><td><code>verify.sh</code></td><td>健康检查：跑现有 pytest</td></tr><tr><td><code>PROJECT-MEMORY.md</code> / <code>CODING-STANDARDS.md</code></td><td>长期项目事实与规范，不随任务进度变化</td></tr><tr><td>Git History</td><td>3 次提交，最后一条显式标记 session 已结束</td></tr></table><div class="warn">D1 只用开发侧 <code>verify.sh</code>（本质是 pytest），不使用 Golden Case / 独立 Validator / 外部 Source of Truth（第三讲）；不引入 Skill / 规则生命周期 / 防复发资产（第四讲）。</div></section>
+
+<section id="predict" class="demo"><span class="badge">现场先做预测</span><h2>启动新 Session 之前，先预测五项</h2><p>看一眼工程现场（不启动 Agent），预测新 session 会不会命中：</p><ol><li>识别当前任务（客户名称 + 状态筛选 + 导出）</li><li>识别已完成项（客户名称筛选已做完）</li><li>识别下一步（状态筛选 + 导出）</li><li>识别一个关键决策（D-001 / D-002 / D-003 任一条）</li><li>使用正确的验证命令（<code>./verify.sh</code>）</li></ol><div class="callout">即使某一项没命中，demo 也不算失败——没命中的项恰好用来讨论"工程现场还缺什么"。</div></section>
+
+<section id="run" class="demo"><span class="badge">接手运行</span><h2>Reset，再新开一个 Session</h2><div class="grid"><div class="card"><h3>1 · Reset，看一眼起点</h3><div class="code">cd ai-rd-system-demo
+./scripts/reset_d1_handoff.sh
+cd workspaces/d1-handoff
+cat PROGRESS.md
+git log --oneline
+cd ../..</div></div><div class="card"><h3>2 · 一条命令跑完整链路</h3><div class="code">./scripts/d1_handoff_run.sh --no-reset</div><p>或用交互式会话：从 <code>workspaces/d1-handoff/</code> 目录新开 Codex（不要带着之前的会话），只粘贴下面这一句话：</p><div class="prompt" id="handoff-prompt">接手当前任务。先判断项目现在做到哪里、当前是否健康、下一步应该做什么；确认后继续完成下一步，并把最新状态写回项目。</div><button class="copy-btn" data-copy="handoff-prompt">复制接手指令</button></div></div><p class="small">想看实时轨迹：<code>tail -f instructor/d1/handoff/results/latest/trace.jsonl</code></p></section>
+
+<section id="observe" class="demo"><span class="badge">课堂观察点</span><h2>屏幕上应该出现什么</h2><table><tr><th>节点</th><th>屏幕上应该出现</th><th>讲师要讲的一句话</th></tr><tr><td>读取工程状态</td><td>命令引用 TASK.md / PROGRESS.md / DECISIONS.md / feature-list.json / git log</td><td>它没有问我们上次做到哪了，而是自己去项目里找</td></tr><tr><td>识别当前任务</td><td>消息同时出现客户名称、状态、导出三个范围</td><td>任务边界不是刚才告诉它的</td></tr><tr><td>识别已完成项</td><td>消息说"客户名称筛选已完成"</td><td>它知道哪些不用重做</td></tr><tr><td>识别一个决策</td><td>引用 D-001/D-002/D-003 或复述"权限→筛选→分页"</td><td>它不只读了结论，也读了原因</td></tr><tr><td>判断下一步</td><td>消息点名"状态筛选"和"导出"</td><td>下一步来自 PROGRESS.md，不是猜的</td></tr><tr><td>先做健康检查</td><td>执行 <code>./verify.sh</code>，发生在第一次改代码之前</td><td>先确认现状，再动手</td></tr><tr><td>完成真实小步骤</td><td><code>app/financing/service.py</code>、<code>app/main.py</code> 有新增代码</td><td>不是只写文档，真的实现了</td></tr><tr><td>读取机器反馈</td><td>改完后再次运行 <code>verify.sh</code></td><td>反馈进入了它的收尾判断</td></tr><tr><td>写回工程状态</td><td>PROGRESS.md / DECISIONS.md / feature-list.json 内容变化</td><td>下一个 session 能接着用</td></tr><tr><td>没有越界</td><td>trace 里没有出现其他 workspace 或 instructor/reference 路径</td><td>它老老实实待在自己的项目里</td></tr></table><div class="code">cat instructor/d1/handoff/results/latest/final.md
+cat instructor/d1/handoff/results/latest/result.json</div><p class="small"><code>result.json.predictions</code> 分别记录五项预测是否命中（附证据），不是一刀切 PASS/FAIL。</p></section>
+
+<section id="fallback" class="demo"><span class="badge">兜底</span><h2>Session 超时或跑偏</h2><div class="code">cat instructor/d1/handoff/fallback/final.md
+cat instructor/d1/handoff/fallback/workspace.diff
+cat instructor/d1/handoff/fallback/result.json
+
+./scripts/d1_handoff_restore_fixed.sh   # 直接切到"下一步已完成"目标状态
+./scripts/reset_d1_handoff.sh           # 回到接手起点再演一次</div><div class="callout">fallback 保存的是同一个 handoff checkpoint、同一句接手指令下真实跑通的一次完整运行，不是另一个项目的录像。</div><table><tr><th>Checkpoint</th><th>命令</th><th>状态</th></tr><tr><td><code>handoff</code>（起点）</td><td><code>./scripts/reset_d1_handoff.sh</code></td><td>3 个提交，客户名称筛选已完成，状态筛选/导出待做</td></tr><tr><td><code>fixed</code></td><td><code>./scripts/d1_handoff_restore_fixed.sh</code></td><td>状态筛选 + 导出均已完成，仅用于兜底</td></tr></table></section>
+
+<section class="card"><h3>稳定性预跑</h3><div class="code">./scripts/d1_handoff_prerun.sh 10
+.venv/bin/python instructor/d1/handoff/prerun_report.py</div><p class="small">结果见 <code>instructor/d1/handoff/PRERUN-REPORT.md</code>；五项预测分别统计命中率，不做一刀切。</p></section>
+</main>
+<script>
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.go).scrollIntoView({behavior:'smooth'}));
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const target=document.getElementById(b.dataset.copy);const original=b.textContent;try{await navigator.clipboard.writeText(target.innerText);b.textContent='已复制';setTimeout(()=>b.textContent=original,1200)}catch(e){b.textContent='请手动选择复制';setTimeout(()=>b.textContent=original,1600)}});
+</script>
+</body>
+</html>

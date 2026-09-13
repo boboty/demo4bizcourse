@@ -8,7 +8,11 @@
 
 ## 第一讲 D0｜连续执行
 
-第一讲只证明 Agent 能在真实反馈下连续工作：读项目 → 改代码 → 跑验证 → 读到失败 → 自己定位 → 改完再验证直到通过。完整流程见 [D0-RUNBOOK.md](D0-RUNBOOK.md)，本文件后续章节从第二讲的工程环境开始。
+第一讲只证明 Agent 能在真实反馈下连续工作：读项目 → 改代码 → 跑验证 → 读到失败 → 自己定位 → 改完再验证直到通过。完整流程见 [D0-RUNBOOK.md](D0-RUNBOOK.md)。
+
+## 第二讲 D1｜工程现场接力
+
+第二讲现在的主 demo 证明：一个没有上一轮聊天记录的全新 Agent Session，仍然能从工程现场（TASK/PROGRESS/DECISIONS/feature-list/verify.sh/Git History）重新找到当前任务、已完成项、关键决策和下一步，并把状态写回去。完整流程见 [D1-RUNBOOK.md](D1-RUNBOOK.md)；课堂统一使用总入口 [DEMO-RUNBOOK.html](DEMO-RUNBOOK.html)（导航：D0 连续执行 → D1 Fresh Session → 既有 Demo），`D1-HANDOFF-RUNBOOK.html` 只作为开发/调试参考。本文件（`.md`）后续章节是更早期的 Demo 1–4 材料，尚未合并进 `DEMO-RUNBOOK.html` 的 D0/D1 小节，不代表当前第二讲主线。
 
 ```bash
 ./scripts/reset_d0.sh          # 起点固定为 4 failed, 4 passed

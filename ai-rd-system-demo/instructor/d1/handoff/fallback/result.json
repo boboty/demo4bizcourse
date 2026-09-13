@@ -1,0 +1,70 @@
+{
+  "run_status": "COMPLETED",
+  "elapsed_seconds": 125.59,
+  "final_message": "已完成接手与后续开发，项目当前健康，本次任务已全部完成。\n\n- 完成融资状态精确筛选，支持与客户名称组合。\n- 新增异步导出接口 `POST /api/financing-applications/export`，复用 `ExportQueue`。\n- 导出任务包含筛选结果快照、发起用户及 tenant 权限范围。\n- 新增 4 个状态筛选与导出测试。\n- 已更新 [PROGRESS.md](/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/d1-handoff/PROGRESS.md)、[DECISIONS.md](/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/d1-handoff/DECISIONS.md) 和 [feature-list.json](/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/d1-handoff/feature-list.json)。\n\n验证证据：\n\n- `./verify.sh`：`9 passed`\n- `feature-list.json` JSON 校验通过\n- `git diff --check` 通过\n- 已完成最终 diff 检查\n\n剩余风险：现有 `ExportQueue` 仅负责内存入队和任务查询，尚无后台消费者生成实际下载文件；这属于基础工程当前能力边界，不影响本次“支持异步导出入队”的要求。测试生成的未跟踪 `__pycache__` 目录仍在工作区，未修改或删除用户文件。",
+  "files_changed_since_handoff": [
+    "DECISIONS.md",
+    "PROGRESS.md",
+    "app/financing/service.py",
+    "app/main.py",
+    "feature-list.json",
+    "tests/test_status_filter_and_export.py"
+  ],
+  "final_test_passed": true,
+  "final_test_summary": "9 passed in 0.13s",
+  "predictions": {
+    "1_identified_task": {
+      "hit": true,
+      "evidence": {
+        "read_task_md": true,
+        "message_mentions_all_three_scopes": true
+      }
+    },
+    "2_identified_done": {
+      "hit": true,
+      "evidence": {
+        "read_progress_md": true,
+        "read_feature_list_json": true,
+        "message_states_customer_filter_done": true
+      }
+    },
+    "3_identified_next_step": {
+      "hit": true,
+      "evidence": {
+        "implemented_status_filter_in_diff": true,
+        "implemented_export_route_in_diff": true,
+        "message_names_next_step": true
+      }
+    },
+    "4_identified_decision": {
+      "hit": true,
+      "evidence": {
+        "read_decisions_md": true,
+        "message_references_a_decision": true
+      }
+    },
+    "5_correct_verify_command": {
+      "hit": true,
+      "evidence": {
+        "ran_verify_sh": true,
+        "ran_pytest_directly_instead": false
+      }
+    },
+    "read_git_log": true,
+    "hits": 5,
+    "total": 5
+  },
+  "health_check_timing": {
+    "ran_verify_or_pytest_before_first_edit": true,
+    "verify_or_pytest_run_count": 1,
+    "edited": true
+  },
+  "state_written_back": {
+    "progress_md_changed": true,
+    "decisions_md_changed": true
+  },
+  "workspace_boundary_violations": [],
+  "stayed_in_workspace": true,
+  "trace": "/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/d1/handoff/results/latest/trace.jsonl",
+  "diff": "/Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/d1/handoff/results/latest/workspace.diff"
+}

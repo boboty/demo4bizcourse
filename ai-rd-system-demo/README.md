@@ -32,9 +32,18 @@ cd ../..
 
 完整课堂流程、观察点、兜底与 checkpoint 见 [instructor/D0-RUNBOOK.md](instructor/D0-RUNBOOK.md)。课前 QA 用 `scripts/d0_verify.py`，稳定性证据见 `instructor/d0/PRERUN-REPORT.md` 与 `instructor/d0/fallback/`。
 
-## D1｜工程环境如何改变 AI 开发
+## D1｜工程现场接力：新会话如何找到自己的坐标
 
-D1 从同一个融资申请任务出发，逐级增加 Plan、项目记忆、代码规范和开发侧自检要求。课堂只使用已经登录的 Codex / Plus 环境；模型和 provider 是课前环境，不是 D1 的比较变量。完整课堂入口见 [instructor/D1-RUNBOOK.md](instructor/D1-RUNBOOK.md)。
+D1 的主 demo 证明：一个没有上一轮聊天记录的全新 Agent Session，仍然能从 `TASK.md`／`PROGRESS.md`／`DECISIONS.md`／`feature-list.json`／`verify.sh`／Git History 里重新找到当前任务、已完成项、关键决策和下一步，并把状态写回去。课堂只使用已经登录的 Codex / Plus 环境；模型和 provider 是课前环境，不是 D1 的比较变量。完整课堂入口见 [instructor/D1-RUNBOOK.md](instructor/D1-RUNBOOK.md)。
+
+```bash
+./scripts/reset_d1_handoff.sh
+./scripts/d1_handoff_run.sh --no-reset
+```
+
+课前可运行 `scripts/d1_handoff_verify_setup.py` 做不调用模型的 reset、环境资产和边界预检；稳定性预跑见 `scripts/d1_handoff_prerun.sh` 与 `instructor/d1/handoff/PRERUN-REPORT.md`。
+
+原来的 Task → Plan → 项目环境 → 自检要求 三级对比实验（Level 1/2/3）降级为补充实验，保留在 `instructor/D1-RUNBOOK.md` 末尾：
 
 ```bash
 ./scripts/d1_plan.sh level1
@@ -43,8 +52,6 @@ D1 从同一个融资申请任务出发，逐级增加 Plan、项目记忆、代
 ./scripts/d1_execute.sh level3
 ./scripts/d1_compare.sh
 ```
-
-课前可运行 `scripts/d1_verify_setup.py` 做不调用模型的 reset、环境资产和 watchdog 预检。
 
 ## 环境
 

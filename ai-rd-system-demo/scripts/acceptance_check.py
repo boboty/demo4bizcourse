@@ -165,15 +165,30 @@ def main() -> int:
     )
     direct_task_marker = "给融资申请列表增加客户名称和融资状态" + "筛选，并支持导出。"
     direct_task_locations = {str(path.relative_to(ROOT)) for path, text in all_repo_text if direct_task_marker in text}
+    direct_task_allowed_exact = {
+        "instructor/DEMO-RUNBOOK.md",
+        "instructor/DEMO-RUNBOOK.html",
+        "instructor/D1-RUNBOOK.md",
+        "instructor/D1-HANDOFF-RUNBOOK.html",
+        "instructor/d1/task.txt",
+    }
+    # D1 工程现场接力 demo 把任务文本写进 TASK.md/feature-list.json 作为工程现场资产
+    # 本身（不是从 Runbook 临场粘贴），这是与 Level1/2/3 不同的、故意的设计。
+    direct_task_allowed_prefixes = (
+        "instructor/baselines/d1-handoff/",
+        "instructor/reference/d1-handoff-completed/",
+        "instructor/d1/handoff/",
+        "workspaces/d1-handoff/",
+    )
+    direct_task_unexpected = {
+        location
+        for location in direct_task_locations
+        if location not in direct_task_allowed_exact and not location.startswith(direct_task_allowed_prefixes)
+    }
     check(
-        "Direct Task sources are limited to Runbooks and D1 task source",
-        direct_task_locations == {
-            "instructor/DEMO-RUNBOOK.md",
-            "instructor/DEMO-RUNBOOK.html",
-            "instructor/D1-RUNBOOK.md",
-            "instructor/d1/task.txt",
-        },
-        ", ".join(sorted(direct_task_locations)),
+        "Direct Task sources are limited to Runbooks, D1 task source and d1-handoff engineering assets",
+        not direct_task_unexpected,
+        ", ".join(sorted(direct_task_unexpected)),
     )
 
     d0_workspace = WORKSPACES / "d0-first-loop"
