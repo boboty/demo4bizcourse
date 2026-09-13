@@ -1,6 +1,6 @@
 == pytest（开发侧测试）==
 ...................                                                      [100%]
-19 passed in 0.13s
+19 passed in 0.14s
 
 == golden/check_export_eligibility.py（独立 Golden Case / policy gate）==
 Export eligibility Golden Case

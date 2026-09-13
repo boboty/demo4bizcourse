@@ -7,9 +7,10 @@ from app.financing.repository import all_applications_for_user
 
 EXPORT_FIELDS = ("id", "customer_name", "status", "amount")
 
-# 放款处理导出规则（来自独立业务事实源 export_eligibility_source_of_truth.md）：
-# 只有 APPROVED / FUNDED 允许进入放款导出；SUBMITTED / REJECTED 仍可在列表查询，
-# 但不得进入导出 payload。这条规则只约束导出，不改变列表查询和 tenant 权限范围。
+# 放款处理导出规则：只有 APPROVED / FUNDED 允许进入放款导出；SUBMITTED / REJECTED 仍可在
+# 列表查询，但不得进入导出 payload。这条规则只约束导出，不改变列表查询和 tenant 权限范围。
+# （D3 独立验收发现的问题，详见 reports/demo3-validation.md；这条规则目前只写在这里，
+# 还没有沉淀成项目级规则资产或独立于开发测试的验证方式。）
 EXPORT_ELIGIBLE_STATUSES = {"APPROVED", "FUNDED"}
 
 
@@ -31,7 +32,7 @@ def _filter_by_status(rows: list[dict], status: Optional[str]) -> list[dict]:
 
 
 def _filtered_rows(*, user: str, customer_name: Optional[str], status: Optional[str]) -> list[dict]:
-    """筛选顺序：先取 tenant 权限内数据，再筛选（见 PROJECT-MEMORY.md）。"""
+    """筛选顺序：先取 tenant 权限内数据，再筛选。"""
     rows = all_applications_for_user(user)
     rows = _filter_by_customer_name(rows, customer_name)
     rows = _filter_by_status(rows, status)

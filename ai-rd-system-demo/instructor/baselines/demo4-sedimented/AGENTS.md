@@ -12,3 +12,5 @@
   状态一起导出了。修复本身已经在 `app/financing/service.py` 和 `tests/test_export_eligibility.py`
   里；`docs/rules/`、`golden/` 和这份 `./verify.sh` 是为了让下一次开发者或 Agent 不需要重新踩这次
   坑、也不需要重新等一次独立验收才发现这条规则。
+- 只做任务需要的最小改动；不要顺手重构、重命名或重新组织你不需要碰的函数和文件——尤其是
+  `app/financing/service.py` 里已有的实现结构和变量命名，除非任务本身就是要改它们。

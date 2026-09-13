@@ -348,6 +348,49 @@ def main() -> int:
     ]
     check("Demo 4 sedimented rule doc covers the confirmed rules", all(token in rule_doc for token in required_rule_tokens))
 
+    demo4_report = (demo4_pre_baseline / "reports/demo3-validation.md").read_text(encoding="utf-8")
+    check(
+        "Demo 4 has a financing-flavored D3 validation report as sedimentation fact input",
+        "Overall: PASS" in demo4_report
+        and "GC-02" in demo4_report
+        and "GC-04" in demo4_report
+        and "已经通过独立验收确认的事实" in demo4_report,
+    )
+    check(
+        "Demo 4 validation report is carried forward unchanged into the sedimented baseline",
+        (demo4_sedimented_baseline / "reports/demo3-validation.md").read_text(encoding="utf-8") == demo4_report,
+    )
+
+    stale_refs = ["export_eligibility_source_of_truth.md", "PROJECT-MEMORY.md"]
+    for label, service_path in (
+        ("pre-sedimentation", demo4_pre_baseline / "app/financing/service.py"),
+        ("sedimented", demo4_sedimented_baseline / "app/financing/service.py"),
+    ):
+        service_text = service_path.read_text(encoding="utf-8")
+        leaks = [token for token in stale_refs if token in service_text]
+        check(f"Demo 4 {label} service.py has no dangling source-of-truth/PROJECT-MEMORY references", not leaks, ", ".join(leaks))
+    sedimented_service_text = (demo4_sedimented_baseline / "app/financing/service.py").read_text(encoding="utf-8")
+    check(
+        "Demo 4 sedimented service.py points to the rule doc instead of restating the rule",
+        "docs/rules/export_eligibility.md" in sedimented_service_text
+        and required_rule_tokens[0] not in sedimented_service_text,
+    )
+
+    retro_prompt = (ROOT / "instructor/prompts/demo4/01-retro-sedimentation.md").read_text(encoding="utf-8")
+    fresh_prompt = (ROOT / "instructor/prompts/demo4/02-fresh-session-maintenance-task.md").read_text(encoding="utf-8")
+    check(
+        "Demo 4 retro task tells the agent not to refactor unrelated code (keeps regression injection stable)",
+        "不要顺手重构" in retro_prompt and "变量命名" in retro_prompt,
+    )
+    check(
+        "Demo 4 fresh-session task tells the agent not to refactor unrelated code",
+        "不要重构你不需要改的代码" in fresh_prompt,
+    )
+    check(
+        "Demo 4 sedimented AGENTS.md carries the same minimal-diff discipline for any future session",
+        "不要顺手重构" in (demo4_sedimented_baseline / "AGENTS.md").read_text(encoding="utf-8"),
+    )
+
     golden_cases = json.loads((demo4_sedimented_baseline / "golden/cases.json").read_text(encoding="utf-8"))
     check(
         "Demo 4 Golden Case covers GC-01..GC-04 with independently-derived expected ids",
