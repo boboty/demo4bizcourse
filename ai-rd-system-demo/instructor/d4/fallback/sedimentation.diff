@@ -1,7 +1,7 @@
 diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/AGENTS.md /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/AGENTS.md
 --- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/AGENTS.md	2026-09-14 06:47:20
-+++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/AGENTS.md	2026-09-14 06:47:37
-@@ -2,8 +2,15 @@
++++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/AGENTS.md	2026-09-14 07:36:32
+@@ -2,8 +2,19 @@
  
  - 当前目录就是完整项目上下文，不读取父目录或兄弟 workspace，也不要在仓库里寻找课堂材料。
  - 本工程统一使用 Python 3.12 和 pytest；不引入新的第三方依赖。
@@ -22,17 +22,20 @@ diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/ya
 +  坑、也不需要重新等一次独立验收才发现这条规则。
 +- 只做任务需要的最小改动；不要顺手重构、重命名或重新组织你不需要碰的函数和文件——尤其是
 +  `app/financing/service.py` 里已有的实现结构和变量命名，除非任务本身就是要改它们。
++- `./verify.sh` 必须完整跑完开发测试和 Golden Case 两部分：其中任何一项失败都不能导致另一项
++  被跳过，最后要有一个统一的 PASS/BLOCKED 结论。不限制具体 shell 写法（不强制去掉 `set -e`），
++  只约束这个可观察行为——如果改 `verify.sh` 时不确定，参考它当前的实现方式（分别捕获两步的
++  退出码，再统一判断）。
 diff -ru --exclude .venv --exclude __pycache__ --exclude .pytest_cache /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/app/financing/service.py /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/app/financing/service.py
---- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/app/financing/service.py	2026-09-14 06:46:26
+--- /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/instructor/baselines/demo4-sedimentation/app/financing/service.py	2026-09-14 07:06:44
 +++ /Users/yanbo/Documents/bizcourse/Demo/ai-rd-system-demo/workspaces/demo4-sedimentation/app/financing/service.py	2026-09-14 06:46:36
-@@ -7,10 +7,8 @@
+@@ -7,9 +7,8 @@
  
  EXPORT_FIELDS = ("id", "customer_name", "status", "amount")
  
 -# 放款处理导出规则：只有 APPROVED / FUNDED 允许进入放款导出；SUBMITTED / REJECTED 仍可在
 -# 列表查询，但不得进入导出 payload。这条规则只约束导出，不改变列表查询和 tenant 权限范围。
--# （D3 独立验收发现的问题，详见 reports/demo3-validation.md；这条规则目前只写在这里，
--# 还没有沉淀成项目级规则资产或独立于开发测试的验证方式。）
+-# （尚未沉淀成项目级规则资产；历史验收事实见 reports/demo3-validation.md。）
 +# 放款处理导出资格规则的唯一事实源是 docs/rules/export_eligibility.md，不在这里重复整段
 +# 规则原文；改动这个集合前先读那份文件。
  EXPORT_ELIGIBLE_STATUSES = {"APPROVED", "FUNDED"}

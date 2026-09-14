@@ -167,8 +167,9 @@ live-agent fallback 预跑证据的 digest，已撤销。
 - **D1**（`workspaces/d1-handoff`，先看接手前状态、再 `restore_fixed` 看完整态）：
   接手前列表状态列显示"待审核/已通过/已放款/未通过"；完整态下拉框选中"未通过"→筛选→
   "导出当前筛选结果"，反馈条显示
-  `导出任务已创建：任务编号 xxx · 任务状态 已提交 · 筛选条件 customer_name=(空)，
-  status=未通过 · 共 1 条记录`。
+  `导出任务已创建：任务编号 xxx · 任务状态 已提交 · 筛选条件：客户名称=(空)，
+  融资状态=未通过 · 共 1 条记录`（字段名与状态值均已中文化；第二轮补漏后状态值还带彩色标签，
+  见第 11 节）。
 - **D3**（`workspaces/demo3-developer`，wrong 状态）：状态选"未通过"→筛选→
   "放款处理导出"，反馈显示"共 1 条记录"（即 REJECTED 记录被错误导出，符合 D3 教学预期的
   "看起来正常、实际违规"状态）。
@@ -253,3 +254,118 @@ OVERALL: PASS   （scripts/d1_verify_setup.py，Level 1/2/3 附带检查）
    原文（详见第 2 节），因为它绑定着一次真实 live-agent fallback 预跑证据的 tree digest，
    本轮判断"D0 课堂全程不浏览这个页面、中文化零收益，却有证据失效风险"，故意不改。如果后续
    需要覆盖，需要先确认能否重新预跑生成 D0 fallback snapshot，而不是直接改文件。
+
+## 11. Final QC 补漏（第二轮，2026-09-14）
+
+在第一轮（第 1–10 节）基础上只做小步修补：不重新设计 Demo，不改 API、枚举值、测试语义。
+
+### 11.1 导出反馈的字段名彻底中文化
+
+第一轮只把状态**值**中文化，字段名仍是英文，学员实际看到的是
+`筛选条件 customer_name=(空)，status=未通过`。本轮把字段名一并改成中文：
+
+```
+筛选条件：客户名称=(空)，融资状态=未通过
+```
+
+只改显示文本。API query key、payload key、JS 里读取的 `customer_name` / `status`
+（`job.payload.filters.customer_name`、`params.set('status', ...)`）以及内部枚举值全部保持英文不变。
+
+覆盖 7 个页面（D3 / D4 / D1 reference 三个页面族，源 baseline 与 workspace 副本同步）：
+
+- `instructor/baselines/demo3-developer/static/index.html` + `workspaces/demo3-developer/`
+- `instructor/baselines/demo3-fixed/`、`instructor/baselines/demo4-sedimentation/`、
+  `instructor/baselines/demo4-sedimented/` + `workspaces/demo4-sedimentation/`
+- `instructor/reference/d1-handoff-completed/static/index.html`
+
+已用全仓 grep 确认：**没有任何 `static/index.html` 再向学员显示 `customer_name=` / `status=`
+这类英文字段标签**（剩下 `customer_name` 的出现全部是 JS 变量名、API 参数和 payload key）。
+`instructor/baselines/d0-first-loop` 页面本来就没有筛选/导出反馈区，不涉及这项。
+
+### 11.2 状态标签配色体系（统一映射）
+
+`.pill` 原来只有一个共用底色。本轮在每个页面里加了统一的 `STATUS_CLASSES` /
+`JOB_STATUS_CLASSES`（JS 常量）与 `statusClass()` / `jobStatusClass()` /
+`statusPill()` / `jobStatusPill()`（helper 函数），表格状态列、下拉筛选后的结果、导出反馈里的
+状态值全部走同一套 helper，没有分散的手写样式。同一状态全链路同一个颜色：
+
+| 状态 | 枚举 | class | 底色 | 文字色 |
+| --- | --- | --- | --- | --- |
+| 待审核 | `SUBMITTED` | `status-pending` | `#fdf4e3` 琥珀 | `#8a5a12` |
+| 已通过 | `APPROVED` | `status-approved` | `#e9f5ef` 绿 | `#146b45` |
+| 已放款 | `FUNDED` | `status-funded` | `#e9f1fb` 蓝 | `#1c5aa3` |
+| 未通过 | `REJECTED` | `status-rejected` | `#fdecea` 红 | `#a3372b` |
+| 已提交 | `QUEUED` | `status-queued` | `#eeecf7` 紫灰 | `#4f4a80` |
+
+均为浅底 + 深色字 + 圆角 pill + 1px 同色系描边，保持原有浅色页面风格，投屏和打印都清晰。
+只改前端视觉表现（CSS 规则 + 显示 helper），未改任何业务逻辑、API、枚举值或测试语义。
+
+导出反馈里的状态值也做成了彩色标签（字段名不做标签，避免太花）：
+
+```
+导出任务已创建：任务编号 <b>b085…</b> · 任务状态 [已提交] · 筛选条件：客户名称=<b>(空)</b>，
+融资状态=[未通过] · 共 <b>1</b> 条记录
+```
+
+（`[ ]` 表示带底色的 pill；其中状态值为 `(空)` 时是中性灰底，不占用任何业务状态颜色。）
+
+改动的页面（源 baseline + 由 `reset_*.sh` / `restore_*.sh` 重新生成的 workspace 副本，
+digest 与 baseline 一致）：
+
+- D1：`instructor/reference/d1-handoff-completed/`、`instructor/baselines/d1-handoff/stage-0|stage-1/`、
+  `instructor/baselines/d1-financing-minimal/` + `workspaces/d1-handoff`、`workspaces/d1-level1/2/3`
+- Demo1/2：`instructor/baselines/demo12-financing/`、`instructor/baselines/demo12-reference/` +
+  `workspaces/demo12-financing`
+- D3：`instructor/baselines/demo3-developer/`、`instructor/baselines/demo3-fixed/` +
+  `workspaces/demo3-developer`
+- D4：`instructor/baselines/demo4-sedimentation/`、`instructor/baselines/demo4-sedimented/` +
+  `workspaces/demo4-sedimentation`
+
+`instructor/baselines/d0-first-loop`（含 `workspaces/d0-first-loop`）本轮**不改**，理由同第 2 节 /
+第 10 节：它的 tree digest 被一次真实 live-agent fallback 预跑固定引用，且该页面没有筛选与导出反馈区。
+
+### 11.3 D3 / D4 fallback 真实重新生成
+
+**D3/D4 fallback 已在 Golden label 中文化后重新真实生成，而不是手工修改旧结果。**
+
+- D4：`instructor/d4/fallback/` 整套由现有脚本真实重跑——
+  `restore_demo4_sedimented.sh` → PASS → `inject_demo4_regression.sh` → BLOCKED →
+  `restore_demo4_fixed.sh` → PASS，并 `demo4_save_fallback.sh` 重新落盘
+  `verify-sedimented.txt`、`verify-blocked.txt`、`verify-restored.txt`、`restore.txt`、
+  `inject.txt`、`sedimentation.diff`。Golden 段现在显示 `GC-02 未通过 FAIL` 等中文 label。
+- D3：`instructor/d3/fallback/golden-before.txt`（wrong 状态真实跑 `demo3_validator.sh` →
+  `GC-02 未通过 FAIL`、`Overall: BLOCKER`）与 `golden-after.txt`（`restore_demo3_fixed.sh` 后真实跑
+  → 四项中文 label 全 PASS）重新生成；`workspace.diff`、`developer-tests-*.txt`、
+  `self-check-*.txt` 也一并由 `demo3_save_fallback.sh` 从同一次真实执行重新落盘，
+  `instructor/d3/fallback/README.md` 同步改写成当前的真实复现步骤。
+  （`workspace.diff` 现在包含新增的 `tests/test_export_eligibility.py`、`README.md` 和
+  中文化后的页面 diff，与当前 Demo 页面一致。）
+
+保留英文的部分：`pytest` traceback、API 参数里的 `REJECTED` / `SUBMITTED` 等技术值原样保留
+——那是工具真实输出，不做伪造翻译。
+
+其余课堂兜底资产一并复扫：`instructor/d0/fallback/`（live-agent 证据，D0 全程 pytest 驱动，
+不含页面文本）、`instructor/d1/handoff/fallback/`（live-agent 证据，`workspace.diff` 只含
+Python 代码与测试，不含页面 HTML）均不含与当前 Demo 冲突的显示 label，未改动。
+`instructor/DEMO-RUNBOOK.html` 3E 的 `<div class="prompt">`（逐字发给开发 Agent 的缺陷单）里
+保留 `GC-02 REJECTED` / `GC-03 MIXED` 是陈述业务事实，第一轮已判定为有意保留，本轮维持。
+
+### 11.4 第二轮验证结果
+
+```
+OVERALL: PASS   （scripts/acceptance_check.py）
+OVERALL: PASS   （scripts/d0_verify.py）
+OVERALL: PASS   （scripts/d1_handoff_verify_setup.py）
+OVERALL: PASS   （scripts/d1_verify_setup.py）
+```
+
+浏览器层复核（对真实运行中的服务执行页面真实 JS，检查实际渲染出的 HTML）：D1 接手起点、
+D1 完整态、demo12 起点、demo12 reference、D3 wrong、D3 fixed、D4 injected、D4 restored
+八种状态逐一确认，验收口径与第一轮一致：
+
+- D3 wrong：未通过查询 1 条，导出 1 条（错误导出，符合教学预期）；
+- D3 fixed：未通过查询 1 条，导出 0 条；
+- D4 inject：未通过查询 1 条，导出 1 条，`verify.sh` 的 Golden 段以中文 label 明确 BLOCK；
+- D4 restore：未通过查询 1 条，导出 0 条，`verify.sh` 回到 PASS。
+
+四种状态下表格状态列、筛选结果与导出反馈里的状态标签颜色均与 11.2 的映射一致。

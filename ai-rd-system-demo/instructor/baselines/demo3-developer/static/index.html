@@ -8,7 +8,12 @@
     body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;margin:40px;background:#f7f7f4;color:#15201c}
     main{max-width:1040px;margin:auto}.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     table{width:100%;border-collapse:collapse;background:white}th,td{padding:14px;border-bottom:1px solid #e5e7eb;text-align:left}
-    .muted{color:#69736e}.pill{padding:4px 10px;border-radius:999px;background:#eef3f0}.pager{margin-top:18px}
+    .muted{color:#69736e}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef3f0;color:#3f4a45;border:1px solid #dfe5e1;white-space:nowrap}.pager{margin-top:18px}
+    .pill.status-pending{background:#fdf4e3;border-color:#f0dcae;color:#8a5a12}
+    .pill.status-approved{background:#e9f5ef;border-color:#bfe0cd;color:#146b45}
+    .pill.status-funded{background:#e9f1fb;border-color:#c3daf5;color:#1c5aa3}
+    .pill.status-rejected{background:#fdecea;border-color:#f3c9c4;color:#a3372b}
+    .pill.status-queued{background:#eeecf7;border-color:#d3cfe9;color:#4f4a80}
     .progress{display:flex;gap:10px;font-size:14px;flex-wrap:wrap}
     .progress span{color:#0c7a54;font-weight:700}
     .filters{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
@@ -50,9 +55,15 @@
 </main>
 <script>
 const STATUS_LABELS = { SUBMITTED: '待审核', APPROVED: '已通过', REJECTED: '未通过', FUNDED: '已放款' };
+const STATUS_CLASSES = { SUBMITTED: 'status-pending', APPROVED: 'status-approved', REJECTED: 'status-rejected', FUNDED: 'status-funded' };
 const JOB_STATUS_LABELS = { QUEUED: '已提交' };
+const JOB_STATUS_CLASSES = { QUEUED: 'status-queued' };
 function statusLabel(value) { return value ? (STATUS_LABELS[value] || value) : '(空)'; }
 function jobStatusLabel(value) { return JOB_STATUS_LABELS[value] || value; }
+function statusClass(value) { return STATUS_CLASSES[value] || ''; }
+function jobStatusClass(value) { return JOB_STATUS_CLASSES[value] || ''; }
+function statusPill(value) { return `<span class="pill ${statusClass(value)}">${statusLabel(value)}</span>`; }
+function jobStatusPill(value) { return `<span class="pill ${jobStatusClass(value)}">${jobStatusLabel(value)}</span>`; }
 
 let page = 1;
 let customerName = '';
@@ -68,7 +79,7 @@ function buildQuery() {
 async function load() {
   const r = await fetch(`/api/financing-applications?${buildQuery()}`, { headers: { 'X-User': 'alice' } });
   const d = await r.json();
-  document.querySelector('#rows').innerHTML = d.items.map(x => `<tr><td>${x.id}</td><td>${x.customer_name}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
+  document.querySelector('#rows').innerHTML = d.items.map(x => `<tr><td>${x.id}</td><td>${x.customer_name}</td><td>${statusPill(x.status)}</td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
   document.querySelector('#page').textContent = `第 ${d.page} 页 / 共 ${d.total} 条`;
   document.querySelector('#prev').disabled = page <= 1;
   document.querySelector('#next').disabled = page * d.page_size >= d.total;
@@ -105,7 +116,7 @@ document.querySelector('#export-btn').addEventListener('click', async () => {
   const job = await r.json();
   const box = document.querySelector('#export-result');
   box.style.display = 'block';
-  box.innerHTML = `导出任务已创建：任务编号 <b>${job.id}</b> · 任务状态 <b>${jobStatusLabel(job.status)}</b> · 筛选条件 customer_name=<b>${job.payload.filters.customer_name || '(空)'}</b>，status=<b>${statusLabel(job.payload.filters.status)}</b> · 共 <b>${job.payload.rows.length}</b> 条记录`;
+  box.innerHTML = `导出任务已创建：任务编号 <b>${job.id}</b> · 任务状态 ${jobStatusPill(job.status)} · 筛选条件：客户名称=<b>${job.payload.filters.customer_name || '(空)'}</b>，融资状态=${statusPill(job.payload.filters.status)} · 共 <b>${job.payload.rows.length}</b> 条记录`;
 });
 
 load();

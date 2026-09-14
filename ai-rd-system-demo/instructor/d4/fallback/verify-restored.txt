@@ -1,13 +1,13 @@
 == pytest（开发侧测试）==
 ...................                                                      [100%]
-19 passed in 0.14s
+19 passed in 0.13s
 
 == golden/check_export_eligibility.py（独立 Golden Case / policy gate）==
 Export eligibility Golden Case
-GC-01  APPROVED       PASS
-GC-02  REJECTED       PASS
-GC-03  MIXED          PASS
-GC-04  TENANT_SCOPE   PASS
+GC-01  已通过            PASS
+GC-02  未通过            PASS
+GC-03  混合状态           PASS
+GC-04  租户权限           PASS
 
 Export eligibility Golden Case: PASS
 
