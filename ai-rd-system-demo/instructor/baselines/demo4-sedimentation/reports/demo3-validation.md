@@ -10,10 +10,10 @@ Developer tests: 13 passed（开发方自报，全绿）
 Developer self-check: SELF-CHECK: PASS（自检清单没有"哪些状态允许放款导出"这一条，看不到这条规则）
 
 Golden validation:
-GC-01 APPROVED       PASS
-GC-02 REJECTED       FAIL   export expected 0 ids=[], actual 1 ids=['FA-1004']
-GC-03 MIXED          FAIL   export expected 3 ids=['FA-1002', 'FA-1003', 'FA-1005'], actual 5 ids=['FA-1001', 'FA-1002', 'FA-1003', 'FA-1004', 'FA-1005']
-GC-04 TENANT_SCOPE   FAIL   export expected 2 ids=['FA-2001', 'FA-2003'], actual 3 ids=['FA-2001', 'FA-2002', 'FA-2003']
+GC-01 已通过           PASS
+GC-02 未通过           FAIL   export expected 0 ids=[], actual 1 ids=['FA-1004']
+GC-03 混合状态         FAIL   export expected 3 ids=['FA-1002', 'FA-1003', 'FA-1005'], actual 5 ids=['FA-1001', 'FA-1002', 'FA-1003', 'FA-1004', 'FA-1005']
+GC-04 租户权限         FAIL   export expected 2 ids=['FA-2001', 'FA-2003'], actual 3 ids=['FA-2001', 'FA-2002', 'FA-2003']
 
 Overall: BLOCKER
 Root cause classification: 条件遗漏——开发方第一次实现和自检时没有见过独立业务事实源里的放款
@@ -31,10 +31,10 @@ APPROVED / FUNDED；SUBMITTED / REJECTED 仍必须可以在列表查询里查到
 Developer tests: 19 passed（13 条原有 + 6 条新增）
 
 Golden validation:
-GC-01 APPROVED       PASS
-GC-02 REJECTED       PASS
-GC-03 MIXED          PASS
-GC-04 TENANT_SCOPE   PASS
+GC-01 已通过           PASS
+GC-02 未通过           PASS
+GC-03 混合状态         PASS
+GC-04 租户权限         PASS
 
 Overall: PASS
 Root cause classification: 业务条件遗漏导致的实现错误；根因是独立业务事实未进入开发上下文，开发实现与测试共享不完整理解。

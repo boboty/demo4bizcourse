@@ -1,26 +1,38 @@
 [
   {
     "id": "GC-01",
-    "label": "APPROVED",
+    "label": "已通过",
     "user": "alice",
-    "query": { "status": "APPROVED", "customer_name": null }
+    "query": {
+      "status": "APPROVED",
+      "customer_name": null
+    }
   },
   {
     "id": "GC-02",
-    "label": "REJECTED",
+    "label": "未通过",
     "user": "alice",
-    "query": { "status": "REJECTED", "customer_name": null }
+    "query": {
+      "status": "REJECTED",
+      "customer_name": null
+    }
   },
   {
     "id": "GC-03",
-    "label": "MIXED",
+    "label": "混合状态",
     "user": "alice",
-    "query": { "status": null, "customer_name": null }
+    "query": {
+      "status": null,
+      "customer_name": null
+    }
   },
   {
     "id": "GC-04",
-    "label": "TENANT_SCOPE",
+    "label": "租户权限",
     "user": "bob",
-    "query": { "status": null, "customer_name": null }
+    "query": {
+      "status": null,
+      "customer_name": null
+    }
   }
 ]

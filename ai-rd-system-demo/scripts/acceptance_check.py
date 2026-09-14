@@ -446,11 +446,11 @@ def main() -> int:
 
     blocked_result = run([str(demo4 / "verify.sh")], demo4)
     check(
-        "Demo 4 injected regression: verify.sh deterministically BLOCKED, Golden Case names REJECTED",
+        "Demo 4 injected regression: verify.sh deterministically BLOCKED, Golden Case names the 未通过/REJECTED case",
         blocked_result.returncode != 0
         and "Export eligibility Golden Case: FAIL" in blocked_result.stdout
         and "GC-02" in blocked_result.stdout
-        and "REJECTED" in blocked_result.stdout
+        and "未通过" in blocked_result.stdout
         and "OVERALL: BLOCKED" in blocked_result.stdout,
         blocked_result.stdout.strip().splitlines()[-1] if blocked_result.stdout else blocked_result.stderr.strip(),
     )

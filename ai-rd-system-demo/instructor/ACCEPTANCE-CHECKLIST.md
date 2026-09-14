@@ -47,7 +47,7 @@
 - [ ] developer 测试全绿后启动 `./scripts/demo3_serve.sh`，固定端口为 `127.0.0.1:8030`；浏览器三项功能都能点，REJECTED 仍可查询但会被错误导出。
 - [ ] 在 `workspaces/demo3-validator/` 先形成 Independent Expectation，再运行 `../../.venv/bin/python bin/actual-output validation/cases.json`（或讲师自查用 `./scripts/demo3_validator.sh`）；wrong state 必须发现 BLOCKER。
 - [ ] validator 的实际结果只来自 HTTP，不包含 developer 路径或实现模块名。
-- [ ] GC-02（REJECTED）导出必须是 expected 0 vs actual 1；GC-03（混合结果）必须是 expected 只含 APPROVED/FUNDED vs actual 含全部状态。
+- [ ] GC-02（未通过 / REJECTED）导出必须是 expected 0 vs actual 1；GC-03（混合状态 / 混合结果）必须是 expected 只含 APPROVED/FUNDED vs actual 含全部状态。
 - [ ] 验收角色在形成期望前看不到实现、开发测试和开发聊天。
 - [ ] fixed state 下开发测试 + 黑盒实际输出与独立期望一致，且 REJECTED/SUBMITTED 仍能在列表查询中查到。
 
@@ -57,6 +57,6 @@
 - [ ] 讲师参考沉淀态：`instructor/baselines/demo4-sedimented/`（`docs/rules/export_eligibility.md` + `golden/cases.json` + `golden/check_export_eligibility.py` + 升级后的 `verify.sh` + `AGENTS.md`），`./scripts/restore_demo4_sedimented.sh` 可确定性恢复到这个目标状态。
 - [ ] D4-3 全新 Session 只给一个普通维护任务（新增 `exported_by` 字段），不提 D3、不贴规则；应能自己发现规则文档、跑 `./verify.sh`、不修改 `golden/` 期望值。
 - [ ] D4-4 `./scripts/inject_demo4_regression.sh` 确定性重新引入历史 bug（导出改回直接用 `rows`），不依赖模型犯错；浏览器 REJECTED 查询 1 条、导出也变成 1 条。
-- [ ] D4-5 `(cd workspaces/demo4-sedimentation && ./verify.sh)` 必须确定性 `OVERALL: BLOCKED`，输出包含 `Export eligibility Golden Case: FAIL` 和 `GC-02 REJECTED`；没有人重新讲业务规则或人工判断。
+- [ ] D4-5 `(cd workspaces/demo4-sedimentation && ./verify.sh)` 必须确定性 `OVERALL: BLOCKED`，输出包含 `Export eligibility Golden Case: FAIL` 和 `GC-02 未通过`；没有人重新讲业务规则或人工判断。
 - [ ] D4-6 `./scripts/restore_demo4_fixed.sh` 只恢复导出逻辑，不触碰沉淀资产；浏览器恢复导出 0 条，`./verify.sh` 回到 `OVERALL: PASS`。
 - [ ] `scripts/acceptance_check.py` 覆盖完整链路（reset → 沉淀态 PASS → 注入 BLOCK → 恢复 PASS → reset）且可重复运行；旧 settlement/FX_LOSS 相关脚本与素材（`restore_demo4_before.sh`、`restore_demo4_learned.sh`、`instructor/golden/`、`instructor/baselines/demo4-learned/`）已删除。

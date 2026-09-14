@@ -35,10 +35,10 @@
     <input id="customer-name-input" type="text" placeholder="按客户名称筛选（支持模糊匹配）" />
     <select id="status-select">
       <option value="">全部状态</option>
-      <option value="SUBMITTED">SUBMITTED</option>
-      <option value="APPROVED">APPROVED</option>
-      <option value="FUNDED">FUNDED</option>
-      <option value="REJECTED">REJECTED</option>
+      <option value="SUBMITTED">待审核</option>
+      <option value="APPROVED">已通过</option>
+      <option value="FUNDED">已放款</option>
+      <option value="REJECTED">未通过</option>
     </select>
     <button id="apply-filter-btn">筛选</button>
     <button id="clear-filter-btn">清除</button>
@@ -49,6 +49,11 @@
   <div class="pager"><button id="prev">上一页</button> <span id="page"></span> <button id="next">下一页</button></div>
 </main>
 <script>
+const STATUS_LABELS = { SUBMITTED: '待审核', APPROVED: '已通过', REJECTED: '未通过', FUNDED: '已放款' };
+const JOB_STATUS_LABELS = { QUEUED: '已提交' };
+function statusLabel(value) { return value ? (STATUS_LABELS[value] || value) : '(空)'; }
+function jobStatusLabel(value) { return JOB_STATUS_LABELS[value] || value; }
+
 let page = 1;
 let customerName = '';
 let status = '';
@@ -63,7 +68,7 @@ function buildQuery() {
 async function load() {
   const r = await fetch(`/api/financing-applications?${buildQuery()}`, { headers: { 'X-User': 'alice' } });
   const d = await r.json();
-  document.querySelector('#rows').innerHTML = d.items.map(x => `<tr><td>${x.id}</td><td>${x.customer_name}</td><td><span class="pill">${x.status}</span></td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
+  document.querySelector('#rows').innerHTML = d.items.map(x => `<tr><td>${x.id}</td><td>${x.customer_name}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
   document.querySelector('#page').textContent = `第 ${d.page} 页 / 共 ${d.total} 条`;
   document.querySelector('#prev').disabled = page <= 1;
   document.querySelector('#next').disabled = page * d.page_size >= d.total;
@@ -102,7 +107,7 @@ document.querySelector('#export-btn').addEventListener('click', async () => {
   box.style.display = 'block';
   const count = job.payload.rows.length;
   const zeroNote = count === 0 ? '（当前筛选状态不满足放款导出条件，无可导出记录）' : '';
-  box.innerHTML = `导出任务已创建：job id <b>${job.id}</b> · status <b>${job.status}</b> · 筛选条件 customer_name=<b>${job.payload.filters.customer_name || '(空)'}</b>，status=<b>${job.payload.filters.status || '(空)'}</b> · 共 <b>${count}</b> 条记录 ${zeroNote}`;
+  box.innerHTML = `导出任务已创建：任务编号 <b>${job.id}</b> · 任务状态 <b>${jobStatusLabel(job.status)}</b> · 筛选条件 customer_name=<b>${job.payload.filters.customer_name || '(空)'}</b>，status=<b>${statusLabel(job.payload.filters.status)}</b> · 共 <b>${count}</b> 条记录 ${zeroNote}`;
 });
 
 load();

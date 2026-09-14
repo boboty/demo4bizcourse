@@ -18,11 +18,13 @@
   <div class="pager"><button id="prev">上一页</button> <span id="page"></span> <button id="next">下一页</button></div>
 </main>
 <script>
+const STATUS_LABELS = { SUBMITTED: '待审核', APPROVED: '已通过', REJECTED: '未通过', FUNDED: '已放款' };
+function statusLabel(value) { return value ? (STATUS_LABELS[value] || value) : '(空)'; }
 let page=1;
 async function load(){
   const r=await fetch(`/api/financing-applications?page=${page}&page_size=5`,{headers:{'X-User':'alice'}});
   const d=await r.json();
-  document.querySelector('#rows').innerHTML=d.items.map(x=>`<tr><td>${x.id}</td><td>${x.customer_name}</td><td><span class="pill">${x.status}</span></td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
+  document.querySelector('#rows').innerHTML=d.items.map(x=>`<tr><td>${x.id}</td><td>${x.customer_name}</td><td><span class="pill">${statusLabel(x.status)}</span></td><td>${x.amount.toLocaleString()}</td></tr>`).join('');
   document.querySelector('#page').textContent=`第 ${d.page} 页 / 共 ${d.total} 条`;
   document.querySelector('#prev').disabled=page<=1;
   document.querySelector('#next').disabled=page*d.page_size>=d.total;

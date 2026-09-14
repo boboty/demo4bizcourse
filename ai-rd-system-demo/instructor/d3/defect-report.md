@@ -12,9 +12,9 @@
 独立验收发现：
 
 ```
-GC-02 REJECTED      FAIL   export expected 0 ids=[], actual 1 ids=['FA-1004']
-GC-03 MIXED         FAIL   export expected 3 ids=['FA-1002', 'FA-1003', 'FA-1005'], actual 5 ids=['FA-1001', 'FA-1002', 'FA-1003', 'FA-1004', 'FA-1005']
-GC-04 TENANT_SCOPE  FAIL   export expected 2 ids=['FA-2001', 'FA-2003'], actual 3 ids=['FA-2001', 'FA-2002', 'FA-2003']
+GC-02 未通过        FAIL   export expected 0 ids=[], actual 1 ids=['FA-1004']
+GC-03 混合状态      FAIL   export expected 3 ids=['FA-1002', 'FA-1003', 'FA-1005'], actual 5 ids=['FA-1001', 'FA-1002', 'FA-1003', 'FA-1004', 'FA-1005']
+GC-04 租户权限      FAIL   export expected 2 ids=['FA-2001', 'FA-2003'], actual 3 ids=['FA-2001', 'FA-2002', 'FA-2003']
 ```
 
 请：
