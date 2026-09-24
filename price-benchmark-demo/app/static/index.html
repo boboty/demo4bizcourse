@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>今日采购价格对标 · 智能业务执行 Demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">✳</span><span>智能业务执行 <b>DEMO</b></span></div>
+      <div class="top-right"><span class="offline"><i></i> 本地演示 · 无需外网</span><button id="controlButton" class="control-button" aria-expanded="false">演示控制 <span>⌄</span></button></div>
+      <div id="controlMenu" class="control-menu hidden">
+        <button data-action="reset">重置 Demo <kbd>R</kbd></button>
+        <button data-action="normal">运行正常场景 <kbd>1</kbd></button>
+        <button data-action="anomaly">运行异常场景 <kbd>2</kbd></button>
+        <button data-action="normal-result">直接跳到 Demo 1 结果</button>
+        <button data-action="compare">直接跳到 Demo 2 A/B 对比</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="title-row">
+        <div><div class="eyebrow">TASK / 001 <span class="eyebrow-line"></span> 采购决策辅助</div><h1>今日采购价格对标<span class="title-dot">.</span></h1><p>自动取得市场信息，对齐商品口径，识别异常，生成可验证的价格判断</p></div>
+        <span id="sceneBadge" class="scene-badge">等待执行</span>
+      </div>
+
+      <section id="intro" class="scene intro">
+        <div class="intro-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="center-symbol">✳</div><span class="art-label l1">市场信息</span><span class="art-label l2">商品口径</span><span class="art-label l3">价格判断</span></div>
+        <div class="intro-copy"><span class="section-index">01 / 今日任务</span><h2>把价格看清楚，<br><em>再给出判断。</em></h2><p>今日价格对标任务</p><div class="stats"><div><strong>5</strong><span>个商品</span></div><div><strong>5</strong><span>个市场来源</span></div></div><button id="startButton" class="primary-button">开始执行 <span>↗</span></button><div class="hint">演示数据已内置，可随时重置</div></div>
+      </section>
+
+      <section id="progress" class="scene progress hidden">
+        <div class="progress-head"><div><span class="section-index">任务执行中</span><h2 id="progressTitle">正在取得市场数据</h2><p>同一批商品，逐步形成可验证的判断。</p></div><div id="progressCount" class="progress-count">01 <small>/ 06</small></div></div>
+        <div class="progress-track"><div id="progressFill"></div></div>
+        <div id="steps" class="steps"></div>
+        <div id="eventBox" class="event-box hidden"><span>异常事件</span><div id="events"></div></div>
+      </section>
+
+      <section id="normalResult" class="scene result hidden">
+        <div class="section-head"><div><span class="section-index">DEMO 1 / 正常执行</span><h2>先确认可比，再讨论价差。</h2></div><button class="text-button" data-action="anomaly">运行异常场景 <span>↗</span></button></div>
+        <div class="result-grid"><div class="result-column green"><div class="column-heading"><span>● 可比较</span><b>03</b></div><div id="comparableList" class="cards"></div></div><div class="result-column amber"><div class="column-heading"><span>● 暂不可比较</span><b>01</b></div><div id="blockedList" class="cards"></div></div><div class="result-column gray"><div class="column-heading"><span>● 需要人工确认</span><b>01</b></div><div id="manualList" class="cards"></div></div></div>
+        <div class="completion"><span class="pulse-dot"></span><strong>任务完成：</strong>3 项已形成判断，1 项暂不可比，1 项等待人工确认。</div>
+      </section>
+
+      <section id="anomalyResult" class="scene result anomaly hidden">
+        <div class="section-head"><div><span class="section-index">DEMO 2 / 异常场景</span><h2>环境变了，判断也必须有边界。</h2></div><div class="view-tabs"><button data-view="a">报告 A</button><button data-view="b">报告 B</button><button data-view="compare">A / B 对比</button></div></div>
+        <div id="anomalyEvents" class="anomaly-events"></div>
+        <div id="reportA" class="report-view hidden"><div class="report-lead"><div><span class="report-kicker">不受控执行</span><h3>报告 A <em>看似完成</em></h3><p>演示中的“不受控执行”结果，仅用于说明风险。</p></div><div class="completion-number"><span id="aPercent">100%</span><small>完成度</small></div></div><div id="reportAList" class="report-list"></div></div>
+        <div id="reportB" class="report-view hidden"><div class="report-lead controlled"><div><span class="report-kicker">受控执行</span><h3>报告 B <em>停止并升级</em></h3><p>完成 2 项价格判断、1 项暂不可比的口径判断；其余停止。</p></div><div class="completion-number"><span id="bCompleted">3</span><small>项完成</small><span id="bStopped">2 项已停止</span></div></div><div class="stop-center">无法可靠判断，已停止自动执行，等待人工确认。</div><div id="reportBList" class="report-list b-list"></div></div>
+        <div id="comparison" class="comparison hidden"><div class="compare-card compare-a"><span>报告 A</span><h3>看似完成</h3><div class="compare-number"><span id="compareAPercent">100%</span><small>完成度</small></div><p>缺失数据被推断<br>不确定匹配被当成确定结果</p></div><div class="compare-vs">VS</div><div class="compare-card compare-b"><span>报告 B</span><h3>停止并升级</h3><div class="compare-number"><span id="compareBPercent">60%</span><small>自动完成</small></div><p>说明原因 · 保存证据<br>等待人工确认</p></div><div class="compare-quote">企业里最危险的不是系统报错，而是它错了，但看起来已经完成了。</div></div>
+      </section>
+    </main>
+    <footer><span>LOCAL BUSINESS AI / CASE 01</span><span>语义理解 · 程序计算 · 规则校验 · 工具执行 · 人工确认</span></footer>
+  </div>
+
+  <dialog id="evidenceDialog"><div class="dialog-top"><span>判断依据</span><button id="closeDialog" aria-label="关闭">×</button></div><div id="evidenceBody"></div></dialog>
+  <script src="/static/app.js"></script>
+</body>
+</html>

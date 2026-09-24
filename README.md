@@ -11,6 +11,7 @@
 | `ai-test-loop-demo/` | AI 测试闭环：生成测试全绿、独立验收拒绝、修复后沉淀测试能力（FastAPI） |
 | `ai-rd-system-demo/` | AI 研发体系建设课堂 Demo：连续执行、工程环境、独立验证与能力沉淀 |
 | `token-task-lab/` | 通用“任务 → 调用链 → Token”教学实验台；天津货代为首个场景，可扩展到财务/研发/测试 |
+| `price-benchmark-demo/` | 今日采购价格对标：正常判断与异常场景 A/B 对比（FastAPI，离线数据） |
 
 ## 课堂演示检查点
 
