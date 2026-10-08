@@ -1,0 +1,28 @@
+{
+  "exercise_id": "PRACTICE-D2-01",
+  "course_lesson": "第二讲：场景展开、风险裁剪与覆盖反查",
+  "input_files": [
+    "prd/prd_v1_0.json",
+    "business/analysis.json",
+    "business/rules_v1_0.json",
+    "scenarios/candidates_v1_0.json"
+  ],
+  "student_prompt": "仅根据V1.0需求和候选场景，为本轮最多15个必测场景制定方案。先标记需求事实、推断、缺失和冲突；合并重复项并按影响、发生概率、难发现性和执行成本排序；检查每项选择所覆盖的规则，并列出未覆盖规则和待确认项。对缺少业务依据的退款金额不要编造正确答案，可把‘停止并确认口径’作为验证目标。最后指出一个多维高风险组合是否应人工补回。",
+  "constraints": {
+    "max_selected_scenarios": 15,
+    "allowed_sources": [
+      "PRD V1.0",
+      "structured analysis",
+      "scenario candidates"
+    ],
+    "finance_spec_available": false,
+    "no_claim_of_full_coverage": true
+  },
+  "deliverable_shape": {
+    "selected_scenario_ids": "最多15项，含选择理由",
+    "rule_coverage": "每条规则列场景ID或明确未覆盖/待确认",
+    "manual_additions": "高风险组合及理由",
+    "open_questions": "仍需业务确认的问题"
+  },
+  "paths_relative_to": "demo_assets/"
+}

@@ -1,0 +1,239 @@
+{
+  "artifact_id": "F-D2-DIRECT-01",
+  "frozen": true,
+  "label": "预置演示结果：AI直接生成（非实时）",
+  "input_source_ids": [
+    "YS-RET-PRD@1.0"
+  ],
+  "excluded_sources": [
+    "YS-FIN-AFTERSALES-01"
+  ],
+  "result": {
+    "summary": "以下用例根据V1.0整理，覆盖常见售后路径；金额预期按明确业务事实和显式假设区分。",
+    "assumptions": [
+      {
+        "assumption_id": "A10",
+        "statement": "退款渠道沿用原支付方式。",
+        "basis": "PRD P40；渠道失败细节未说明。",
+        "evidence_status": "fact"
+      },
+      {
+        "assumption_id": "A20",
+        "statement": "部分商品退款按商品原价比例分摊订单优惠。",
+        "basis": "常见实现假设，PRD未给出分摊公式。",
+        "evidence_status": "inference",
+        "confirmation_required": true
+      },
+      {
+        "assumption_id": "A30",
+        "statement": "签收后7日按连续168小时计算。",
+        "basis": "PRD未说明时间边界和时区。",
+        "evidence_status": "inference",
+        "confirmation_required": true
+      }
+    ],
+    "sample_cases": [
+      {
+        "case_id": "AI01",
+        "priority": "P1",
+        "title": "用户在有效退货期内提交一个商品申请",
+        "preconditions": [
+          "订单已签收",
+          "商品在订单明细中"
+        ],
+        "steps": [
+          "打开订单售后",
+          "选择商品和数量",
+          "提交申请"
+        ],
+        "expected": "生成申请并进入客服审核。",
+        "source_ids": [
+          "P10"
+        ]
+      },
+      {
+        "case_id": "AI02",
+        "priority": "P1",
+        "title": "客服审核通过并完成寄回与质检",
+        "preconditions": [
+          "申请已提交"
+        ],
+        "steps": [
+          "客服审核通过",
+          "用户填写物流单号",
+          "仓库签收并质检通过"
+        ],
+        "expected": "进入退款处理，退款原支付渠道。",
+        "source_ids": [
+          "P20",
+          "P30",
+          "P40"
+        ]
+      },
+      {
+        "case_id": "AI03",
+        "priority": "P1",
+        "title": "客服审核拒绝申请",
+        "preconditions": [
+          "申请已提交"
+        ],
+        "steps": [
+          "客服选择拒绝并提交"
+        ],
+        "expected": "申请不应进入待寄回/退款流程。",
+        "source_ids": [
+          "P20"
+        ]
+      },
+      {
+        "case_id": "AI04",
+        "priority": "P1",
+        "title": "质检未通过",
+        "preconditions": [
+          "仓库已签收退货"
+        ],
+        "steps": [
+          "仓库登记质检未通过"
+        ],
+        "expected": "客服后续联系消费者处理；具体终态需产品确认。",
+        "source_ids": [
+          "P30"
+        ],
+        "assumption": "不能进入正常退款完成态。"
+      },
+      {
+        "case_id": "AI05",
+        "priority": "P1",
+        "title": "经典订单退回B商品",
+        "preconditions": [
+          "A=199、B=99、C=59；满300减50；已支付307"
+        ],
+        "steps": [
+          "申请退B",
+          "审核通过并质检通过"
+        ],
+        "expected": "按商品原价比例分摊优惠，退款85.13。",
+        "source_ids": [
+          "P40"
+        ],
+        "assumption": "比例分摊是推断口径，不是已确认财务规则。"
+      },
+      {
+        "case_id": "AI06",
+        "priority": "P1",
+        "title": "签收后第6天提交申请",
+        "preconditions": [
+          "订单已签收6天"
+        ],
+        "steps": [
+          "提交退货申请"
+        ],
+        "expected": "受理申请。",
+        "source_ids": [
+          "P10"
+        ]
+      },
+      {
+        "case_id": "AI07",
+        "priority": "P2",
+        "title": "签收后第8天提交申请",
+        "preconditions": [
+          "订单已签收8天"
+        ],
+        "steps": [
+          "提交退货申请"
+        ],
+        "expected": "拒绝申请。",
+        "source_ids": [
+          "P10"
+        ],
+        "assumption": "按7个连续自然日近似；精确边界需确认。"
+      },
+      {
+        "case_id": "AI08",
+        "priority": "P1",
+        "title": "部分商品申请退款",
+        "preconditions": [
+          "订单包含多个商品"
+        ],
+        "steps": [
+          "只选择其中一个SKU申请退货",
+          "审核、质检通过"
+        ],
+        "expected": "仅对该SKU计算退款。",
+        "source_ids": [
+          "P10",
+          "P40"
+        ],
+        "assumption": "优惠按商品原价比例分摊。"
+      },
+      {
+        "case_id": "AI09",
+        "priority": "P2",
+        "title": "审核通过后未填写物流单号",
+        "preconditions": [
+          "客服审核已通过"
+        ],
+        "steps": [
+          "不填写物流单号，尝试进入寄回完成"
+        ],
+        "expected": "系统提示补充物流信息。",
+        "source_ids": [
+          "P20"
+        ],
+        "assumption": "物流单号为寄回跟踪所需输入。"
+      },
+      {
+        "case_id": "AI10",
+        "priority": "P2",
+        "title": "银行卡支付退款",
+        "preconditions": [
+          "原订单银行卡支付"
+        ],
+        "steps": [
+          "质检通过并触发退款"
+        ],
+        "expected": "退款回银行卡原渠道。",
+        "source_ids": [
+          "P40",
+          "P60"
+        ]
+      },
+      {
+        "case_id": "AI11",
+        "priority": "P2",
+        "title": "余额支付退款",
+        "preconditions": [
+          "原订单余额支付"
+        ],
+        "steps": [
+          "质检通过并触发退款"
+        ],
+        "expected": "退款回余额原渠道。",
+        "source_ids": [
+          "P40",
+          "P60"
+        ]
+      },
+      {
+        "case_id": "AI12",
+        "priority": "P2",
+        "title": "支付渠道退款失败或响应超时",
+        "preconditions": [
+          "退款请求已发送"
+        ],
+        "steps": [
+          "模拟支付渠道失败/超时"
+        ],
+        "expected": "记录失败结果并允许后续处理；具体重试、幂等规则待确认。",
+        "source_ids": [
+          "P40"
+        ],
+        "assumption": "不可静默标记退款成功。"
+      }
+    ],
+    "known_gaps": [
+      "完整场景覆盖和状态/来源反查留给后续课堂分析环节。"
+    ]
+  }
+}

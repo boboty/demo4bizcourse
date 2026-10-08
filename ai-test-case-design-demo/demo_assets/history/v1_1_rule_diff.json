@@ -1,0 +1,81 @@
+{
+  "base_version": "1.0",
+  "target_version": "1.1",
+  "rule_diff": [
+    {
+      "change_id": "C10",
+      "change_type": "behavior_and_state_order",
+      "source_id": "P31",
+      "affected_rule_ids": [
+        "R-QC",
+        "R-FAST-REFUND"
+      ],
+      "summary": "eligible=true填物流后先退款、后质检；质检失败转客服并追偿。eligible=false继续遵循质检通过后退款。"
+    },
+    {
+      "change_id": "C20",
+      "change_type": "eligibility_window",
+      "source_id": "P11",
+      "affected_rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "summary": "普通/银卡7日，金卡15日，按下单时等级，订单时区签收时刻起算，含截止时刻，超1秒拒绝。"
+    },
+    {
+      "change_id": "C30",
+      "change_type": "source_formalization",
+      "source_id": "P41",
+      "affected_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PROMO-RECALC"
+      ],
+      "summary": "将Demo4/5已独立验证的财务累计公式正式写入PRD；这是来源与追溯关系正式化，不是算法变化。"
+    }
+  ],
+  "dependency_contract": {
+    "scenario_dependencies": "scenario.rule_ids",
+    "case_dependencies": "case.rule_ids ∪ case.source_rule_ids ∪ referenced scenario.rule_ids",
+    "migration_source": "history/v1_0_validated_baseline.json",
+    "target_requirements": "prd/prd_v1_1.json",
+    "target_rules": "business/rules.json",
+    "actions_are_derived": true,
+    "target_additions": "history/v1_1_additions.json"
+  },
+  "migration_criteria": [
+    {
+      "change_id": "C10",
+      "affected_rule_ids": [
+        "R-QC",
+        "R-FAST-REFUND"
+      ],
+      "derive": "对依赖R-QC的历史用例检查其断言是否无条件要求质检先于退款；若是则修改为eligible=false分支。新增eligible=true先退款后质检与质检失败转客服场景；不能仅凭引用R-QC就一律作废。"
+    },
+    {
+      "change_id": "C20",
+      "affected_rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "derive": "依赖期限规则的时间测试以target规则重算预期；普通/银卡期限内等价场景可保留语义并更新来源，边界或会员分层断言需修改；增加金卡15日及下单后等级变化覆盖。"
+    },
+    {
+      "change_id": "C30",
+      "affected_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PROMO-RECALC"
+      ],
+      "derive": "对照历史case.rule_ids与source_rule_ids：已按财务公式独立验证的49.00等预期保留，仅把依据F10/F20/F30补录P41/R-PROMO-RECALC来源；85.13比例分摊假设不属于有效历史基线，应从有效资产中排除。"
+    }
+  ],
+  "action_definitions": {
+    "retain": "既有输入和预期仍符合target规则，仅可补充来源关系",
+    "modify": "已有测试意图仍有效，但输入/条件/预期需按变化调整",
+    "obsolete": "历史断言依赖已删除或与target业务路径矛盾，且不能通过改条件保留原意",
+    "add": "target规则引入的行为/边界没有任何依赖资产覆盖时补建"
+  },
+  "regression_budget": {
+    "max_cases": 25,
+    "selection_basis": "从推导出的修改/新增用例及高风险受影响保留项选取；报告实际选中ID和未选原因，数量由执行结果计算。"
+  }
+}

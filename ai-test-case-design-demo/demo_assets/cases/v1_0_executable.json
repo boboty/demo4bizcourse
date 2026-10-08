@@ -1,0 +1,896 @@
+{
+  "schema_version": "1.1",
+  "title": "V1.0 按比例分摊假设的可执行基线用例",
+  "expected_policy": "proportional_discount_allocation",
+  "promotion_policy": "仅有满300减50；gross>=300.00且enabled=true时优惠50.00，否则0.00。",
+  "count": 20,
+  "cases": [
+    {
+      "case_id": "TC01",
+      "title": "经典B部分退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC28",
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-01",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "85.13",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC02",
+      "title": "经典A部分退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-02",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "171.13",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC03",
+      "title": "经典C部分退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-03",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "50.74",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC04",
+      "title": "经典B与C组合退货",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-04",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "B",
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "135.87",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC05",
+      "title": "经典订单整单退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC25"
+      ],
+      "input": {
+        "order_id": "ORD-05",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A",
+          "B",
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "307.00",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC06",
+      "title": "无优惠未达门槛部分退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC24"
+      ],
+      "input": {
+        "order_id": "ORD-06",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.99"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "299.99",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "99.99",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC07",
+      "title": "原价恰为300元且优惠启用",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC29"
+      ],
+      "input": {
+        "order_id": "ORD-07",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "83.33",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC08",
+      "title": "无优惠299.99元订单",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC30"
+      ],
+      "input": {
+        "order_id": "ORD-08",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "200.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "299.99",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "99.99",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC09",
+      "title": "原价300.01元优惠启用",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC29"
+      ],
+      "input": {
+        "order_id": "ORD-09",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.01",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "83.33",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC10",
+      "title": "满减订单构造：退货后剩余原价恰为300元",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC29"
+      ],
+      "input": {
+        "order_id": "ORD-10",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "57.00"
+          },
+          {
+            "sku": "B",
+            "gross": "300.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "49.02",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC11",
+      "title": "满减订单构造：退货后剩余原价299.99元",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC30"
+      ],
+      "input": {
+        "order_id": "ORD-11",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "57.01"
+          },
+          {
+            "sku": "B",
+            "gross": "299.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "49.03",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC12",
+      "title": "满减订单构造：退货后剩余原价300.01元",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC27"
+      ],
+      "input": {
+        "order_id": "ORD-12",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "56.99"
+          },
+          {
+            "sku": "B",
+            "gross": "300.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "49.01",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC13",
+      "title": "无优惠一元商品退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC24"
+      ],
+      "input": {
+        "order_id": "ORD-13",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "98.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "99.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "1.00",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC14",
+      "title": "300.01元订单极小SKU舍入",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC27"
+      ],
+      "input": {
+        "order_id": "ORD-14",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "299.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.01",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "0.83",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC15",
+      "title": "400元订单满减后退一件",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-15",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          },
+          {
+            "sku": "D",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "350.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "87.50",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC16",
+      "title": "500元订单连续两件部分退货",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-16",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "125.00"
+          },
+          {
+            "sku": "B",
+            "gross": "125.00"
+          },
+          {
+            "sku": "C",
+            "gross": "125.00"
+          },
+          {
+            "sku": "D",
+            "gross": "125.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "450.00",
+        "return_skus": [
+          "A",
+          "B"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "225.00",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC17",
+      "title": "500元订单非相邻SKU退货",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-17",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "220.00"
+          },
+          {
+            "sku": "B",
+            "gross": "180.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "450.00",
+        "return_skus": [
+          "A",
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "288.00",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC18",
+      "title": "301元订单退一元SKU",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC27"
+      ],
+      "input": {
+        "order_id": "ORD-18",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "300.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "251.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "0.83",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC19",
+      "title": "无优惠89.99元订单部分退款",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC24"
+      ],
+      "input": {
+        "order_id": "ORD-19",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "20.00"
+          },
+          {
+            "sku": "B",
+            "gross": "30.00"
+          },
+          {
+            "sku": "C",
+            "gross": "39.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "89.99",
+        "return_skus": [
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "39.99",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    },
+    {
+      "case_id": "TC20",
+      "title": "满减订单多SKU退货尾差",
+      "source_rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "R-PAYMENT"
+      ],
+      "scenario_ids": [
+        "SC31"
+      ],
+      "input": {
+        "order_id": "ORD-20",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "101.00"
+          },
+          {
+            "sku": "B",
+            "gross": "103.00"
+          },
+          {
+            "sku": "C",
+            "gross": "97.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "251.00",
+        "return_skus": [
+          "A",
+          "C"
+        ],
+        "policy": "proportional_discount_allocation",
+        "rounding": "half_up_2dp"
+      },
+      "expected": {
+        "refund": "165.11",
+        "status": "refund_calculated",
+        "basis": "按本用例启用的满300减50优惠，按退货商品原价占订单原价比例分摊；该口径是待确认假设。"
+      }
+    }
+  ]
+}

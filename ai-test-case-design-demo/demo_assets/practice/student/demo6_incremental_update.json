@@ -1,0 +1,26 @@
+{
+  "exercise_id": "PRACTICE-D4-01",
+  "course_lesson": "第四讲：V1.0到V1.1测试资产增量更新",
+  "input_files": [
+    "prd/prd_v1_0.json",
+    "finance/after_sales_funds.json",
+    "history/v1_0_validated_baseline.json",
+    "history/v1_1_rule_diff.json",
+    "prd/prd_v1_1.json",
+    "business/rules.json"
+  ],
+  "student_prompt": "从Demo4/5独立验证后的有效历史资产开始。结合V1.1需求变化、规则ID依赖和历史场景/用例引用，推导每项资产保留、修改、作废或新增的原因；区分行为变化与来源正式化。为变更结果选择不超过25条回归用例，并列出被排除项及风险依据。不要把比例分摊85.13作为有效历史预期，也不要为了凑增量声称V1.1改了已验证的优惠算法。",
+  "constraints": {
+    "max_regression_cases": 25,
+    "baseline_is_independently_validated": true,
+    "use_dependency_ids": true,
+    "preserve_verified_financial_expected_values": true
+  },
+  "deliverable_shape": {
+    "rule_to_asset_trace": "受影响规则到场景/用例ID",
+    "migration_actions": "动作和可复核理由",
+    "regression_selection": "最多25条及风险优先级",
+    "provenance_changes": "来源更新与行为修改分开"
+  },
+  "paths_relative_to": "demo_assets/"
+}

@@ -1,0 +1,144 @@
+{
+  "business": "悦选商城",
+  "version": "1.0",
+  "evidence_levels": [
+    "fact",
+    "inference",
+    "missing",
+    "conflict"
+  ],
+  "rules": [
+    {
+      "rule_id": "R-RETURN-WINDOW",
+      "statement": "签收后期限内可申请退货，期限边界待确认。",
+      "source_ids": [
+        "P10"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-REVIEW",
+      "statement": "客服审核通过后方可寄回。",
+      "source_ids": [
+        "P20"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-LOGISTICS",
+      "statement": "消费者填写退货物流单号。",
+      "source_ids": [
+        "P20"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-QC",
+      "statement": "仓库签收且质检通过后进入退款。",
+      "source_ids": [
+        "P30"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-REFUND-CHANNEL",
+      "statement": "退款退回原支付渠道。",
+      "source_ids": [
+        "P40"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-PARTIAL-AMOUNT",
+      "statement": "部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。",
+      "source_ids": [
+        "P40"
+      ],
+      "evidence_status": "missing",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-MEMBER",
+      "statement": "会员等级存在，但对售后期限的影响未定义。",
+      "source_ids": [
+        "P10"
+      ],
+      "evidence_status": "missing",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-PAYMENT",
+      "statement": "银行卡或余额支付，可同时使用满减优惠。",
+      "source_ids": [
+        "P60"
+      ],
+      "evidence_status": "fact",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-FREIGHT",
+      "statement": "运费是否退还未定义。",
+      "source_ids": [
+        "P40"
+      ],
+      "evidence_status": "missing",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-RETRY",
+      "statement": "渠道退款失败、重试和重复回调规则未定义。",
+      "source_ids": [
+        "P40"
+      ],
+      "evidence_status": "missing",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-RETURN-INPUT",
+      "statement": "退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。",
+      "source_ids": [
+        "P10"
+      ],
+      "evidence_status": "inference",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "rule_id": "R-STATUS",
+      "statement": "售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。",
+      "source_ids": [
+        "P50"
+      ],
+      "evidence_status": "missing",
+      "versions": [
+        "1.0"
+      ]
+    }
+  ]
+}

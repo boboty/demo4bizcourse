@@ -1,0 +1,1014 @@
+{
+  "schema_version": "1.0",
+  "total": 41,
+  "dimensions": {
+    "payment": [
+      "银行卡",
+      "余额",
+      "混合",
+      "未知"
+    ],
+    "promotion": [
+      "无",
+      "满300减50",
+      "其他",
+      "未知"
+    ],
+    "after_sales_type": [
+      "整单退",
+      "部分退",
+      "换货"
+    ],
+    "order_state": [
+      "已支付",
+      "已发货",
+      "已签收"
+    ],
+    "membership": [
+      "普通",
+      "银卡",
+      "金卡"
+    ]
+  },
+  "theoretical_product": {
+    "expression": "4×4×3×3×3",
+    "count": 432,
+    "invalid_combinations": [
+      "未付款订单发起退货",
+      "无退货商品提交部分退款",
+      "换货操作走退款渠道",
+      "无优惠订单生成优惠扣回"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "SC01",
+      "title": "签收后第3天本人正常提交",
+      "stage": "apply",
+      "category": "normal",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "delivered": true,
+        "elapsed_hours": 72,
+        "quantity": 1,
+        "owner": "self"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC02",
+      "title": "未签收即提交",
+      "stage": "apply",
+      "category": "exception",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "delivered": false
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ],
+      "note": "PRD未明确该输入/状态的拒绝行为；这是待确认推断场景。"
+    },
+    {
+      "scenario_id": "SC03",
+      "title": "超过7天1秒提交",
+      "stage": "apply",
+      "category": "exception",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604801
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ],
+      "note": "PRD未明确该输入/状态的拒绝行为；这是待确认推断场景。"
+    },
+    {
+      "scenario_id": "SC04",
+      "title": "退货数量为0",
+      "stage": "apply",
+      "category": "equivalence",
+      "rule_ids": [
+        "R-RETURN-INPUT"
+      ],
+      "conditions": {
+        "quantity": 0,
+        "purchased_quantity": 1,
+        "equivalence_class": "invalid_quantity"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ],
+      "note": "PRD未明确该输入/状态的拒绝行为；这是待确认推断场景。"
+    },
+    {
+      "scenario_id": "SC05",
+      "title": "退货数量超过购买数量",
+      "stage": "apply",
+      "category": "equivalence",
+      "rule_ids": [
+        "R-RETURN-INPUT"
+      ],
+      "conditions": {
+        "quantity": 3,
+        "purchased_quantity": 2,
+        "equivalence_class": "quantity_exceeds_purchase"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ],
+      "note": "PRD未明确该输入/状态的拒绝行为；这是待确认推断场景。"
+    },
+    {
+      "scenario_id": "SC06",
+      "title": "非订单本人提交",
+      "stage": "apply",
+      "category": "exception",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "owner": "other"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ],
+      "note": "PRD未明确该输入/状态的拒绝行为；这是待确认推断场景。"
+    },
+    {
+      "scenario_id": "SC07",
+      "title": "普通会员恰在7×24小时截止点提交",
+      "stage": "apply",
+      "category": "boundary",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604800
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC08",
+      "title": "普通会员截止前1秒提交",
+      "stage": "apply",
+      "category": "boundary",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "seconds_before_deadline": 1
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC09",
+      "title": "退货原因为空",
+      "stage": "apply",
+      "category": "boundary",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "reason": ""
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC10",
+      "title": "客服审核通过",
+      "stage": "review",
+      "category": "normal",
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "conditions": {
+        "decision": "approve"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC11",
+      "title": "客服审核拒绝后仍尝试寄回",
+      "stage": "review",
+      "category": "exception",
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "conditions": {
+        "decision": "reject",
+        "ship_attempt": true
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC12",
+      "title": "同一申请重复审核",
+      "stage": "review",
+      "category": "state",
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "conditions": {
+        "decision_count": 2
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC13",
+      "title": "审核长期未处理",
+      "stage": "review",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "conditions": {
+        "review_elapsed_hours": "overdue"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC14",
+      "title": "审核通过并填写有效物流单号",
+      "stage": "ship",
+      "category": "normal",
+      "rule_ids": [
+        "R-LOGISTICS"
+      ],
+      "conditions": {
+        "approved": true,
+        "tracking_no": "present"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC15",
+      "title": "审核通过但未填写物流单号",
+      "stage": "ship",
+      "category": "boundary",
+      "rule_ids": [
+        "R-LOGISTICS"
+      ],
+      "conditions": {
+        "approved": true,
+        "tracking_no": "missing"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC16",
+      "title": "审核拒绝后出现物流轨迹",
+      "stage": "ship",
+      "category": "state",
+      "rule_ids": [
+        "R-REVIEW",
+        "R-LOGISTICS"
+      ],
+      "conditions": {
+        "approved": false,
+        "tracking_event": true
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC17",
+      "title": "物流长期未到仓",
+      "stage": "ship",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-LOGISTICS"
+      ],
+      "conditions": {
+        "tracking_state": "in_transit_overdue"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC18",
+      "title": "物流轨迹显示丢失",
+      "stage": "ship",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-LOGISTICS"
+      ],
+      "conditions": {
+        "tracking_state": "lost"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC19",
+      "title": "仓库签收后全部质检通过",
+      "stage": "inspect",
+      "category": "normal",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "received": true,
+        "qc": "all_pass"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC20",
+      "title": "质检全部失败",
+      "stage": "inspect",
+      "category": "exception",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "received": true,
+        "qc": "all_fail"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC21",
+      "title": "多件退货中部分质检通过",
+      "stage": "inspect",
+      "category": "boundary",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "received": true,
+        "qc": "partial_pass"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC22",
+      "title": "同一退货重复质检回传",
+      "stage": "inspect",
+      "category": "state",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "qc_callback_count": 2
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC23",
+      "title": "签收事件未到先收到质检结果",
+      "stage": "inspect",
+      "category": "state",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "received": false,
+        "qc_event": true
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC24",
+      "title": "银行卡无优惠部分退款",
+      "stage": "refund",
+      "category": "normal",
+      "rule_ids": [
+        "R-PAYMENT",
+        "R-PARTIAL-AMOUNT",
+        "R-REFUND-CHANNEL"
+      ],
+      "conditions": {
+        "payment": "card",
+        "discount": "0.00",
+        "return_type": "partial"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC25",
+      "title": "余额整单退款",
+      "stage": "refund",
+      "category": "normal",
+      "rule_ids": [
+        "R-PAYMENT",
+        "R-PARTIAL-AMOUNT",
+        "R-REFUND-CHANNEL"
+      ],
+      "conditions": {
+        "payment": "balance",
+        "return_type": "full"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC26",
+      "title": "银行卡与余额混合支付部分退款",
+      "stage": "refund",
+      "category": "combination",
+      "rule_ids": [
+        "R-PAYMENT",
+        "R-PARTIAL-AMOUNT",
+        "R-REFUND-CHANNEL"
+      ],
+      "conditions": {
+        "payment": "mixed",
+        "promotion": "threshold_300_50"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 3,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC27",
+      "title": "退货后剩余原价仍达优惠门槛",
+      "stage": "refund",
+      "category": "boundary",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "fixture": "ORDER-400-50",
+        "gross_total": "400.00",
+        "returned_gross": "50.00",
+        "remaining_gross": "350.00",
+        "threshold": "300.00"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC28",
+      "title": "退货后剩余原价低于优惠门槛",
+      "stage": "refund",
+      "category": "boundary",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "gross_total": "357.00",
+        "returned_sku": "B",
+        "remaining_gross": "258.00"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC29",
+      "title": "剩余原价恰为300元门槛",
+      "stage": "refund",
+      "category": "boundary",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "fixture": "ORDER-400-50",
+        "gross_total": "400.00",
+        "returned_gross": "100.00",
+        "remaining_gross": "300.00",
+        "threshold": "300.00"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC30",
+      "title": "剩余原价299.99元",
+      "stage": "refund",
+      "category": "boundary",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "remaining_gross": "299.99",
+        "threshold": "300.00"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 3,
+        "hard_to_detect": 4
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC31",
+      "title": "多个SKU连续部分退款累计金额",
+      "stage": "refund",
+      "category": "state",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "returned_skus": [
+          "B",
+          "C"
+        ],
+        "prior_refund": "待确认的历史退款金额"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC32",
+      "title": "重复退同一SKU",
+      "stage": "refund",
+      "category": "state",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "returned_skus": [
+          "B",
+          "B"
+        ]
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC33",
+      "title": "支付渠道明确返回失败",
+      "stage": "refund",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-RETRY"
+      ],
+      "conditions": {
+        "channel_result": "failure"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC34",
+      "title": "渠道响应超时后用户重试",
+      "stage": "refund",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-RETRY"
+      ],
+      "conditions": {
+        "channel_result": "timeout",
+        "client_retry": true
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC35",
+      "title": "退款成功后渠道重复回调",
+      "stage": "refund",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-RETRY"
+      ],
+      "conditions": {
+        "channel_result": "success",
+        "callback_count": 2
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC36",
+      "title": "金卡混合支付且优惠失效的部分退款",
+      "stage": "refund",
+      "category": "combination",
+      "rule_ids": [
+        "R-MEMBER",
+        "R-PAYMENT",
+        "R-PARTIAL-AMOUNT",
+        "R-RETRY"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "payment": "mixed",
+        "remaining_gross": "258.00",
+        "promotion": "threshold_300_50",
+        "return_type": "partial",
+        "channel_timeout": true
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 3,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ],
+      "note": "多维高风险待确认组合，课堂中应人工补回；不作为规则已确认的断言。"
+    },
+    {
+      "scenario_id": "SC37",
+      "title": "订单无运费按商品退款",
+      "stage": "refund",
+      "category": "normal",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "conditions": {
+        "freight": "0.00"
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC38",
+      "title": "订单有运费但退款范围未说明",
+      "stage": "refund",
+      "category": "external_dependency",
+      "rule_ids": [
+        "R-FREIGHT"
+      ],
+      "conditions": {
+        "freight": "8.00",
+        "policy": "unknown"
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 5,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 2,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC43",
+      "title": "退款成功后关闭售后单",
+      "stage": "close",
+      "category": "normal",
+      "rule_ids": [
+        "R-STATUS"
+      ],
+      "conditions": {
+        "refund": "success",
+        "close": true
+      },
+      "validity": "candidate",
+      "risk": {
+        "impact": 2,
+        "probability": 3,
+        "hard_to_detect": 2
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC44",
+      "title": "退款处理中提前关闭售后单",
+      "stage": "close",
+      "category": "state",
+      "rule_ids": [
+        "R-STATUS"
+      ],
+      "conditions": {
+        "refund": "pending",
+        "close": true
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "scenario_id": "SC45",
+      "title": "已关闭售后单再次发起申请",
+      "stage": "close",
+      "category": "state",
+      "rule_ids": [
+        "R-STATUS"
+      ],
+      "conditions": {
+        "case_state": "closed",
+        "new_request": true
+      },
+      "validity": "needs_confirmation",
+      "risk": {
+        "impact": 4,
+        "probability": 2,
+        "hard_to_detect": 5
+      },
+      "execution_cost": 1,
+      "versions": [
+        "1.0"
+      ]
+    }
+  ]
+}

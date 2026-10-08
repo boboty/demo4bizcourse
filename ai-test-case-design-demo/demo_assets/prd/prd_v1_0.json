@@ -1,0 +1,22 @@
+{
+  "document_id": "YS-RET-PRD",
+  "version": "1.0",
+  "title": "悦选商城售后退款需求说明",
+  "status": "baseline",
+  "source_note": "课堂构造的最小业务需求；未明确事项保留待确认，不视作事实。",
+  "paragraphs": [
+    {"source_id":"P10","text":"消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。"},
+    {"source_id":"P20","text":"客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。"},
+    {"source_id":"P30","text":"仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。"},
+    {"source_id":"P40","text":"退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。"},
+    {"source_id":"P50","text":"页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。"},
+    {"source_id":"P60","text":"订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。"}
+  ],
+  "open_questions": [
+    {"question_id":"Q10","text":"7日按自然日还是精确到签收时刻的连续168小时计算？时区及截止边界是什么？","source_ids":["P10"],"status":"unresolved"},
+    {"question_id":"Q20","text":"客服审核超时、退货物流超时分别如何处理？","source_ids":["P20"],"status":"unresolved"},
+    {"question_id":"Q30","text":"部分退款的优惠如何分摊；退款时是否重新计算剩余订单优惠？","source_ids":["P40"],"status":"unresolved"},
+    {"question_id":"Q40","text":"运费是否退款、退款失败如何重试，以及重复退款如何防止？","source_ids":["P30","P40"],"status":"unresolved"},
+    {"question_id":"Q50","text":"混合支付的退款顺序、渠道失败后的状态与人工处理规则是什么？","source_ids":["P40","P60"],"status":"unresolved"}
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "roles": [
+    {
+      "id": "ROLE-CUSTOMER",
+      "name": "消费者",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P10",
+        "P20"
+      ]
+    },
+    {
+      "id": "ROLE-CS",
+      "name": "客服",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P20",
+        "P30"
+      ]
+    },
+    {
+      "id": "ROLE-WH",
+      "name": "仓库",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P30"
+      ]
+    },
+    {
+      "id": "ROLE-PAY",
+      "name": "支付渠道",
+      "evidence_status": "inference",
+      "source_ids": [
+        "P40"
+      ],
+      "note": "外部依赖；失败语义待确认"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "IN-ORDER",
+      "name": "商品、实付、支付方式及订单记录（会员维度在V1.0影响待确认）",
+      "evidence_status": "inference",
+      "source_ids": [
+        "P60"
+      ]
+    },
+    {
+      "id": "IN-RETURN",
+      "name": "退货SKU/数量/原因、物流单号",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P10",
+        "P20"
+      ]
+    },
+    {
+      "id": "IN-CLOCK",
+      "name": "签收时间、提交时间边界与时区",
+      "evidence_status": "missing",
+      "source_ids": [
+        "P10"
+      ]
+    }
+  ],
+  "flow": [
+    "申请",
+    "客服审核",
+    "消费者寄回",
+    "仓库签收",
+    "质检",
+    "退款",
+    "完结"
+  ],
+  "states": [
+    "申请中",
+    "审核中",
+    "待寄回",
+    "运输中",
+    "仓库签收",
+    "质检中",
+    "退款中",
+    "已退款",
+    "已关闭"
+  ],
+  "risks": [
+    {
+      "risk_id": "RK-MONEY",
+      "statement": "优惠及部分退款金额缺少独立依据，可能出现资金差错",
+      "evidence_status": "missing",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT"
+      ],
+      "impact": 5,
+      "probability": 3,
+      "hard_to_detect": 4
+    },
+    {
+      "risk_id": "RK-TIME",
+      "statement": "退货期限边界和时区不明",
+      "evidence_status": "missing",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "impact": 3,
+      "probability": 3,
+      "hard_to_detect": 3
+    },
+    {
+      "risk_id": "RK-EXT",
+      "statement": "渠道失败/重复响应可能造成状态错误或重复退款",
+      "evidence_status": "missing",
+      "rule_ids": [
+        "R-RETRY",
+        "R-REFUND-CHANNEL"
+      ],
+      "impact": 5,
+      "probability": 2,
+      "hard_to_detect": 4
+    }
+  ],
+  "external_dependencies": [
+    {
+      "id": "EXT-PAY",
+      "name": "银行卡/余额退款渠道",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P40",
+        "P60"
+      ]
+    },
+    {
+      "id": "EXT-WH",
+      "name": "仓库签收和质检结果",
+      "evidence_status": "fact",
+      "source_ids": [
+        "P30"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q10",
+      "question": "7日按何种时间边界和时区计算？",
+      "evidence_status": "missing",
+      "source_ids": [
+        "P10"
+      ]
+    },
+    {
+      "id": "Q20",
+      "question": "审核及物流超时如何处理？",
+      "evidence_status": "missing",
+      "source_ids": [
+        "P20"
+      ]
+    },
+    {
+      "id": "Q30",
+      "question": "部分退款优惠如何分摊或重算？",
+      "evidence_status": "missing",
+      "source_ids": [
+        "P40"
+      ]
+    },
+    {
+      "id": "Q40",
+      "question": "运费、渠道失败和重试规则是什么？",
+      "evidence_status": "missing",
+      "source_ids": [
+        "P30",
+        "P40"
+      ]
+    }
+  ],
+  "status_legend": {
+    "fact": "需求直接陈述",
+    "inference": "分析推断，需确认",
+    "missing": "需求无规则",
+    "conflict": "明确互相矛盾的业务表述；V1.0优惠规则属于missing"
+  }
+}

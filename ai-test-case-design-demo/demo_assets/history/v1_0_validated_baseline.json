@@ -1,0 +1,1927 @@
+{
+  "baseline_id": "HIST-POST-D4-D5-01",
+  "business_version": "1.0 plus independently verified finance-1.0",
+  "validation_status": "independently_validated_after_demo4_demo5",
+  "business_sources": [
+    "YS-RET-PRD@1.0",
+    "YS-FIN-AFTERSALES-01"
+  ],
+  "note": "历史基线建立于独立财务规范揭示并验证之后。20条金额用例沿用V1.0可执行输入，但expected按财务累计公式纠正；比例分摊85.13仅是被冻结课堂错误证物，不属于有效历史资产。",
+  "scenarios": [
+    {
+      "scenario_id": "HS-M01",
+      "title": "经典B部分退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC01",
+        "return_skus": [
+          "B"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M02",
+      "title": "经典A部分退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC02",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M03",
+      "title": "经典C部分退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC03",
+        "return_skus": [
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M04",
+      "title": "经典B与C组合退货",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC04",
+        "return_skus": [
+          "B",
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M05",
+      "title": "经典订单整单退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC05",
+        "return_skus": [
+          "A",
+          "B",
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M06",
+      "title": "无优惠未达门槛部分退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC06",
+        "return_skus": [
+          "B"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M07",
+      "title": "原价恰为300元且优惠启用",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC07",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M08",
+      "title": "无优惠299.99元订单",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC08",
+        "return_skus": [
+          "B"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M09",
+      "title": "原价300.01元优惠启用",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC09",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M10",
+      "title": "满减订单构造：退货后剩余原价恰为300元",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC10",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M11",
+      "title": "满减订单构造：退货后剩余原价299.99元",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC11",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M12",
+      "title": "满减订单构造：退货后剩余原价300.01元",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC12",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M13",
+      "title": "无优惠一元商品退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC13",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M14",
+      "title": "300.01元订单极小SKU舍入",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC14",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M15",
+      "title": "400元订单满减后退一件",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC15",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M16",
+      "title": "500元订单连续两件部分退货",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC16",
+        "return_skus": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M17",
+      "title": "500元订单非相邻SKU退货",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC17",
+        "return_skus": [
+          "A",
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M18",
+      "title": "301元订单退一元SKU",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC18",
+        "return_skus": [
+          "A"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M19",
+      "title": "无优惠89.99元订单部分退款",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC19",
+        "return_skus": [
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-M20",
+      "title": "满减订单多SKU退货尾差",
+      "rule_ids": [
+        "R-PROMO-RECALC",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "source_case_id": "TC20",
+        "return_skus": [
+          "A",
+          "C"
+        ]
+      }
+    },
+    {
+      "scenario_id": "HS-F01",
+      "title": "旧规则断言：所有订单必须先质检后退款",
+      "rule_ids": [
+        "R-QC"
+      ],
+      "conditions": {
+        "qc": "pending"
+      },
+      "baseline_status": "legacy_unconditional_gate"
+    },
+    {
+      "scenario_id": "HS-F02",
+      "title": "普通质检通过后原支付渠道退款",
+      "rule_ids": [
+        "R-QC",
+        "R-REFUND-CHANNEL"
+      ],
+      "conditions": {
+        "qc": "pass",
+        "payment": "card"
+      },
+      "baseline_status": "active"
+    },
+    {
+      "scenario_id": "HS-F03",
+      "title": "普通会员签收第6天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_hours": 144
+      },
+      "baseline_status": "active"
+    },
+    {
+      "scenario_id": "HS-F04",
+      "title": "普通会员签收第8天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_hours": 192
+      },
+      "baseline_status": "active"
+    },
+    {
+      "scenario_id": "HS-F05",
+      "title": "金卡会员签收第10天申请（V1.0）",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_hours": 240
+      },
+      "baseline_status": "active"
+    },
+    {
+      "scenario_id": "HS-F06",
+      "title": "余额支付退款回原余额",
+      "rule_ids": [
+        "R-PAYMENT",
+        "R-REFUND-CHANNEL"
+      ],
+      "conditions": {
+        "payment": "balance",
+        "qc": "pass"
+      },
+      "baseline_status": "active"
+    },
+    {
+      "scenario_id": "HS-V10-01",
+      "title": "银卡会员签收第6天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "silver",
+        "elapsed_hours": 144
+      },
+      "baseline_status": "validated_v1_0"
+    },
+    {
+      "scenario_id": "HS-V10-02",
+      "title": "银卡会员签收第8天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "silver",
+        "elapsed_hours": 192
+      },
+      "baseline_status": "validated_v1_0"
+    },
+    {
+      "scenario_id": "HS-V10-03",
+      "title": "金卡会员签收第6天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_hours": 144
+      },
+      "baseline_status": "validated_v1_0"
+    },
+    {
+      "scenario_id": "HS-V10-04",
+      "title": "金卡会员签收第8天申请（V1.0统一7日口径）",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_hours": 192
+      },
+      "baseline_status": "validated_v1_0"
+    },
+    {
+      "scenario_id": "HS-V10-05",
+      "title": "客服拒绝售后申请",
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "conditions": {
+        "decision": "reject"
+      },
+      "baseline_status": "validated_v1_0"
+    },
+    {
+      "scenario_id": "HS-V10-06",
+      "title": "经典订单先退B再退C累计退款",
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "conditions": {
+        "order": "A199+B99+C59",
+        "return_sequence": [
+          "B",
+          "C"
+        ]
+      },
+      "baseline_status": "validated_v1_0"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "H-F01",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F01"
+      ],
+      "rule_ids": [
+        "R-QC"
+      ],
+      "input": {
+        "qc": "pending"
+      },
+      "expected": {
+        "outcome": "refund_blocked"
+      },
+      "validation_status": "independently_validated",
+      "title": "旧规则断言（范围：所有订单）：退款必须先质检后进行",
+      "assertion_scope": "all_orders"
+    },
+    {
+      "case_id": "H-F02",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F02"
+      ],
+      "rule_ids": [
+        "R-QC",
+        "R-REFUND-CHANNEL"
+      ],
+      "input": {
+        "qc": "pass",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_to_original_channel"
+      },
+      "validation_status": "independently_validated",
+      "title": "普通质检通过后原支付渠道退款"
+    },
+    {
+      "case_id": "H-F03",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F03"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "elapsed_hours": 144
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "independently_validated",
+      "title": "普通会员签收第6天申请"
+    },
+    {
+      "case_id": "H-F04",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F04"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "elapsed_hours": 192
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "independently_validated",
+      "title": "普通会员签收第8天申请"
+    },
+    {
+      "case_id": "H-F05",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F05"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_hours": 240
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "independently_validated",
+      "title": "金卡会员签收第10天申请（V1.0）"
+    },
+    {
+      "case_id": "H-F06",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F06"
+      ],
+      "rule_ids": [
+        "R-QC",
+        "R-PAYMENT",
+        "R-REFUND-CHANNEL"
+      ],
+      "input": {
+        "payment": "balance",
+        "qc": "pass"
+      },
+      "expected": {
+        "outcome": "refund_to_original_balance"
+      },
+      "validation_status": "independently_validated",
+      "title": "余额支付退款回原余额"
+    },
+    {
+      "case_id": "H-M01",
+      "kind": "money",
+      "derived_from_case_id": "TC01",
+      "scenario_ids": [
+        "HS-M01",
+        "SC28",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-01",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "49.00",
+        "cumulative_refunded": "49.00",
+        "remaining_goods_original": "258.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "经典B部分退款"
+    },
+    {
+      "case_id": "H-M02",
+      "kind": "money",
+      "derived_from_case_id": "TC02",
+      "scenario_ids": [
+        "HS-M02",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-02",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "149.00",
+        "cumulative_refunded": "149.00",
+        "remaining_goods_original": "158.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "经典A部分退款"
+    },
+    {
+      "case_id": "H-M03",
+      "kind": "money",
+      "derived_from_case_id": "TC03",
+      "scenario_ids": [
+        "HS-M03",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-03",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "9.00",
+        "cumulative_refunded": "9.00",
+        "remaining_goods_original": "298.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "经典C部分退款"
+    },
+    {
+      "case_id": "H-M04",
+      "kind": "money",
+      "derived_from_case_id": "TC04",
+      "scenario_ids": [
+        "HS-M04",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-04",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "B",
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "108.00",
+        "cumulative_refunded": "108.00",
+        "remaining_goods_original": "199.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "经典B与C组合退货"
+    },
+    {
+      "case_id": "H-M05",
+      "kind": "money",
+      "derived_from_case_id": "TC05",
+      "scenario_ids": [
+        "HS-M05",
+        "SC25"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-05",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "199.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.00"
+          },
+          {
+            "sku": "C",
+            "gross": "59.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A",
+          "B",
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "307.00",
+        "cumulative_refunded": "307.00",
+        "remaining_goods_original": "0.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "经典订单整单退款"
+    },
+    {
+      "case_id": "H-M06",
+      "kind": "money",
+      "derived_from_case_id": "TC06",
+      "scenario_ids": [
+        "HS-M06",
+        "SC24"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-06",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.99"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "299.99",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "99.99",
+        "cumulative_refunded": "99.99",
+        "remaining_goods_original": "200.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "无优惠未达门槛部分退款"
+    },
+    {
+      "case_id": "H-M07",
+      "kind": "money",
+      "derived_from_case_id": "TC07",
+      "scenario_ids": [
+        "HS-M07",
+        "SC29"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-07",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "50.00",
+        "cumulative_refunded": "50.00",
+        "remaining_goods_original": "200.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "原价恰为300元且优惠启用"
+    },
+    {
+      "case_id": "H-M08",
+      "kind": "money",
+      "derived_from_case_id": "TC08",
+      "scenario_ids": [
+        "HS-M08",
+        "SC30"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-08",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "200.00"
+          },
+          {
+            "sku": "B",
+            "gross": "99.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "299.99",
+        "return_skus": [
+          "B"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "99.99",
+        "cumulative_refunded": "99.99",
+        "remaining_goods_original": "200.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "无优惠299.99元订单"
+    },
+    {
+      "case_id": "H-M09",
+      "kind": "money",
+      "derived_from_case_id": "TC09",
+      "scenario_ids": [
+        "HS-M09",
+        "SC29"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-09",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.01",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "50.00",
+        "cumulative_refunded": "50.00",
+        "remaining_goods_original": "200.01",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "原价300.01元优惠启用"
+    },
+    {
+      "case_id": "H-M10",
+      "kind": "money",
+      "derived_from_case_id": "TC10",
+      "scenario_ids": [
+        "HS-M10",
+        "SC29"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-10",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "57.00"
+          },
+          {
+            "sku": "B",
+            "gross": "300.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "57.00",
+        "cumulative_refunded": "57.00",
+        "remaining_goods_original": "300.00",
+        "recalculated_remaining_discount": "50.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "满减订单构造：退货后剩余原价恰为300元"
+    },
+    {
+      "case_id": "H-M11",
+      "kind": "money",
+      "derived_from_case_id": "TC11",
+      "scenario_ids": [
+        "HS-M11",
+        "SC30"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-11",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "57.01"
+          },
+          {
+            "sku": "B",
+            "gross": "299.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "7.01",
+        "cumulative_refunded": "7.01",
+        "remaining_goods_original": "299.99",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "满减订单构造：退货后剩余原价299.99元"
+    },
+    {
+      "case_id": "H-M12",
+      "kind": "money",
+      "derived_from_case_id": "TC12",
+      "scenario_ids": [
+        "HS-M12",
+        "SC27"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-12",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "56.99"
+          },
+          {
+            "sku": "B",
+            "gross": "300.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "307.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "56.99",
+        "cumulative_refunded": "56.99",
+        "remaining_goods_original": "300.01",
+        "recalculated_remaining_discount": "50.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "满减订单构造：退货后剩余原价300.01元"
+    },
+    {
+      "case_id": "H-M13",
+      "kind": "money",
+      "derived_from_case_id": "TC13",
+      "scenario_ids": [
+        "HS-M13",
+        "SC24"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-13",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "98.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "99.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "1.00",
+        "cumulative_refunded": "1.00",
+        "remaining_goods_original": "98.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "无优惠一元商品退款"
+    },
+    {
+      "case_id": "H-M14",
+      "kind": "money",
+      "derived_from_case_id": "TC14",
+      "scenario_ids": [
+        "HS-M14",
+        "SC27"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT",
+        "F40"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-14",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "299.01"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "250.01",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "0.00",
+        "status": "financial_review_required",
+        "formula_due": "-49.00",
+        "gap": "49.00"
+      },
+      "validation_status": "boundary_requires_finance_review",
+      "title": "300.01元订单极小SKU舍入"
+    },
+    {
+      "case_id": "H-M15",
+      "kind": "money",
+      "derived_from_case_id": "TC15",
+      "scenario_ids": [
+        "HS-M15",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-15",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "100.00"
+          },
+          {
+            "sku": "B",
+            "gross": "100.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          },
+          {
+            "sku": "D",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "350.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "100.00",
+        "cumulative_refunded": "100.00",
+        "remaining_goods_original": "300.00",
+        "recalculated_remaining_discount": "50.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "400元订单满减后退一件"
+    },
+    {
+      "case_id": "H-M16",
+      "kind": "money",
+      "derived_from_case_id": "TC16",
+      "scenario_ids": [
+        "HS-M16",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-16",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "125.00"
+          },
+          {
+            "sku": "B",
+            "gross": "125.00"
+          },
+          {
+            "sku": "C",
+            "gross": "125.00"
+          },
+          {
+            "sku": "D",
+            "gross": "125.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "450.00",
+        "return_skus": [
+          "A",
+          "B"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "200.00",
+        "cumulative_refunded": "200.00",
+        "remaining_goods_original": "250.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "500元订单连续两件部分退货"
+    },
+    {
+      "case_id": "H-M17",
+      "kind": "money",
+      "derived_from_case_id": "TC17",
+      "scenario_ids": [
+        "HS-M17",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-17",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "220.00"
+          },
+          {
+            "sku": "B",
+            "gross": "180.00"
+          },
+          {
+            "sku": "C",
+            "gross": "100.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "450.00",
+        "return_skus": [
+          "A",
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "270.00",
+        "cumulative_refunded": "270.00",
+        "remaining_goods_original": "180.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "500元订单非相邻SKU退货"
+    },
+    {
+      "case_id": "H-M18",
+      "kind": "money",
+      "derived_from_case_id": "TC18",
+      "scenario_ids": [
+        "HS-M18",
+        "SC27"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-18",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "1.00"
+          },
+          {
+            "sku": "B",
+            "gross": "300.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "251.00",
+        "return_skus": [
+          "A"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "1.00",
+        "cumulative_refunded": "1.00",
+        "remaining_goods_original": "300.00",
+        "recalculated_remaining_discount": "50.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "301元订单退一元SKU"
+    },
+    {
+      "case_id": "H-M19",
+      "kind": "money",
+      "derived_from_case_id": "TC19",
+      "scenario_ids": [
+        "HS-M19",
+        "SC24"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-19",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "20.00"
+          },
+          {
+            "sku": "B",
+            "gross": "30.00"
+          },
+          {
+            "sku": "C",
+            "gross": "39.99"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": false
+        },
+        "original_discount": "0.00",
+        "paid": "89.99",
+        "return_skus": [
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "39.99",
+        "cumulative_refunded": "39.99",
+        "remaining_goods_original": "50.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "无优惠89.99元订单部分退款"
+    },
+    {
+      "case_id": "H-M20",
+      "kind": "money",
+      "derived_from_case_id": "TC20",
+      "scenario_ids": [
+        "HS-M20",
+        "SC31"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30",
+        "R-PAYMENT"
+      ],
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-20",
+        "items": [
+          {
+            "sku": "A",
+            "gross": "101.00"
+          },
+          {
+            "sku": "B",
+            "gross": "103.00"
+          },
+          {
+            "sku": "C",
+            "gross": "97.00"
+          }
+        ],
+        "promotion": {
+          "threshold": "300.00",
+          "discount": "50.00",
+          "enabled": true
+        },
+        "original_discount": "50.00",
+        "paid": "251.00",
+        "return_skus": [
+          "A",
+          "C"
+        ],
+        "policy": "finance_cumulative_recalculation",
+        "rounding": "half_up_2dp",
+        "previously_refunded": "0.00"
+      },
+      "expected": {
+        "refund": "148.00",
+        "cumulative_refunded": "148.00",
+        "remaining_goods_original": "103.00",
+        "recalculated_remaining_discount": "0.00"
+      },
+      "validation_status": "independently_validated",
+      "title": "满减订单多SKU退货尾差"
+    },
+    {
+      "case_id": "H-V10-01",
+      "kind": "eligibility",
+      "title": "银卡会员签收第6天申请",
+      "scenario_ids": [
+        "HS-V10-01"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "silver",
+        "elapsed_hours": 144
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "independently_validated"
+    },
+    {
+      "case_id": "H-V10-02",
+      "kind": "eligibility",
+      "title": "银卡会员签收第8天申请",
+      "scenario_ids": [
+        "HS-V10-02"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "silver",
+        "elapsed_hours": 192
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "independently_validated"
+    },
+    {
+      "case_id": "H-V10-03",
+      "kind": "eligibility",
+      "title": "金卡会员签收第6天申请",
+      "scenario_ids": [
+        "HS-V10-03"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_hours": 144
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "independently_validated"
+    },
+    {
+      "case_id": "H-V10-04",
+      "kind": "eligibility",
+      "title": "金卡会员签收第8天申请（V1.0统一7日口径）",
+      "scenario_ids": [
+        "HS-V10-04"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_hours": 192
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "independently_validated"
+    },
+    {
+      "case_id": "H-V10-05",
+      "kind": "workflow",
+      "title": "客服拒绝售后申请",
+      "scenario_ids": [
+        "HS-V10-05"
+      ],
+      "rule_ids": [
+        "R-REVIEW"
+      ],
+      "input": {
+        "decision": "reject"
+      },
+      "expected": {
+        "outcome": "application_rejected"
+      },
+      "validation_status": "independently_validated"
+    },
+    {
+      "case_id": "H-V10-06",
+      "kind": "money",
+      "title": "经典订单先退B再退C，累计优惠重算",
+      "scenario_ids": [
+        "HS-V10-06"
+      ],
+      "rule_ids": [
+        "R-PARTIAL-AMOUNT",
+        "F10",
+        "F20",
+        "F30"
+      ],
+      "input": {
+        "order_id": "ORD-01",
+        "items": {
+          "A": "199.00",
+          "B": "99.00",
+          "C": "59.00"
+        },
+        "promotion": {
+          "enabled": true,
+          "threshold": "300.00",
+          "discount": "50.00"
+        },
+        "paid": "307.00",
+        "policy": "finance_cumulative_recalculation",
+        "return_sequence": [
+          [
+            "B"
+          ],
+          [
+            "B",
+            "C"
+          ]
+        ],
+        "previously_refunded_before_first": "0.00"
+      },
+      "expected": {
+        "first_refund": "49.00",
+        "second_refund": "59.00",
+        "cumulative_after_second": "108.00"
+      },
+      "validation_status": "independently_validated",
+      "source_rule_ids": [
+        "F10",
+        "F20",
+        "F30"
+      ]
+    }
+  ],
+  "excluded_unverified_artifacts": [
+    {
+      "artifact_id": "F-D2-DIRECT-01",
+      "reason": "比例分摊85.13没有财务依据，不能作为有效历史预期。"
+    }
+  ]
+}

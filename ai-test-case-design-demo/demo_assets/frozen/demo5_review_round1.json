@@ -1,0 +1,17 @@
+{
+  "artifact_id":"F-D5-REVIEW-01",
+  "frozen":true,
+  "label":"预置演示结果：第一次独立审查（非实时）",
+  "inputs":["YS-RET-PRD@1.0","cases/v1_0_executable.json","executor_report:V1.0-20-cases"],
+  "not_included":["finance/after_sales_funds.json"],
+  "review":{
+    "summary":"结构与执行结果整体一致，20条用例据报告均通过；覆盖了多个商品价位、优惠及无优惠输入和舍入结果。",
+    "findings":[
+      {"severity":"observation","text":"用例的比例分摊公式前后一致，85.13计算正确。"},
+      {"severity":"gap","text":"V1.0只说优惠按财务规则处理；用例采用比例分摊，但该公式没有V1.0业务来源。建议将预期口径标为待确认。"},
+      {"severity":"gap","text":"7日边界、运费、支付渠道失败仍未形成已确认规则。"}
+    ],
+    "decision":"未发现可由当前输入证明的实现偏差；不能据此认定退款金额业务口径已验证。",
+    "teaching_point":"相同PRD和用例再次审查，可以发现来源标注不足，但不能补出未提供的财务事实。"
+  }
+}

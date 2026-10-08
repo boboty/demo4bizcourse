@@ -1,0 +1,630 @@
+{
+  "target_version": "1.1",
+  "kind": "new_or_changed_reference_assets",
+  "derived_from_rule_changes": [
+    "C10",
+    "C20"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "HS-F07",
+      "title": "金卡会员恰15×24小时申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1296000
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F08",
+      "title": "金卡会员超过15天1秒申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1296001
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F09",
+      "title": "金卡下单后降为普通，第10天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "member_at_request": "ordinary",
+        "elapsed_hours": 240
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F10",
+      "title": "普通下单后升为金卡，第10天申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "member_at_request": "gold",
+        "elapsed_hours": 240
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F11",
+      "title": "极速资格通过、先退款后质检失败",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "conditions": {
+        "eligible": true,
+        "tracking_no": "filled",
+        "qc": "fail"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F12",
+      "title": "极速资格未通过、质检通过后退款",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "conditions": {
+        "eligible": false,
+        "tracking_no": "filled",
+        "qc": "pass"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F13",
+      "title": "金卡签收后14日23时59分59秒申请（截止前1秒）",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "conditions": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1295999
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F14",
+      "title": "极速退款资格且质检通过：先退款后质检",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "conditions": {
+        "eligible": true,
+        "tracking_no": "TRACK-14",
+        "qc": "pass",
+        "payment": "card"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F15",
+      "title": "极速退款资格且质检待定：先退款后继续质检",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "conditions": {
+        "eligible": true,
+        "tracking_no": "TRACK-15",
+        "qc": "pending",
+        "payment": "card"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F16",
+      "title": "不符合极速资格且质检待定：等待质检",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "conditions": {
+        "eligible": false,
+        "tracking_no": "TRACK-16",
+        "qc": "pending",
+        "payment": "card"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F17",
+      "title": "极速退款资格缺少物流单号：不退款",
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "conditions": {
+        "eligible": true,
+        "qc": "pass",
+        "payment": "card"
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F18",
+      "title": "普通会员签收后7日减1秒申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604799
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F19",
+      "title": "普通会员签收后恰7日申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604800
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F20",
+      "title": "普通会员签收后7日加1秒申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "conditions": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604801
+      },
+      "baseline_status": "new_target_case"
+    },
+    {
+      "scenario_id": "HS-F21",
+      "title": "银卡会员签收后恰7日申请",
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "conditions": {
+        "member_at_order": "silver",
+        "elapsed_seconds": 604800
+      },
+      "baseline_status": "new_target_case"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "H-F07",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F07"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1296000
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "金卡会员恰15×24小时申请",
+      "change_ids": [
+        "C20"
+      ]
+    },
+    {
+      "case_id": "H-F08",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F08"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1296001
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "target_change_reference",
+      "title": "金卡会员超过15天1秒申请",
+      "change_ids": [
+        "C20"
+      ]
+    },
+    {
+      "case_id": "H-F09",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F09"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "member_at_request": "ordinary",
+        "elapsed_hours": 240
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "金卡下单后降为普通，第10天申请",
+      "change_ids": [
+        "C20"
+      ]
+    },
+    {
+      "case_id": "H-F10",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F10"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "member_at_request": "gold",
+        "elapsed_hours": 240
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "target_change_reference",
+      "title": "普通下单后升为金卡，第10天申请",
+      "change_ids": [
+        "C20"
+      ]
+    },
+    {
+      "case_id": "H-F11",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F11"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "input": {
+        "eligible": true,
+        "tracking_no": "filled",
+        "qc": "fail"
+      },
+      "expected": {
+        "outcome": "refund_first_then_customer_recovery",
+        "sequence": [
+          "refund",
+          "qc",
+          "customer_recovery"
+        ],
+        "refund_allowed": true,
+        "recovery_required": true
+      },
+      "validation_status": "target_change_reference",
+      "title": "极速资格通过、先退款后质检失败",
+      "change_ids": [
+        "C10"
+      ]
+    },
+    {
+      "case_id": "H-F12",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F12"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "input": {
+        "eligible": false,
+        "tracking_no": "filled",
+        "qc": "pass",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_to_original_channel",
+        "sequence": [
+          "qc",
+          "refund"
+        ],
+        "refund_allowed": true,
+        "recovery_required": false
+      },
+      "validation_status": "target_change_reference",
+      "title": "极速资格未通过、质检通过后退款",
+      "change_ids": [
+        "C10"
+      ]
+    },
+    {
+      "case_id": "H-F13",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F13"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "input": {
+        "member_at_order": "gold",
+        "elapsed_seconds": 1295999
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "金卡签收后14日23时59分59秒申请（截止前1秒）"
+    },
+    {
+      "case_id": "H-F14",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F14"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "input": {
+        "eligible": true,
+        "tracking_no": "TRACK-14",
+        "qc": "pass",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_first_then_qc",
+        "sequence": [
+          "refund",
+          "qc"
+        ],
+        "refund_allowed": true,
+        "recovery_required": false
+      },
+      "validation_status": "target_change_reference",
+      "title": "极速退款资格且质检通过：先退款后质检"
+    },
+    {
+      "case_id": "H-F15",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F15"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "input": {
+        "eligible": true,
+        "tracking_no": "TRACK-15",
+        "qc": "pending",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_first_qc_pending",
+        "sequence": [
+          "refund",
+          "qc"
+        ],
+        "refund_allowed": true,
+        "recovery_required": false
+      },
+      "validation_status": "target_change_reference",
+      "title": "极速退款资格且质检待定：先退款后继续质检"
+    },
+    {
+      "case_id": "H-F16",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F16"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "input": {
+        "eligible": false,
+        "tracking_no": "TRACK-16",
+        "qc": "pending",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_blocked",
+        "sequence": [
+          "qc"
+        ],
+        "refund_allowed": false,
+        "recovery_required": false
+      },
+      "validation_status": "target_change_reference",
+      "title": "不符合极速资格且质检待定：等待质检"
+    },
+    {
+      "case_id": "H-F17",
+      "kind": "workflow",
+      "scenario_ids": [
+        "HS-F17"
+      ],
+      "rule_ids": [
+        "R-FAST-REFUND",
+        "R-QC"
+      ],
+      "change_ids": [
+        "C10"
+      ],
+      "input": {
+        "eligible": true,
+        "qc": "pass",
+        "payment": "card"
+      },
+      "expected": {
+        "outcome": "refund_blocked",
+        "sequence": [],
+        "refund_allowed": false,
+        "recovery_required": false
+      },
+      "validation_status": "target_change_reference",
+      "title": "极速退款资格缺少物流单号：不退款"
+    },
+    {
+      "case_id": "H-F18",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F18"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604799
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "普通会员签收后7日减1秒申请"
+    },
+    {
+      "case_id": "H-F19",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F19"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604800
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "普通会员签收后恰7日申请"
+    },
+    {
+      "case_id": "H-F20",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F20"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "input": {
+        "member_at_order": "ordinary",
+        "elapsed_seconds": 604801
+      },
+      "expected": {
+        "outcome": "reject"
+      },
+      "validation_status": "target_change_reference",
+      "title": "普通会员签收后7日加1秒申请"
+    },
+    {
+      "case_id": "H-F21",
+      "kind": "eligibility",
+      "scenario_ids": [
+        "HS-F21"
+      ],
+      "rule_ids": [
+        "R-RETURN-WINDOW",
+        "R-MEMBER"
+      ],
+      "change_ids": [
+        "C20"
+      ],
+      "input": {
+        "member_at_order": "silver",
+        "elapsed_seconds": 604800
+      },
+      "expected": {
+        "outcome": "accept"
+      },
+      "validation_status": "target_change_reference",
+      "title": "银卡会员签收后恰7日申请"
+    }
+  ],
+  "note": "V1.1 目标版本增量用例；expected 为独立冻结常量，执行结果由 executor 实算后比对。"
+}

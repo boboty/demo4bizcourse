@@ -1,0 +1,81 @@
+{
+  "exercise_id": "PRACTICE-D4-01-REFERENCE",
+  "separate_from_student_input": true,
+  "migration_reference": {
+    "C10": "依赖R-QC且断言无条件先质检后退款的历史流程用例需加入eligible=false条件；新增eligible=true物流填报后先退款、后质检及质检失败转客服追偿路径。不能将所有R-QC资产作废。",
+    "C20": "依赖R-RETURN-WINDOW/R-MEMBER的时间资产按下单时会员等级和签收时刻重算；普通/银卡7日原有有效覆盖可保留或更新边界输入；金卡15日、下单后等级变化和截止点场景需补齐。",
+    "C30": "历史金额已按独立财务规范正确验证；保留49.00、59.00等预期，只把F10/F20/F30依据补连到P41/R-PROMO-RECALC。促销公式没有行为变化。"
+  },
+  "sample_derived_actions": [
+    {
+      "case_id": "H-M01",
+      "action": "retain",
+      "reason": "49.00按财务累计公式已验证；只补P41/R-PROMO-RECALC来源，不改金额。"
+    },
+    {
+      "case_id": "H-V10-06",
+      "action": "retain",
+      "reason": "先退B退款49.00，再退C增量59.00；正式化不改变已验证预期。"
+    },
+    {
+      "case_id": "H-F01",
+      "action": "obsolete",
+      "reason": "这是“任何订单质检前不可退款”的无条件旧断言。V1.1将资格分支拆开；该泛化断言不再成立。"
+    },
+    {
+      "case_id": "H-F02",
+      "action": "modify",
+      "reason": "普通质检通过后仍原渠道退款；补充eligible=false输入，将旧流程明确约束到未获资格分支。"
+    },
+    {
+      "case_id": "H-F04",
+      "action": "retain_after_recheck",
+      "reason": "普通会员8日超出7日仍拒绝；确认时间来源后保持预期。"
+    },
+    {
+      "case_id": "H-F05",
+      "action": "modify",
+      "reason": "V1.0金卡第10天仍按7日拒绝；V1.1按下单等级享15日，应改为接受。"
+    },
+    {
+      "case_id": "H-F06",
+      "action": "modify",
+      "reason": "余额仍原路退款；补充eligible=false并检查质检先于退款。"
+    },
+    {
+      "case_id": "H-F07",
+      "action": "add",
+      "reason": "新增金卡第15天含截止时刻边界。"
+    },
+    {
+      "case_id": "H-F08",
+      "action": "add",
+      "reason": "新增金卡超过15天1秒边界。"
+    },
+    {
+      "case_id": "H-F09",
+      "action": "add",
+      "reason": "验证金卡下单后降级仍按下单时金卡待遇。"
+    },
+    {
+      "case_id": "H-F10",
+      "action": "add",
+      "reason": "验证普通下单后升级不追溯获得15日期限。"
+    },
+    {
+      "case_id": "H-F11",
+      "action": "add",
+      "reason": "eligible=true下先退款后质检失败，转客服追偿。"
+    },
+    {
+      "case_id": "H-F12",
+      "action": "covered_by_modified_case",
+      "reason": "更新后的H-F02已覆盖相同资格、渠道和状态顺序断言，无需重复新增。"
+    }
+  ],
+  "budget_guidance": {
+    "max": 25,
+    "priority": "先选C10修改/新增及C20时间与等级变化，再纳入已验证金额回归和原渠道保护。筛选须从rule/scenario依赖图推导；32条历史资产不是32条都必须执行。",
+    "counts": "实际受影响数、迁移动作数及选中数由扫描和回归选择结果计算；本答案不写死统计数量。"
+  }
+}

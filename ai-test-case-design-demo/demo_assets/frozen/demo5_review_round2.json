@@ -1,0 +1,15 @@
+{
+  "artifact_id":"F-D5-REVIEW-02",
+  "frozen":true,
+  "label":"预置演示结果：加入独立财务规范后的第二次审查（非实时）",
+  "inputs":["YS-RET-PRD@1.0","cases/v1_0_executable.json","executor_report:V1.0-20-cases","YS-FIN-AFTERSALES-01"],
+  "review":{
+    "summary":"执行报告仍显示20/20通过，但经典订单B退款预期与财务规范冲突。",
+    "findings":[
+      {"severity":"critical","rule_ids":["F10","F20"],"case_ids":["TC01"],"text":"测试期望85.13来自比例分摊；财务规则按退货后剩余商品重算优惠。剩余商品原价258，小于300门槛，优惠重算为0，B退款为49.00。差额36.13。"},
+      {"severity":"high","rule_ids":["F30"],"text":"需要检查累计退款和重复退SKU，确保累计不超过实付307.00。"}
+    ],
+    "decision":"20/20 PASS证明实现符合测试预期，不能证明测试预期符合财务业务规则。",
+    "calculation":{"gross_total":"357.00","original_discount":"50.00","paid":"307.00","remaining_after_B":"258.00","recalculated_discount":"0.00","correct_refund":"49.00","test_expected":"85.13","difference":"36.13"}
+  }
+}

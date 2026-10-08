@@ -1,0 +1,77 @@
+{
+  "document_id": "YS-FIN-AFTERSALES-01",
+  "title": "售后资金处理规范（Demo 4 才揭示）",
+  "visibility": "demo4_reveal_only",
+  "status": "independent_business_source",
+  "version": "finance-1.0",
+  "rules": [
+    {
+      "rule_id": "F10",
+      "text": "部分退货后，以剩余商品原价合计重新判断满减门槛；未达门槛时，剩余订单优惠为0。",
+      "source_ids": [
+        "P40"
+      ],
+      "evidence_status": "independent_source"
+    },
+    {
+      "rule_id": "F20",
+      "text": "按同一订单已经退款的SKU集合计算累计退款：本次退款=原订单实付-(退货后剩余商品原价-按剩余商品重算的优惠)-此前已退款。",
+      "source_ids": [
+        "F10"
+      ],
+      "evidence_status": "independent_source"
+    },
+    {
+      "rule_id": "F30",
+      "text": "同一订单多次部分退款使用已退SKU集合累计计算；金额下限为0，上限为原订单实付减此前已退款，不得负退款或超付。重复退同一SKU不得产生第二次退款。",
+      "source_ids": [
+        "F20"
+      ],
+      "evidence_status": "independent_source"
+    },
+    {
+      "rule_id": "F40",
+      "text": "按F20计算出的本次退款小于0时，不执行负数退款，暂停自动退款并转财务人工复核；厘清差额前不记为独立验证通过。",
+      "source_ids": [
+        "F20"
+      ],
+      "evidence_status": "independent_source"
+    }
+  ],
+  "reveal_gate": "Demo 4；Demo 2 的输入不包含本文件，Demo 5 第二轮审查才加入此独立依据。",
+  "worked_example": {
+    "items": [
+      {
+        "sku": "A",
+        "gross": "199.00"
+      },
+      {
+        "sku": "B",
+        "gross": "99.00"
+      },
+      {
+        "sku": "C",
+        "gross": "59.00"
+      }
+    ],
+    "gross_total": "357.00",
+    "original_discount": "50.00",
+    "paid": "307.00",
+    "return_sku": "B",
+    "remaining_gross": "258.00",
+    "recalculated_discount": "0.00",
+    "refund": "49.00",
+    "assumed_proportional_refund": "85.13",
+    "difference": "36.13",
+    "calculation": "B退款=99.00；退货后剩余原价=199.00+59.00=258.00，小于300.00门槛，优惠重算为0.00；扣回原订单优惠50.00，退款=99.00-50.00=49.00；85.13-49.00=36.13。"
+  },
+  "cumulative_example": {
+    "refund_order": [
+      "B:49.00",
+      "C:59.00",
+      "A:199.00"
+    ],
+    "cumulative_total": "307.00",
+    "explanation": "本次金额按已退SKU集合累积：B后剩余258，退款49；B+C后剩余199，累计应退108，本次59；全部退完累计应退307，本次199。重复SKU无新增退款。"
+  }
+}

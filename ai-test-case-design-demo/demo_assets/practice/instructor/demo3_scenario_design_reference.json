@@ -1,0 +1,157 @@
+{
+  "exercise_id": "PRACTICE-D2-01-REFERENCE",
+  "separate_from_student_input": true,
+  "suggested_selection_under_budget_15": [
+    "SC01",
+    "SC19",
+    "SC26",
+    "SC13",
+    "SC17",
+    "SC18",
+    "SC33",
+    "SC34",
+    "SC35",
+    "SC38",
+    "SC07",
+    "SC08",
+    "SC09",
+    "SC15",
+    "SC36"
+  ],
+  "selection_notes": {
+    "SC03": "时间边界来源未明确，应作为待确认行为，而非声称有既定拒绝口径。",
+    "SC04_SC05": "输入数量等价类来自分析推断，需求没有写出校验错误文案或拒绝契约。",
+    "SC27_SC29": "构造订单分别覆盖优惠门槛保留、恰好达到门槛。金额规则仍未从V1.0获得确认。",
+    "SC36": "高影响多维组合，人工补回；支付渠道超时及会员/优惠交互均待确认。",
+    "SC38": "运费是否进入退款金额没有依据，应标记待确认。"
+  },
+  "coverage_findings": [
+    {
+      "rule_id": "R-RETURN-WINDOW",
+      "scenario_ids": [
+        "SC01",
+        "SC07",
+        "SC08",
+        "SC09"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-REVIEW",
+      "scenario_ids": [
+        "SC13"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-LOGISTICS",
+      "scenario_ids": [
+        "SC17",
+        "SC18",
+        "SC15"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-QC",
+      "scenario_ids": [
+        "SC19"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-REFUND-CHANNEL",
+      "scenario_ids": [
+        "SC26"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-PARTIAL-AMOUNT",
+      "scenario_ids": [
+        "SC26",
+        "SC36"
+      ],
+      "evidence_status": "missing",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-MEMBER",
+      "scenario_ids": [
+        "SC36"
+      ],
+      "evidence_status": "missing",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-PAYMENT",
+      "scenario_ids": [
+        "SC26",
+        "SC36"
+      ],
+      "evidence_status": "fact",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-FREIGHT",
+      "scenario_ids": [
+        "SC38"
+      ],
+      "evidence_status": "missing",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-RETRY",
+      "scenario_ids": [
+        "SC33",
+        "SC34",
+        "SC35",
+        "SC36"
+      ],
+      "evidence_status": "missing",
+      "status": "candidate_covered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-RETURN-INPUT",
+      "scenario_ids": [],
+      "evidence_status": "inference",
+      "status": "uncovered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    },
+    {
+      "rule_id": "R-STATUS",
+      "scenario_ids": [],
+      "evidence_status": "missing",
+      "status": "uncovered",
+      "note": "候选引用覆盖不等于业务规则或预期已验证"
+    }
+  ],
+  "principle": "候选场景映射不等于规则已覆盖验证；R-PARTIAL-AMOUNT的预期金额不能从V1.0确认。",
+  "selection_policy": "课堂保护 SC01/SC19；剩余名额按 risk_score=impact×probability×hard_to_detect 降序裁剪，cost 单列；SC36 仅人工补漏时纳入。",
+  "equivalence_merge": [
+    {
+      "equivalence_class": "invalid_quantity",
+      "representative_id": "SC04",
+      "merged_ids": [
+        "SC05"
+      ],
+      "reason": "按相同的无效退货数量校验风险等价类抽样；不代表两种输入完全相同。"
+    }
+  ],
+  "reference_note": "固定课堂策略的一种示例；允许学员提出满足预算、依据与风险约束的其他选择。"
+}
