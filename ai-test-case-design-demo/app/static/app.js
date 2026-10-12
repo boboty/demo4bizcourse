@@ -20,15 +20,14 @@
   function stageHtml(content){stage.innerHTML=`<div class="step-content">${content}</div>`}
   async function render(){const seq=++renderSeq, target=demo;clearError();try{if(target===2)await d2(seq);if(target===3)await d3(seq);if(target===4)await d4(seq);if(target===5)await d5(seq);if(target===6)await d6(seq)}catch(e){if(seq===renderSeq)showError(e)}}
   function buildDemo2Prompt(prd) {
-    const paragraphs=(prd.paragraphs||[]).map(p=>p.source_id+'：'+p.text).join('\n');
-    const openQuestions=(prd.open_questions||[]).map(q=>q.question_id+'：'+q.text).join('\n');
+    const paragraphs=(prd.paragraphs||[]).map((p,i)=>(i+1)+'．'+p.text).join('\n');
+    const openQuestions=(prd.open_questions||[]).map((q,i)=>(i+1)+'．'+q.text).join('\n');
     return [
       '请根据下面的商城售后需求设计10条有代表性的业务测试用例，覆盖正常流程、异常流程和边界条件。',
       '每条包含：编号、测试场景、前置条件、操作步骤、预期结果。请用表格输出，并在最后列出需求尚待确认的规则。',
-      '以下是本轮输入的全部需求资料，不存在额外的项目文件或校验器说明。',
-      '文档：'+prd.document_id+'@'+prd.version+'《'+prd.title+'》',
-      '需求正文：\n'+paragraphs,
-      '待确认问题：\n'+openQuestions
+      '文档：《'+prd.title+'》（V'+prd.version+'）',
+      '业务需求：\n'+paragraphs,
+      '待确认事项：\n'+openQuestions
     ].join('\n\n');
   }
   async function d2(seq){const d=await data('d2','/api/lesson/2');if(seq!==renderSeq||demo!==2)return;const title=d.prd.title; shell(`Demo 2｜${title}`,3);const cases=d.direct_generation.result.sample_cases||[];
