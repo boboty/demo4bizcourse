@@ -416,7 +416,7 @@ def analyze_d5(text1: str, text2: str, label1: str = "", label2: str = "") -> Di
         if label1.strip() and label1.strip() == label2.strip():
             notes.append("两轮使用同一模型：差别只来自新增输入。")
         elif label1.strip() and label2.strip():
-            notes.append("两轮使用不同模型/Agent：若第一轮仍未发现关键金额问题，说明更换模型不等于获得新的业务证据。")
+            notes.append("两轮使用不同模型/Agent：模型与输入证据同时变化，不能仅将结论差异归因于新增财务规范；建议用同一模型进行受控复核。")
     return {"round1": dict(m1, **keywords(text1), label=label1), "round2": dict(m2, **keywords(text2), label=label2),
             "input_difference": {"only_in_round2": diff.strip().splitlines()[0], "round1_contains_finance": "F10" in r1 or "YS-FIN-AFTERSALES-01" in r1,
                                  "round2_contains_finance": "F10" in r2 and "YS-FIN-AFTERSALES-01" in r2,
