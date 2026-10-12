@@ -183,7 +183,7 @@ def test_d5_compare_reports_difference_and_handles_partial_input():
     assert both["input_difference"]["identical_after_removing_block"] is True
     assert both["input_difference"]["round1_contains_finance"] is False and both["input_difference"]["round2_contains_finance"] is True
     assert both["round1"]["expectations"] == "UNSUPPORTED" and both["round2"]["mentions_49"] and both["round2"]["mentions_36_13"]
-    assert any("不等于获得新的业务证据" in n for n in both["notes"])
+    assert any("模型与输入证据同时变化" in n for n in both["notes"])
     partial = ailab.analyze_d5("EXPECTATIONS=UNSUPPORTED", "")
     assert partial["notes"] and partial["round2"]["expectations"] is None
 
