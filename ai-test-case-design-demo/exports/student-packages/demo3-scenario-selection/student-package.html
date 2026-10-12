@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo 3 · 在预算内选场景 · 学员材料包</title><style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1c2430;--muted:#5d6878;--line:#d9dee6;--accent:#1f5fbf;--accent-ink:#fff;--soft:#eaf1fc;
+--fact:#d6f1e2;--fact-ink:#14583a;--inference:#fbebc2;--inference-ink:#6b4a05;--missing:#f9d7da;--missing-ink:#7a1f2a;--indep:#dde6fb;--indep-ink:#24437f;--badge:#e8ebf0;--badge-ink:#3a4452;--code:#eef1f5}
+@media(prefers-color-scheme:dark){:root{--bg:#10151d;--panel:#171e29;--ink:#e8edf4;--muted:#a3afc0;--line:#2e3a4b;--accent:#6aa5f5;--accent-ink:#0c1522;--soft:#1b2b44;
+--fact:#17402f;--fact-ink:#a5ecc7;--inference:#4a3a12;--inference-ink:#f6dc8c;--missing:#4e2228;--missing-ink:#ffbfc5;--indep:#1f3158;--indep-ink:#b8cdfa;--badge:#262f3d;--badge-ink:#c8d2e0;--code:#1d2532}}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 56px}
+header.hero{padding:34px 0 18px}.eyebrow{margin:0 0 4px;color:var(--muted);font-size:14px;letter-spacing:.04em}
+h1{margin:0;font-size:30px;line-height:1.3}.sub{margin:6px 0 0;color:var(--muted);font-size:17px}
+nav.toc{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;display:flex;gap:6px 8px;flex-wrap:wrap}
+nav.toc a{color:var(--ink);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 12px;font-size:14px}
+nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:20px 0;scroll-margin-top:64px}
+section>.head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+h2{margin:0;font-size:21px}h3{margin:20px 0 8px;font-size:16px;color:var(--muted)}
+p{margin:8px 0}ul{margin:8px 0;padding-left:22px}ol{padding-left:22px}
+.task{background:var(--soft);border-left:5px solid var(--accent);border-radius:6px;padding:12px 16px;font-size:17px}
+button.copy{font:inherit;font-size:14px;color:var(--accent-ink);background:var(--accent);border:0;border-radius:7px;padding:6px 14px;cursor:pointer;white-space:nowrap}
+button.copy:hover{filter:brightness(1.08)}button.copy:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+button.copy.ok{background:#1f8a58}button.copy.err{background:#b3372f}
+dl.kv{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;margin:8px 0}dl.kv dt{color:var(--muted)}dl.kv dd{margin:0}
+.table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.5}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--badge);white-space:nowrap}tr:last-child td{border-bottom:0}td:first-child{white-space:nowrap;font-weight:600}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}code{background:var(--code);border-radius:4px;padding:1px 5px;font-size:12.5px;word-break:break-all}
+pre{background:var(--code);border-radius:8px;padding:14px 16px;overflow:auto;font-size:13.5px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;margin:10px 0 0}
+.tag{display:inline-block;border-radius:999px;padding:0 9px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.t-fact{background:var(--fact);color:var(--fact-ink)}.t-inference{background:var(--inference);color:var(--inference-ink)}
+.t-missing,.t-conflict{background:var(--missing);color:var(--missing-ink)}.t-indep{background:var(--indep);color:var(--indep-ink)}.t-badge{background:var(--badge);color:var(--badge-ink)}
+details.prompt{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:12px 0}
+details.prompt>summary{cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;list-style-position:inside}
+details.prompt .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.note{color:var(--muted);font-size:14px}.recommended{border-color:var(--accent)}
+footer{color:var(--muted);font-size:13.5px;border-top:1px solid var(--line);padding-top:14px;margin-top:28px}
+@media(max-width:640px){section{padding:16px}h1{font-size:24px}dl.kv{grid-template-columns:1fr}dl.kv dt{margin-top:6px}}
+@media print{nav.toc,button.copy{display:none}body{background:#fff}section{break-inside:avoid-page;border-color:#bbb}.table-wrap{max-height:none;overflow:visible}pre{max-height:none}}
+</style></head><body><div class="wrap"><header class="hero"><p class="eyebrow">AI赋能业务测试用例设计与优化 · 悦选商城 · PRACTICE-D2-01</p><h1>Demo 3 · 在预算内选场景</h1><p class="sub">悦选商城售后退款 V1.0：41 条候选场景，最多选 15 条</p></header><nav class="toc" aria-label="目录"><a href="#start">怎么用</a><a href="#task">任务</a><a href="#prompts">提示词</a><a href="#m1">材料 1</a><a href="#m2">材料 2</a><a href="#m3">材料 3</a><a href="#m4">材料 4</a></nav><section id="start"><div class="head"><h2>怎么用这份材料</h2></div><ol><li>读完下方“任务”“约束”“交付物”，明确要产出什么。</li><li>按需阅读“材料”：需求、结构化分析、业务规则、候选场景。</li><li>在“提示词”中选预算（本练习约束为 15），点击复制，粘贴到全新的 AI 对话。</li><li>对 AI 的回答逐条核对：规则覆盖是否真实、证据状态是否被混淆；按“交付物”整理成自己的方案。</li></ol></section><section id="task"><div class="head"><h2>任务</h2><button type="button" class="copy" data-copy-from="txt-task">复制任务说明</button></div><p class="task">仅根据V1.0需求和候选场景，为本轮最多15个必测场景制定方案。先标记需求事实、推断、缺失和冲突；合并重复项并按影响、发生概率、难发现性和执行成本排序；检查每项选择所覆盖的规则，并列出未覆盖规则和待确认项。对缺少业务依据的退款金额不要编造正确答案，可把‘停止并确认口径’作为验证目标。最后指出一个多维高风险组合是否应人工补回。</p><h3>约束</h3><div class="table-wrap"><table><thead><tr><th>约束</th><th>要求</th></tr></thead><tbody><tr><td>入选场景上限</td><td>15</td></tr><tr><td>只能使用的资料</td><td>PRD V1.0、structured analysis、scenario candidates</td></tr><tr><td>可使用独立财务规范</td><td>否</td></tr><tr><td>不得声称完全覆盖</td><td>是</td></tr></tbody></table></div><h3>交付物</h3><div class="table-wrap"><table><thead><tr><th>交付物</th><th>要求</th></tr></thead><tbody><tr><td>入选场景</td><td>最多15项，含选择理由</td></tr><tr><td>规则覆盖</td><td>每条规则列场景ID或明确未覆盖/待确认</td></tr><tr><td>人工补回</td><td>高风险组合及理由</td></tr><tr><td>待确认问题</td><td>仍需业务确认的问题</td></tr></tbody></table></div><textarea id="txt-task" hidden readonly aria-hidden="true" tabindex="-1">任务
+仅根据V1.0需求和候选场景，为本轮最多15个必测场景制定方案。先标记需求事实、推断、缺失和冲突；合并重复项并按影响、发生概率、难发现性和执行成本排序；检查每项选择所覆盖的规则，并列出未覆盖规则和待确认项。对缺少业务依据的退款金额不要编造正确答案，可把‘停止并确认口径’作为验证目标。最后指出一个多维高风险组合是否应人工补回。
+
+约束
+约束｜要求
+入选场景上限｜15
+只能使用的资料｜PRD V1.0、structured analysis、scenario candidates
+可使用独立财务规范｜否
+不得声称完全覆盖｜是
+
+交付物
+交付物｜要求
+入选场景｜最多15项，含选择理由
+规则覆盖｜每条规则列场景ID或明确未覆盖/待确认
+人工补回｜高风险组合及理由
+待确认问题｜仍需业务确认的问题</textarea></section><section id="prompts"><div class="head"><h2>提示词</h2></div><p class="note">提示词已内嵌全部所需数据，不要求 AI 读取任何文件。浏览器禁止自动复制时会自动选中文本，按 ⌘C / Ctrl+C 即可；也可使用同目录 prompts.txt。</p><details class="prompt" open><summary><span>提示词 A · 预算 10 条（对比用）</span><button type="button" class="copy" data-copy-from="prompt-a10">复制提示词</button></summary><p class="note">自带需求、规则、41 条候选场景，直接粘贴到全新的 AI 对话即可。本练习的入选上限是 15，此档仅用于观察预算变化。</p><pre id="prompt-a10">你是一名资深业务测试设计顾问。请在有限的测试预算内，为“悦选商城售后退货退款”挑选要执行的测试场景。
+
+【任务】从下面的候选场景中选出不超过 10 条（预算上限 10 条，可以少于但不得超过）。
+选择需要综合考虑业务风险、执行成本、业务规则覆盖，以及规则证据是否已确认。只能使用清单内的场景ID，不得自造场景。
+
+【业务需求 V1.0】
+P10：消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。
+P20：客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。
+P30：仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。
+P40：退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。
+P50：页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。
+P60：订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。
+
+【业务规则及证据状态】（规则ID｜内容｜证据状态；“缺失/推断”表示需求没有写清，尚未确认）
+R-RETURN-WINDOW｜签收后期限内可申请退货，期限边界待确认。｜事实
+R-REVIEW｜客服审核通过后方可寄回。｜事实
+R-LOGISTICS｜消费者填写退货物流单号。｜事实
+R-QC｜仓库签收且质检通过后进入退款。｜事实
+R-REFUND-CHANNEL｜退款退回原支付渠道。｜事实
+R-PARTIAL-AMOUNT｜部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。｜缺失
+R-MEMBER｜会员等级存在，但对售后期限的影响未定义。｜缺失
+R-PAYMENT｜银行卡或余额支付，可同时使用满减优惠。｜事实
+R-FREIGHT｜运费是否退还未定义。｜缺失
+R-RETRY｜渠道退款失败、重试和重复回调规则未定义。｜缺失
+R-RETURN-INPUT｜退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。｜推断
+R-STATUS｜售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。｜缺失
+
+【候选场景 41 条】（场景ID并不连续，以清单为准）
+风险分 = 影响 × 发生概率 × 难发现度，分值越大风险越高；执行成本越大越贵；“待确认”表示场景预期依赖尚未确认的规则。
+等价类说明：SC04 与 SC05 校验的是同一类无效退货数量风险，通常只需选其中一条。
+场景ID｜场景｜关联规则｜影响｜概率｜难发现｜风险分｜执行成本｜场景状态
+SC01｜签收后第3天本人正常提交｜R-RETURN-WINDOW｜2｜3｜2｜12｜1｜候选
+SC02｜未签收即提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC03｜超过7天1秒提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC04｜退货数量为0｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC05｜退货数量超过购买数量｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC06｜非订单本人提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC07｜普通会员恰在7×24小时截止点提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC08｜普通会员截止前1秒提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC09｜退货原因为空｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC10｜客服审核通过｜R-REVIEW｜2｜3｜2｜12｜1｜候选
+SC11｜客服审核拒绝后仍尝试寄回｜R-REVIEW｜4｜2｜4｜32｜1｜候选
+SC12｜同一申请重复审核｜R-REVIEW｜4｜2｜5｜40｜1｜待确认
+SC13｜审核长期未处理｜R-REVIEW｜5｜2｜5｜50｜2｜待确认
+SC14｜审核通过并填写有效物流单号｜R-LOGISTICS｜2｜3｜2｜12｜1｜候选
+SC15｜审核通过但未填写物流单号｜R-LOGISTICS｜4｜3｜4｜48｜1｜待确认
+SC16｜审核拒绝后出现物流轨迹｜R-REVIEW、R-LOGISTICS｜4｜2｜5｜40｜1｜候选
+SC17｜物流长期未到仓｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC18｜物流轨迹显示丢失｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC19｜仓库签收后全部质检通过｜R-QC｜2｜3｜2｜12｜1｜候选
+SC20｜质检全部失败｜R-QC｜4｜2｜4｜32｜1｜候选
+SC21｜多件退货中部分质检通过｜R-QC｜4｜3｜4｜48｜1｜待确认
+SC22｜同一退货重复质检回传｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC23｜签收事件未到先收到质检结果｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC24｜银行卡无优惠部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜待确认
+SC25｜余额整单退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜候选
+SC26｜银行卡与余额混合支付部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜5｜3｜5｜75｜2｜待确认
+SC27｜退货后剩余原价仍达优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC28｜退货后剩余原价低于优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC29｜剩余原价恰为300元门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC30｜剩余原价299.99元｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC31｜多个SKU连续部分退款累计金额｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC32｜重复退同一SKU｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC33｜支付渠道明确返回失败｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC34｜渠道响应超时后用户重试｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC35｜退款成功后渠道重复回调｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC36｜金卡混合支付且优惠失效的部分退款｜R-MEMBER、R-PAYMENT、R-PARTIAL-AMOUNT、R-RETRY｜5｜3｜5｜75｜2｜待确认
+SC37｜订单无运费按商品退款｜R-PARTIAL-AMOUNT｜2｜3｜2｜12｜1｜候选
+SC38｜订单有运费但退款范围未说明｜R-FREIGHT｜5｜2｜5｜50｜2｜待确认
+SC43｜退款成功后关闭售后单｜R-STATUS｜2｜3｜2｜12｜1｜候选
+SC44｜退款处理中提前关闭售后单｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+SC45｜已关闭售后单再次发起申请｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+
+【输出格式】
+1. 先用表格列出入选场景：| 序号 | 场景ID | 入选原因 | 主要覆盖的规则 | 它防范的关键风险 |
+2. 再写“可能遗漏”：说明因预算被放弃的最重要的风险（最多3条），以及仍未覆盖或依据未确认的业务规则。
+3. 全文最后，单独一行写出最终清单，格式严格如下（只写场景ID，英文逗号分隔，数量不超过 10）：
+FINAL_SELECTION: SC01, SC02, ...</pre></details><details class="prompt recommended"><summary><span>提示词 A · 预算 15 条（本练习约束）</span><button type="button" class="copy" data-copy-from="prompt-a15">复制提示词</button></summary><p class="note">自带需求、规则、41 条候选场景，直接粘贴到全新的 AI 对话即可。</p><pre id="prompt-a15">你是一名资深业务测试设计顾问。请在有限的测试预算内，为“悦选商城售后退货退款”挑选要执行的测试场景。
+
+【任务】从下面的候选场景中选出不超过 15 条（预算上限 15 条，可以少于但不得超过）。
+选择需要综合考虑业务风险、执行成本、业务规则覆盖，以及规则证据是否已确认。只能使用清单内的场景ID，不得自造场景。
+
+【业务需求 V1.0】
+P10：消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。
+P20：客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。
+P30：仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。
+P40：退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。
+P50：页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。
+P60：订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。
+
+【业务规则及证据状态】（规则ID｜内容｜证据状态；“缺失/推断”表示需求没有写清，尚未确认）
+R-RETURN-WINDOW｜签收后期限内可申请退货，期限边界待确认。｜事实
+R-REVIEW｜客服审核通过后方可寄回。｜事实
+R-LOGISTICS｜消费者填写退货物流单号。｜事实
+R-QC｜仓库签收且质检通过后进入退款。｜事实
+R-REFUND-CHANNEL｜退款退回原支付渠道。｜事实
+R-PARTIAL-AMOUNT｜部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。｜缺失
+R-MEMBER｜会员等级存在，但对售后期限的影响未定义。｜缺失
+R-PAYMENT｜银行卡或余额支付，可同时使用满减优惠。｜事实
+R-FREIGHT｜运费是否退还未定义。｜缺失
+R-RETRY｜渠道退款失败、重试和重复回调规则未定义。｜缺失
+R-RETURN-INPUT｜退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。｜推断
+R-STATUS｜售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。｜缺失
+
+【候选场景 41 条】（场景ID并不连续，以清单为准）
+风险分 = 影响 × 发生概率 × 难发现度，分值越大风险越高；执行成本越大越贵；“待确认”表示场景预期依赖尚未确认的规则。
+等价类说明：SC04 与 SC05 校验的是同一类无效退货数量风险，通常只需选其中一条。
+场景ID｜场景｜关联规则｜影响｜概率｜难发现｜风险分｜执行成本｜场景状态
+SC01｜签收后第3天本人正常提交｜R-RETURN-WINDOW｜2｜3｜2｜12｜1｜候选
+SC02｜未签收即提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC03｜超过7天1秒提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC04｜退货数量为0｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC05｜退货数量超过购买数量｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC06｜非订单本人提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC07｜普通会员恰在7×24小时截止点提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC08｜普通会员截止前1秒提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC09｜退货原因为空｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC10｜客服审核通过｜R-REVIEW｜2｜3｜2｜12｜1｜候选
+SC11｜客服审核拒绝后仍尝试寄回｜R-REVIEW｜4｜2｜4｜32｜1｜候选
+SC12｜同一申请重复审核｜R-REVIEW｜4｜2｜5｜40｜1｜待确认
+SC13｜审核长期未处理｜R-REVIEW｜5｜2｜5｜50｜2｜待确认
+SC14｜审核通过并填写有效物流单号｜R-LOGISTICS｜2｜3｜2｜12｜1｜候选
+SC15｜审核通过但未填写物流单号｜R-LOGISTICS｜4｜3｜4｜48｜1｜待确认
+SC16｜审核拒绝后出现物流轨迹｜R-REVIEW、R-LOGISTICS｜4｜2｜5｜40｜1｜候选
+SC17｜物流长期未到仓｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC18｜物流轨迹显示丢失｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC19｜仓库签收后全部质检通过｜R-QC｜2｜3｜2｜12｜1｜候选
+SC20｜质检全部失败｜R-QC｜4｜2｜4｜32｜1｜候选
+SC21｜多件退货中部分质检通过｜R-QC｜4｜3｜4｜48｜1｜待确认
+SC22｜同一退货重复质检回传｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC23｜签收事件未到先收到质检结果｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC24｜银行卡无优惠部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜待确认
+SC25｜余额整单退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜候选
+SC26｜银行卡与余额混合支付部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜5｜3｜5｜75｜2｜待确认
+SC27｜退货后剩余原价仍达优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC28｜退货后剩余原价低于优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC29｜剩余原价恰为300元门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC30｜剩余原价299.99元｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC31｜多个SKU连续部分退款累计金额｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC32｜重复退同一SKU｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC33｜支付渠道明确返回失败｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC34｜渠道响应超时后用户重试｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC35｜退款成功后渠道重复回调｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC36｜金卡混合支付且优惠失效的部分退款｜R-MEMBER、R-PAYMENT、R-PARTIAL-AMOUNT、R-RETRY｜5｜3｜5｜75｜2｜待确认
+SC37｜订单无运费按商品退款｜R-PARTIAL-AMOUNT｜2｜3｜2｜12｜1｜候选
+SC38｜订单有运费但退款范围未说明｜R-FREIGHT｜5｜2｜5｜50｜2｜待确认
+SC43｜退款成功后关闭售后单｜R-STATUS｜2｜3｜2｜12｜1｜候选
+SC44｜退款处理中提前关闭售后单｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+SC45｜已关闭售后单再次发起申请｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+
+【输出格式】
+1. 先用表格列出入选场景：| 序号 | 场景ID | 入选原因 | 主要覆盖的规则 | 它防范的关键风险 |
+2. 再写“可能遗漏”：说明因预算被放弃的最重要的风险（最多3条），以及仍未覆盖或依据未确认的业务规则。
+3. 全文最后，单独一行写出最终清单，格式严格如下（只写场景ID，英文逗号分隔，数量不超过 15）：
+FINAL_SELECTION: SC01, SC02, ...</pre></details><details class="prompt"><summary><span>提示词 A · 预算 20 条（对比用）</span><button type="button" class="copy" data-copy-from="prompt-a20">复制提示词</button></summary><p class="note">自带需求、规则、41 条候选场景，直接粘贴到全新的 AI 对话即可。本练习的入选上限是 15，此档仅用于观察预算变化。</p><pre id="prompt-a20">你是一名资深业务测试设计顾问。请在有限的测试预算内，为“悦选商城售后退货退款”挑选要执行的测试场景。
+
+【任务】从下面的候选场景中选出不超过 20 条（预算上限 20 条，可以少于但不得超过）。
+选择需要综合考虑业务风险、执行成本、业务规则覆盖，以及规则证据是否已确认。只能使用清单内的场景ID，不得自造场景。
+
+【业务需求 V1.0】
+P10：消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。
+P20：客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。
+P30：仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。
+P40：退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。
+P50：页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。
+P60：订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。
+
+【业务规则及证据状态】（规则ID｜内容｜证据状态；“缺失/推断”表示需求没有写清，尚未确认）
+R-RETURN-WINDOW｜签收后期限内可申请退货，期限边界待确认。｜事实
+R-REVIEW｜客服审核通过后方可寄回。｜事实
+R-LOGISTICS｜消费者填写退货物流单号。｜事实
+R-QC｜仓库签收且质检通过后进入退款。｜事实
+R-REFUND-CHANNEL｜退款退回原支付渠道。｜事实
+R-PARTIAL-AMOUNT｜部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。｜缺失
+R-MEMBER｜会员等级存在，但对售后期限的影响未定义。｜缺失
+R-PAYMENT｜银行卡或余额支付，可同时使用满减优惠。｜事实
+R-FREIGHT｜运费是否退还未定义。｜缺失
+R-RETRY｜渠道退款失败、重试和重复回调规则未定义。｜缺失
+R-RETURN-INPUT｜退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。｜推断
+R-STATUS｜售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。｜缺失
+
+【候选场景 41 条】（场景ID并不连续，以清单为准）
+风险分 = 影响 × 发生概率 × 难发现度，分值越大风险越高；执行成本越大越贵；“待确认”表示场景预期依赖尚未确认的规则。
+等价类说明：SC04 与 SC05 校验的是同一类无效退货数量风险，通常只需选其中一条。
+场景ID｜场景｜关联规则｜影响｜概率｜难发现｜风险分｜执行成本｜场景状态
+SC01｜签收后第3天本人正常提交｜R-RETURN-WINDOW｜2｜3｜2｜12｜1｜候选
+SC02｜未签收即提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC03｜超过7天1秒提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC04｜退货数量为0｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC05｜退货数量超过购买数量｜R-RETURN-INPUT｜4｜2｜4｜32｜1｜待确认
+SC06｜非订单本人提交｜R-RETURN-WINDOW｜4｜2｜4｜32｜1｜待确认
+SC07｜普通会员恰在7×24小时截止点提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC08｜普通会员截止前1秒提交｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC09｜退货原因为空｜R-RETURN-WINDOW｜4｜3｜4｜48｜1｜待确认
+SC10｜客服审核通过｜R-REVIEW｜2｜3｜2｜12｜1｜候选
+SC11｜客服审核拒绝后仍尝试寄回｜R-REVIEW｜4｜2｜4｜32｜1｜候选
+SC12｜同一申请重复审核｜R-REVIEW｜4｜2｜5｜40｜1｜待确认
+SC13｜审核长期未处理｜R-REVIEW｜5｜2｜5｜50｜2｜待确认
+SC14｜审核通过并填写有效物流单号｜R-LOGISTICS｜2｜3｜2｜12｜1｜候选
+SC15｜审核通过但未填写物流单号｜R-LOGISTICS｜4｜3｜4｜48｜1｜待确认
+SC16｜审核拒绝后出现物流轨迹｜R-REVIEW、R-LOGISTICS｜4｜2｜5｜40｜1｜候选
+SC17｜物流长期未到仓｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC18｜物流轨迹显示丢失｜R-LOGISTICS｜5｜2｜5｜50｜2｜待确认
+SC19｜仓库签收后全部质检通过｜R-QC｜2｜3｜2｜12｜1｜候选
+SC20｜质检全部失败｜R-QC｜4｜2｜4｜32｜1｜候选
+SC21｜多件退货中部分质检通过｜R-QC｜4｜3｜4｜48｜1｜待确认
+SC22｜同一退货重复质检回传｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC23｜签收事件未到先收到质检结果｜R-QC｜4｜2｜5｜40｜1｜待确认
+SC24｜银行卡无优惠部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜待确认
+SC25｜余额整单退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜2｜3｜2｜12｜1｜候选
+SC26｜银行卡与余额混合支付部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜5｜3｜5｜75｜2｜待确认
+SC27｜退货后剩余原价仍达优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC28｜退货后剩余原价低于优惠门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC29｜剩余原价恰为300元门槛｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC30｜剩余原价299.99元｜R-PARTIAL-AMOUNT｜4｜3｜4｜48｜1｜待确认
+SC31｜多个SKU连续部分退款累计金额｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC32｜重复退同一SKU｜R-PARTIAL-AMOUNT｜4｜2｜5｜40｜1｜待确认
+SC33｜支付渠道明确返回失败｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC34｜渠道响应超时后用户重试｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC35｜退款成功后渠道重复回调｜R-RETRY｜5｜2｜5｜50｜2｜待确认
+SC36｜金卡混合支付且优惠失效的部分退款｜R-MEMBER、R-PAYMENT、R-PARTIAL-AMOUNT、R-RETRY｜5｜3｜5｜75｜2｜待确认
+SC37｜订单无运费按商品退款｜R-PARTIAL-AMOUNT｜2｜3｜2｜12｜1｜候选
+SC38｜订单有运费但退款范围未说明｜R-FREIGHT｜5｜2｜5｜50｜2｜待确认
+SC43｜退款成功后关闭售后单｜R-STATUS｜2｜3｜2｜12｜1｜候选
+SC44｜退款处理中提前关闭售后单｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+SC45｜已关闭售后单再次发起申请｜R-STATUS｜4｜2｜5｜40｜1｜待确认
+
+【输出格式】
+1. 先用表格列出入选场景：| 序号 | 场景ID | 入选原因 | 主要覆盖的规则 | 它防范的关键风险 |
+2. 再写“可能遗漏”：说明因预算被放弃的最重要的风险（最多3条），以及仍未覆盖或依据未确认的业务规则。
+3. 全文最后，单独一行写出最终清单，格式严格如下（只写场景ID，英文逗号分隔，数量不超过 20）：
+FINAL_SELECTION: SC01, SC02, ...</pre></details><details class="prompt"><summary><span>提示词 B · 练习任务说明（在 A 的回答之后追问）</span><button type="button" class="copy" data-copy-from="prompt-task">复制提示词</button></summary><p class="note">逐字取自练习任务；如需 AI 参与，请先发提示词 A，再在同一对话里发这一段。</p><pre id="prompt-task">练习：PRACTICE-D2-01（第二讲：场景展开、风险裁剪与覆盖反查）
+
+【任务】
+仅根据V1.0需求和候选场景，为本轮最多15个必测场景制定方案。先标记需求事实、推断、缺失和冲突；合并重复项并按影响、发生概率、难发现性和执行成本排序；检查每项选择所覆盖的规则，并列出未覆盖规则和待确认项。对缺少业务依据的退款金额不要编造正确答案，可把‘停止并确认口径’作为验证目标。最后指出一个多维高风险组合是否应人工补回。
+
+【约束】
+- 入选场景上限：15
+- 只能使用的资料：PRD V1.0、structured analysis、scenario candidates
+- 可使用独立财务规范：否
+- 不得声称完全覆盖：是
+
+【交付物】
+- 入选场景：最多15项，含选择理由
+- 规则覆盖：每条规则列场景ID或明确未覆盖/待确认
+- 人工补回：高风险组合及理由
+- 待确认问题：仍需业务确认的问题</pre></details></section><section id="m1"><div class="head"><h2>材料 1 · 需求说明 V1.0</h2><button type="button" class="copy" data-copy-from="txt-m1">复制本节文本</button></div><dl class="kv"><dt>文档</dt><dd>悦选商城售后退款需求说明（YS-RET-PRD）</dd><dt>版本</dt><dd>1.0</dd><dt>状态</dt><dd>baseline</dd><dt>说明</dt><dd>课堂构造的最小业务需求；未明确事项保留待确认，不视作事实。</dd></dl><h3>需求段落</h3><div class="table-wrap"><table><thead><tr><th>段落ID</th><th>内容</th></tr></thead><tbody><tr><td>P10</td><td>消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。</td></tr><tr><td>P20</td><td>客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。</td></tr><tr><td>P30</td><td>仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。</td></tr><tr><td>P40</td><td>退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。</td></tr><tr><td>P50</td><td>页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。</td></tr><tr><td>P60</td><td>订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。</td></tr></tbody></table></div><h3>待确认问题</h3><div class="table-wrap"><table><thead><tr><th>问题ID</th><th>问题</th><th>关联段落</th><th>状态</th></tr></thead><tbody><tr><td>Q10</td><td>7日按自然日还是精确到签收时刻的连续168小时计算？时区及截止边界是什么？</td><td>P10</td><td>unresolved</td></tr><tr><td>Q20</td><td>客服审核超时、退货物流超时分别如何处理？</td><td>P20</td><td>unresolved</td></tr><tr><td>Q30</td><td>部分退款的优惠如何分摊；退款时是否重新计算剩余订单优惠？</td><td>P40</td><td>unresolved</td></tr><tr><td>Q40</td><td>运费是否退款、退款失败如何重试，以及重复退款如何防止？</td><td>P30、P40</td><td>unresolved</td></tr><tr><td>Q50</td><td>混合支付的退款顺序、渠道失败后的状态与人工处理规则是什么？</td><td>P40、P60</td><td>unresolved</td></tr></tbody></table></div><textarea id="txt-m1" hidden readonly aria-hidden="true" tabindex="-1">材料 1 · 需求说明 V1.0
+文档：悦选商城售后退款需求说明（YS-RET-PRD）
+版本：1.0
+状态：baseline
+说明：课堂构造的最小业务需求；未明确事项保留待确认，不视作事实。
+
+需求段落
+段落ID｜内容
+P10｜消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。
+P20｜客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。
+P30｜仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。
+P40｜退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。
+P50｜页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。
+P60｜订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。
+
+待确认问题
+问题ID｜问题｜关联段落｜状态
+Q10｜7日按自然日还是精确到签收时刻的连续168小时计算？时区及截止边界是什么？｜P10｜unresolved
+Q20｜客服审核超时、退货物流超时分别如何处理？｜P20｜unresolved
+Q30｜部分退款的优惠如何分摊；退款时是否重新计算剩余订单优惠？｜P40｜unresolved
+Q40｜运费是否退款、退款失败如何重试，以及重复退款如何防止？｜P30、P40｜unresolved
+Q50｜混合支付的退款顺序、渠道失败后的状态与人工处理规则是什么？｜P40、P60｜unresolved</textarea></section><section id="m2"><div class="head"><h2>材料 2 · 结构化分析</h2><button type="button" class="copy" data-copy-from="txt-m2">复制本节文本</button></div><dl class="kv"><dt>状态图例</dt><dd>事实=需求直接陈述；推断=分析推断，需确认；缺失=需求无规则；冲突=明确互相矛盾的业务表述；V1.0优惠规则属于missing</dd></dl><h3>角色</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>名称</th><th>证据状态</th><th>来源</th><th>备注</th></tr></thead><tbody><tr><td>ROLE-CUSTOMER</td><td>消费者</td><td><span class="tag t-fact">事实</span></td><td>P10、P20</td><td></td></tr><tr><td>ROLE-CS</td><td>客服</td><td><span class="tag t-fact">事实</span></td><td>P20、P30</td><td></td></tr><tr><td>ROLE-WH</td><td>仓库</td><td><span class="tag t-fact">事实</span></td><td>P30</td><td></td></tr><tr><td>ROLE-PAY</td><td>支付渠道</td><td><span class="tag t-inference">推断</span></td><td>P40</td><td>外部依赖；失败语义待确认</td></tr></tbody></table></div><h3>输入</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>名称</th><th>证据状态</th><th>来源</th><th>备注</th></tr></thead><tbody><tr><td>IN-ORDER</td><td>商品、实付、支付方式及订单记录（会员维度在V1.0影响待确认）</td><td><span class="tag t-inference">推断</span></td><td>P60</td><td></td></tr><tr><td>IN-RETURN</td><td>退货SKU/数量/原因、物流单号</td><td><span class="tag t-fact">事实</span></td><td>P10、P20</td><td></td></tr><tr><td>IN-CLOCK</td><td>签收时间、提交时间边界与时区</td><td><span class="tag t-missing">缺失</span></td><td>P10</td><td></td></tr></tbody></table></div><h3>外部依赖</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>名称</th><th>证据状态</th><th>来源</th><th>备注</th></tr></thead><tbody><tr><td>EXT-PAY</td><td>银行卡/余额退款渠道</td><td><span class="tag t-fact">事实</span></td><td>P40、P60</td><td></td></tr><tr><td>EXT-WH</td><td>仓库签收和质检结果</td><td><span class="tag t-fact">事实</span></td><td>P30</td><td></td></tr></tbody></table></div><h3>流程与状态</h3><dl class="kv"><dt>流程</dt><dd>申请 → 客服审核 → 消费者寄回 → 仓库签收 → 质检 → 退款 → 完结</dd><dt>状态</dt><dd>申请中、审核中、待寄回、运输中、仓库签收、质检中、退款中、已退款、已关闭</dd></dl><h3>风险</h3><div class="table-wrap"><table><thead><tr><th>风险ID</th><th>描述</th><th>证据状态</th><th>关联规则</th><th>影响</th><th>概率</th><th>难发现</th><th>风险分</th></tr></thead><tbody><tr><td>RK-MONEY</td><td>优惠及部分退款金额缺少独立依据，可能出现资金差错</td><td><span class="tag t-missing">缺失</span></td><td>R-PARTIAL-AMOUNT</td><td>5</td><td>3</td><td>4</td><td>60</td></tr><tr><td>RK-TIME</td><td>退货期限边界和时区不明</td><td><span class="tag t-missing">缺失</span></td><td>R-RETURN-WINDOW</td><td>3</td><td>3</td><td>3</td><td>27</td></tr><tr><td>RK-EXT</td><td>渠道失败/重复响应可能造成状态错误或重复退款</td><td><span class="tag t-missing">缺失</span></td><td>R-RETRY、R-REFUND-CHANNEL</td><td>5</td><td>2</td><td>4</td><td>40</td></tr></tbody></table></div><h3>待回答问题</h3><div class="table-wrap"><table><thead><tr><th>问题ID</th><th>问题</th><th>证据状态</th><th>来源</th></tr></thead><tbody><tr><td>Q10</td><td>7日按何种时间边界和时区计算？</td><td><span class="tag t-missing">缺失</span></td><td>P10</td></tr><tr><td>Q20</td><td>审核及物流超时如何处理？</td><td><span class="tag t-missing">缺失</span></td><td>P20</td></tr><tr><td>Q30</td><td>部分退款优惠如何分摊或重算？</td><td><span class="tag t-missing">缺失</span></td><td>P40</td></tr><tr><td>Q40</td><td>运费、渠道失败和重试规则是什么？</td><td><span class="tag t-missing">缺失</span></td><td>P30、P40</td></tr></tbody></table></div><textarea id="txt-m2" hidden readonly aria-hidden="true" tabindex="-1">材料 2 · 结构化分析
+状态图例：事实=需求直接陈述；推断=分析推断，需确认；缺失=需求无规则；冲突=明确互相矛盾的业务表述；V1.0优惠规则属于missing
+
+角色
+ID｜名称｜证据状态｜来源｜备注
+ROLE-CUSTOMER｜消费者｜事实｜P10、P20｜
+ROLE-CS｜客服｜事实｜P20、P30｜
+ROLE-WH｜仓库｜事实｜P30｜
+ROLE-PAY｜支付渠道｜推断｜P40｜外部依赖；失败语义待确认
+
+输入
+ID｜名称｜证据状态｜来源｜备注
+IN-ORDER｜商品、实付、支付方式及订单记录（会员维度在V1.0影响待确认）｜推断｜P60｜
+IN-RETURN｜退货SKU/数量/原因、物流单号｜事实｜P10、P20｜
+IN-CLOCK｜签收时间、提交时间边界与时区｜缺失｜P10｜
+
+外部依赖
+ID｜名称｜证据状态｜来源｜备注
+EXT-PAY｜银行卡/余额退款渠道｜事实｜P40、P60｜
+EXT-WH｜仓库签收和质检结果｜事实｜P30｜
+
+流程与状态
+流程：申请 → 客服审核 → 消费者寄回 → 仓库签收 → 质检 → 退款 → 完结
+状态：申请中、审核中、待寄回、运输中、仓库签收、质检中、退款中、已退款、已关闭
+
+风险
+风险ID｜描述｜证据状态｜关联规则｜影响｜概率｜难发现｜风险分
+RK-MONEY｜优惠及部分退款金额缺少独立依据，可能出现资金差错｜缺失｜R-PARTIAL-AMOUNT｜5｜3｜4｜60
+RK-TIME｜退货期限边界和时区不明｜缺失｜R-RETURN-WINDOW｜3｜3｜3｜27
+RK-EXT｜渠道失败/重复响应可能造成状态错误或重复退款｜缺失｜R-RETRY、R-REFUND-CHANNEL｜5｜2｜4｜40
+
+待回答问题
+问题ID｜问题｜证据状态｜来源
+Q10｜7日按何种时间边界和时区计算？｜缺失｜P10
+Q20｜审核及物流超时如何处理？｜缺失｜P20
+Q30｜部分退款优惠如何分摊或重算？｜缺失｜P40
+Q40｜运费、渠道失败和重试规则是什么？｜缺失｜P30、P40</textarea></section><section id="m3"><div class="head"><h2>材料 3 · 业务规则 V1.0（含证据状态）</h2><button type="button" class="copy" data-copy-from="txt-m3">复制本节文本</button></div><div class="table-wrap"><table><thead><tr><th>规则ID</th><th>规则内容</th><th>证据状态</th><th>来源</th></tr></thead><tbody><tr><td>R-RETURN-WINDOW</td><td>签收后期限内可申请退货，期限边界待确认。</td><td><span class="tag t-fact">事实</span></td><td>P10</td></tr><tr><td>R-REVIEW</td><td>客服审核通过后方可寄回。</td><td><span class="tag t-fact">事实</span></td><td>P20</td></tr><tr><td>R-LOGISTICS</td><td>消费者填写退货物流单号。</td><td><span class="tag t-fact">事实</span></td><td>P20</td></tr><tr><td>R-QC</td><td>仓库签收且质检通过后进入退款。</td><td><span class="tag t-fact">事实</span></td><td>P30</td></tr><tr><td>R-REFUND-CHANNEL</td><td>退款退回原支付渠道。</td><td><span class="tag t-fact">事实</span></td><td>P40</td></tr><tr><td>R-PARTIAL-AMOUNT</td><td>部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。</td><td><span class="tag t-missing">缺失</span></td><td>P40</td></tr><tr><td>R-MEMBER</td><td>会员等级存在，但对售后期限的影响未定义。</td><td><span class="tag t-missing">缺失</span></td><td>P10</td></tr><tr><td>R-PAYMENT</td><td>银行卡或余额支付，可同时使用满减优惠。</td><td><span class="tag t-fact">事实</span></td><td>P60</td></tr><tr><td>R-FREIGHT</td><td>运费是否退还未定义。</td><td><span class="tag t-missing">缺失</span></td><td>P40</td></tr><tr><td>R-RETRY</td><td>渠道退款失败、重试和重复回调规则未定义。</td><td><span class="tag t-missing">缺失</span></td><td>P40</td></tr><tr><td>R-RETURN-INPUT</td><td>退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。</td><td><span class="tag t-inference">推断</span></td><td>P10</td></tr><tr><td>R-STATUS</td><td>售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。</td><td><span class="tag t-missing">缺失</span></td><td>P50</td></tr></tbody></table></div><textarea id="txt-m3" hidden readonly aria-hidden="true" tabindex="-1">材料 3 · 业务规则 V1.0（含证据状态）
+规则ID｜规则内容｜证据状态｜来源
+R-RETURN-WINDOW｜签收后期限内可申请退货，期限边界待确认。｜事实｜P10
+R-REVIEW｜客服审核通过后方可寄回。｜事实｜P20
+R-LOGISTICS｜消费者填写退货物流单号。｜事实｜P20
+R-QC｜仓库签收且质检通过后进入退款。｜事实｜P30
+R-REFUND-CHANNEL｜退款退回原支付渠道。｜事实｜P40
+R-PARTIAL-AMOUNT｜部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。｜缺失｜P40
+R-MEMBER｜会员等级存在，但对售后期限的影响未定义。｜缺失｜P10
+R-PAYMENT｜银行卡或余额支付，可同时使用满减优惠。｜事实｜P60
+R-FREIGHT｜运费是否退还未定义。｜缺失｜P40
+R-RETRY｜渠道退款失败、重试和重复回调规则未定义。｜缺失｜P40
+R-RETURN-INPUT｜退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。｜推断｜P10
+R-STATUS｜售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。｜缺失｜P50</textarea></section><section id="m4"><div class="head"><h2>材料 4 · 候选场景（V1.0）</h2><button type="button" class="copy" data-copy-from="txt-m4">复制本节文本</button></div><p>风险分 = 影响 × 发生概率 × 难发现度；执行成本越大越贵；“待确认”表示场景预期依赖尚未确认的规则。</p><h3>场景维度</h3><div class="table-wrap"><table><thead><tr><th>维度</th><th>取值</th></tr></thead><tbody><tr><td>支付方式</td><td>银行卡、余额、混合、未知</td></tr><tr><td>优惠</td><td>无、满300减50、其他、未知</td></tr><tr><td>售后类型</td><td>整单退、部分退、换货</td></tr><tr><td>订单状态</td><td>已支付、已发货、已签收</td></tr><tr><td>会员等级</td><td>普通、银卡、金卡</td></tr></tbody></table></div><dl class="kv"><dt>理论组合</dt><dd>4×4×3×3×3 = 432 种</dd><dt>无效组合示例</dt><dd>未付款订单发起退货、无退货商品提交部分退款、换货操作走退款渠道、无优惠订单生成优惠扣回</dd></dl><h3>候选场景（共 41 条，ID 不连续，以清单为准）</h3><div class="table-wrap"><table><thead><tr><th>场景ID</th><th>场景</th><th>阶段</th><th>类别</th><th>关联规则</th><th>条件</th><th>影响</th><th>概率</th><th>难发现</th><th>风险分</th><th>成本</th><th>状态</th></tr></thead><tbody><tr><td>SC01</td><td>签收后第3天本人正常提交</td><td>apply</td><td>normal</td><td>R-RETURN-WINDOW</td><td><code>{&quot;delivered&quot;:true,&quot;elapsed_hours&quot;:72,&quot;quantity&quot;:1,&quot;owner&quot;:&quot;self&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC02</td><td>未签收即提交</td><td>apply</td><td>exception</td><td>R-RETURN-WINDOW</td><td><code>{&quot;delivered&quot;:false}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC03</td><td>超过7天1秒提交</td><td>apply</td><td>exception</td><td>R-RETURN-WINDOW</td><td><code>{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;elapsed_seconds&quot;:604801}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC04</td><td>退货数量为0</td><td>apply</td><td>equivalence</td><td>R-RETURN-INPUT</td><td><code>{&quot;quantity&quot;:0,&quot;purchased_quantity&quot;:1,&quot;equivalence_class&quot;:&quot;invalid_quantity&quot;}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC05</td><td>退货数量超过购买数量</td><td>apply</td><td>equivalence</td><td>R-RETURN-INPUT</td><td><code>{&quot;quantity&quot;:3,&quot;purchased_quantity&quot;:2,&quot;equivalence_class&quot;:&quot;quantity_exceeds_purchase&quot;}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC06</td><td>非订单本人提交</td><td>apply</td><td>exception</td><td>R-RETURN-WINDOW</td><td><code>{&quot;owner&quot;:&quot;other&quot;}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC07</td><td>普通会员恰在7×24小时截止点提交</td><td>apply</td><td>boundary</td><td>R-RETURN-WINDOW</td><td><code>{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;elapsed_seconds&quot;:604800}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC08</td><td>普通会员截止前1秒提交</td><td>apply</td><td>boundary</td><td>R-RETURN-WINDOW</td><td><code>{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;seconds_before_deadline&quot;:1}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC09</td><td>退货原因为空</td><td>apply</td><td>boundary</td><td>R-RETURN-WINDOW</td><td><code>{&quot;reason&quot;:&quot;&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC10</td><td>客服审核通过</td><td>review</td><td>normal</td><td>R-REVIEW</td><td><code>{&quot;decision&quot;:&quot;approve&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC11</td><td>客服审核拒绝后仍尝试寄回</td><td>review</td><td>exception</td><td>R-REVIEW</td><td><code>{&quot;decision&quot;:&quot;reject&quot;,&quot;ship_attempt&quot;:true}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC12</td><td>同一申请重复审核</td><td>review</td><td>state</td><td>R-REVIEW</td><td><code>{&quot;decision_count&quot;:2}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC13</td><td>审核长期未处理</td><td>review</td><td>external_dependency</td><td>R-REVIEW</td><td><code>{&quot;review_elapsed_hours&quot;:&quot;overdue&quot;}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC14</td><td>审核通过并填写有效物流单号</td><td>ship</td><td>normal</td><td>R-LOGISTICS</td><td><code>{&quot;approved&quot;:true,&quot;tracking_no&quot;:&quot;present&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC15</td><td>审核通过但未填写物流单号</td><td>ship</td><td>boundary</td><td>R-LOGISTICS</td><td><code>{&quot;approved&quot;:true,&quot;tracking_no&quot;:&quot;missing&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC16</td><td>审核拒绝后出现物流轨迹</td><td>ship</td><td>state</td><td>R-REVIEW、R-LOGISTICS</td><td><code>{&quot;approved&quot;:false,&quot;tracking_event&quot;:true}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC17</td><td>物流长期未到仓</td><td>ship</td><td>external_dependency</td><td>R-LOGISTICS</td><td><code>{&quot;tracking_state&quot;:&quot;in_transit_overdue&quot;}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC18</td><td>物流轨迹显示丢失</td><td>ship</td><td>external_dependency</td><td>R-LOGISTICS</td><td><code>{&quot;tracking_state&quot;:&quot;lost&quot;}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC19</td><td>仓库签收后全部质检通过</td><td>inspect</td><td>normal</td><td>R-QC</td><td><code>{&quot;received&quot;:true,&quot;qc&quot;:&quot;all_pass&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC20</td><td>质检全部失败</td><td>inspect</td><td>exception</td><td>R-QC</td><td><code>{&quot;received&quot;:true,&quot;qc&quot;:&quot;all_fail&quot;}</code></td><td>4</td><td>2</td><td>4</td><td>32</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC21</td><td>多件退货中部分质检通过</td><td>inspect</td><td>boundary</td><td>R-QC</td><td><code>{&quot;received&quot;:true,&quot;qc&quot;:&quot;partial_pass&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC22</td><td>同一退货重复质检回传</td><td>inspect</td><td>state</td><td>R-QC</td><td><code>{&quot;qc_callback_count&quot;:2}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC23</td><td>签收事件未到先收到质检结果</td><td>inspect</td><td>state</td><td>R-QC</td><td><code>{&quot;received&quot;:false,&quot;qc_event&quot;:true}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC24</td><td>银行卡无优惠部分退款</td><td>refund</td><td>normal</td><td>R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL</td><td><code>{&quot;payment&quot;:&quot;card&quot;,&quot;discount&quot;:&quot;0.00&quot;,&quot;return_type&quot;:&quot;partial&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC25</td><td>余额整单退款</td><td>refund</td><td>normal</td><td>R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL</td><td><code>{&quot;payment&quot;:&quot;balance&quot;,&quot;return_type&quot;:&quot;full&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC26</td><td>银行卡与余额混合支付部分退款</td><td>refund</td><td>combination</td><td>R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL</td><td><code>{&quot;payment&quot;:&quot;mixed&quot;,&quot;promotion&quot;:&quot;threshold_300_50&quot;}</code></td><td>5</td><td>3</td><td>5</td><td>75</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC27</td><td>退货后剩余原价仍达优惠门槛</td><td>refund</td><td>boundary</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;fixture&quot;:&quot;ORDER-400-50&quot;,&quot;gross_total&quot;:&quot;400.00&quot;,&quot;returned_gross&quot;:&quot;50.00&quot;,&quot;remaining_gross&quot;:&quot;350.00&quot;,&quot;threshold&quot;:&quot;300.00&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC28</td><td>退货后剩余原价低于优惠门槛</td><td>refund</td><td>boundary</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;gross_total&quot;:&quot;357.00&quot;,&quot;returned_sku&quot;:&quot;B&quot;,&quot;remaining_gross&quot;:&quot;258.00&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC29</td><td>剩余原价恰为300元门槛</td><td>refund</td><td>boundary</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;fixture&quot;:&quot;ORDER-400-50&quot;,&quot;gross_total&quot;:&quot;400.00&quot;,&quot;returned_gross&quot;:&quot;100.00&quot;,&quot;remaining_gross&quot;:&quot;300.00&quot;,&quot;threshold&quot;:&quot;300.00&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC30</td><td>剩余原价299.99元</td><td>refund</td><td>boundary</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;remaining_gross&quot;:&quot;299.99&quot;,&quot;threshold&quot;:&quot;300.00&quot;}</code></td><td>4</td><td>3</td><td>4</td><td>48</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC31</td><td>多个SKU连续部分退款累计金额</td><td>refund</td><td>state</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;returned_skus&quot;:[&quot;B&quot;,&quot;C&quot;],&quot;prior_refund&quot;:&quot;待确认的历史退款金额&quot;}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC32</td><td>重复退同一SKU</td><td>refund</td><td>state</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;returned_skus&quot;:[&quot;B&quot;,&quot;B&quot;]}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC33</td><td>支付渠道明确返回失败</td><td>refund</td><td>external_dependency</td><td>R-RETRY</td><td><code>{&quot;channel_result&quot;:&quot;failure&quot;}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC34</td><td>渠道响应超时后用户重试</td><td>refund</td><td>external_dependency</td><td>R-RETRY</td><td><code>{&quot;channel_result&quot;:&quot;timeout&quot;,&quot;client_retry&quot;:true}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC35</td><td>退款成功后渠道重复回调</td><td>refund</td><td>external_dependency</td><td>R-RETRY</td><td><code>{&quot;channel_result&quot;:&quot;success&quot;,&quot;callback_count&quot;:2}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC36</td><td>金卡混合支付且优惠失效的部分退款</td><td>refund</td><td>combination</td><td>R-MEMBER、R-PAYMENT、R-PARTIAL-AMOUNT、R-RETRY</td><td><code>{&quot;member_at_order&quot;:&quot;gold&quot;,&quot;payment&quot;:&quot;mixed&quot;,&quot;remaining_gross&quot;:&quot;258.00&quot;,&quot;promotion&quot;:&quot;threshold_300_50&quot;,&quot;return_type&quot;:&quot;partial&quot;,&quot;channel_timeout&quot;:true}</code></td><td>5</td><td>3</td><td>5</td><td>75</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC37</td><td>订单无运费按商品退款</td><td>refund</td><td>normal</td><td>R-PARTIAL-AMOUNT</td><td><code>{&quot;freight&quot;:&quot;0.00&quot;}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC38</td><td>订单有运费但退款范围未说明</td><td>refund</td><td>external_dependency</td><td>R-FREIGHT</td><td><code>{&quot;freight&quot;:&quot;8.00&quot;,&quot;policy&quot;:&quot;unknown&quot;}</code></td><td>5</td><td>2</td><td>5</td><td>50</td><td>2</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC43</td><td>退款成功后关闭售后单</td><td>close</td><td>normal</td><td>R-STATUS</td><td><code>{&quot;refund&quot;:&quot;success&quot;,&quot;close&quot;:true}</code></td><td>2</td><td>3</td><td>2</td><td>12</td><td>1</td><td><span class="tag t-badge">候选</span></td></tr><tr><td>SC44</td><td>退款处理中提前关闭售后单</td><td>close</td><td>state</td><td>R-STATUS</td><td><code>{&quot;refund&quot;:&quot;pending&quot;,&quot;close&quot;:true}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr><tr><td>SC45</td><td>已关闭售后单再次发起申请</td><td>close</td><td>state</td><td>R-STATUS</td><td><code>{&quot;case_state&quot;:&quot;closed&quot;,&quot;new_request&quot;:true}</code></td><td>4</td><td>2</td><td>5</td><td>40</td><td>1</td><td><span class="tag t-inference">待确认</span></td></tr></tbody></table></div><textarea id="txt-m4" hidden readonly aria-hidden="true" tabindex="-1">材料 4 · 候选场景（V1.0）
+风险分 = 影响 × 发生概率 × 难发现度；执行成本越大越贵；“待确认”表示场景预期依赖尚未确认的规则。
+
+场景维度
+维度｜取值
+支付方式｜银行卡、余额、混合、未知
+优惠｜无、满300减50、其他、未知
+售后类型｜整单退、部分退、换货
+订单状态｜已支付、已发货、已签收
+会员等级｜普通、银卡、金卡
+理论组合：4×4×3×3×3 = 432 种
+无效组合示例：未付款订单发起退货、无退货商品提交部分退款、换货操作走退款渠道、无优惠订单生成优惠扣回
+
+候选场景（共 41 条，ID 不连续，以清单为准）
+场景ID｜场景｜阶段｜类别｜关联规则｜条件｜影响｜概率｜难发现｜风险分｜成本｜状态
+SC01｜签收后第3天本人正常提交｜apply｜normal｜R-RETURN-WINDOW｜{&quot;delivered&quot;:true,&quot;elapsed_hours&quot;:72,&quot;quantity&quot;:1,&quot;owner&quot;:&quot;self&quot;}｜2｜3｜2｜12｜1｜候选
+SC02｜未签收即提交｜apply｜exception｜R-RETURN-WINDOW｜{&quot;delivered&quot;:false}｜4｜2｜4｜32｜1｜待确认
+SC03｜超过7天1秒提交｜apply｜exception｜R-RETURN-WINDOW｜{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;elapsed_seconds&quot;:604801}｜4｜2｜4｜32｜1｜待确认
+SC04｜退货数量为0｜apply｜equivalence｜R-RETURN-INPUT｜{&quot;quantity&quot;:0,&quot;purchased_quantity&quot;:1,&quot;equivalence_class&quot;:&quot;invalid_quantity&quot;}｜4｜2｜4｜32｜1｜待确认
+SC05｜退货数量超过购买数量｜apply｜equivalence｜R-RETURN-INPUT｜{&quot;quantity&quot;:3,&quot;purchased_quantity&quot;:2,&quot;equivalence_class&quot;:&quot;quantity_exceeds_purchase&quot;}｜4｜2｜4｜32｜1｜待确认
+SC06｜非订单本人提交｜apply｜exception｜R-RETURN-WINDOW｜{&quot;owner&quot;:&quot;other&quot;}｜4｜2｜4｜32｜1｜待确认
+SC07｜普通会员恰在7×24小时截止点提交｜apply｜boundary｜R-RETURN-WINDOW｜{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;elapsed_seconds&quot;:604800}｜4｜3｜4｜48｜1｜待确认
+SC08｜普通会员截止前1秒提交｜apply｜boundary｜R-RETURN-WINDOW｜{&quot;member_at_order&quot;:&quot;ordinary&quot;,&quot;seconds_before_deadline&quot;:1}｜4｜3｜4｜48｜1｜待确认
+SC09｜退货原因为空｜apply｜boundary｜R-RETURN-WINDOW｜{&quot;reason&quot;:&quot;&quot;}｜4｜3｜4｜48｜1｜待确认
+SC10｜客服审核通过｜review｜normal｜R-REVIEW｜{&quot;decision&quot;:&quot;approve&quot;}｜2｜3｜2｜12｜1｜候选
+SC11｜客服审核拒绝后仍尝试寄回｜review｜exception｜R-REVIEW｜{&quot;decision&quot;:&quot;reject&quot;,&quot;ship_attempt&quot;:true}｜4｜2｜4｜32｜1｜候选
+SC12｜同一申请重复审核｜review｜state｜R-REVIEW｜{&quot;decision_count&quot;:2}｜4｜2｜5｜40｜1｜待确认
+SC13｜审核长期未处理｜review｜external_dependency｜R-REVIEW｜{&quot;review_elapsed_hours&quot;:&quot;overdue&quot;}｜5｜2｜5｜50｜2｜待确认
+SC14｜审核通过并填写有效物流单号｜ship｜normal｜R-LOGISTICS｜{&quot;approved&quot;:true,&quot;tracking_no&quot;:&quot;present&quot;}｜2｜3｜2｜12｜1｜候选
+SC15｜审核通过但未填写物流单号｜ship｜boundary｜R-LOGISTICS｜{&quot;approved&quot;:true,&quot;tracking_no&quot;:&quot;missing&quot;}｜4｜3｜4｜48｜1｜待确认
+SC16｜审核拒绝后出现物流轨迹｜ship｜state｜R-REVIEW、R-LOGISTICS｜{&quot;approved&quot;:false,&quot;tracking_event&quot;:true}｜4｜2｜5｜40｜1｜候选
+SC17｜物流长期未到仓｜ship｜external_dependency｜R-LOGISTICS｜{&quot;tracking_state&quot;:&quot;in_transit_overdue&quot;}｜5｜2｜5｜50｜2｜待确认
+SC18｜物流轨迹显示丢失｜ship｜external_dependency｜R-LOGISTICS｜{&quot;tracking_state&quot;:&quot;lost&quot;}｜5｜2｜5｜50｜2｜待确认
+SC19｜仓库签收后全部质检通过｜inspect｜normal｜R-QC｜{&quot;received&quot;:true,&quot;qc&quot;:&quot;all_pass&quot;}｜2｜3｜2｜12｜1｜候选
+SC20｜质检全部失败｜inspect｜exception｜R-QC｜{&quot;received&quot;:true,&quot;qc&quot;:&quot;all_fail&quot;}｜4｜2｜4｜32｜1｜候选
+SC21｜多件退货中部分质检通过｜inspect｜boundary｜R-QC｜{&quot;received&quot;:true,&quot;qc&quot;:&quot;partial_pass&quot;}｜4｜3｜4｜48｜1｜待确认
+SC22｜同一退货重复质检回传｜inspect｜state｜R-QC｜{&quot;qc_callback_count&quot;:2}｜4｜2｜5｜40｜1｜待确认
+SC23｜签收事件未到先收到质检结果｜inspect｜state｜R-QC｜{&quot;received&quot;:false,&quot;qc_event&quot;:true}｜4｜2｜5｜40｜1｜待确认
+SC24｜银行卡无优惠部分退款｜refund｜normal｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜{&quot;payment&quot;:&quot;card&quot;,&quot;discount&quot;:&quot;0.00&quot;,&quot;return_type&quot;:&quot;partial&quot;}｜2｜3｜2｜12｜1｜待确认
+SC25｜余额整单退款｜refund｜normal｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜{&quot;payment&quot;:&quot;balance&quot;,&quot;return_type&quot;:&quot;full&quot;}｜2｜3｜2｜12｜1｜候选
+SC26｜银行卡与余额混合支付部分退款｜refund｜combination｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL｜{&quot;payment&quot;:&quot;mixed&quot;,&quot;promotion&quot;:&quot;threshold_300_50&quot;}｜5｜3｜5｜75｜2｜待确认
+SC27｜退货后剩余原价仍达优惠门槛｜refund｜boundary｜R-PARTIAL-AMOUNT｜{&quot;fixture&quot;:&quot;ORDER-400-50&quot;,&quot;gross_total&quot;:&quot;400.00&quot;,&quot;returned_gross&quot;:&quot;50.00&quot;,&quot;remaining_gross&quot;:&quot;350.00&quot;,&quot;threshold&quot;:&quot;300.00&quot;}｜4｜3｜4｜48｜1｜待确认
+SC28｜退货后剩余原价低于优惠门槛｜refund｜boundary｜R-PARTIAL-AMOUNT｜{&quot;gross_total&quot;:&quot;357.00&quot;,&quot;returned_sku&quot;:&quot;B&quot;,&quot;remaining_gross&quot;:&quot;258.00&quot;}｜4｜3｜4｜48｜1｜待确认
+SC29｜剩余原价恰为300元门槛｜refund｜boundary｜R-PARTIAL-AMOUNT｜{&quot;fixture&quot;:&quot;ORDER-400-50&quot;,&quot;gross_total&quot;:&quot;400.00&quot;,&quot;returned_gross&quot;:&quot;100.00&quot;,&quot;remaining_gross&quot;:&quot;300.00&quot;,&quot;threshold&quot;:&quot;300.00&quot;}｜4｜3｜4｜48｜1｜待确认
+SC30｜剩余原价299.99元｜refund｜boundary｜R-PARTIAL-AMOUNT｜{&quot;remaining_gross&quot;:&quot;299.99&quot;,&quot;threshold&quot;:&quot;300.00&quot;}｜4｜3｜4｜48｜1｜待确认
+SC31｜多个SKU连续部分退款累计金额｜refund｜state｜R-PARTIAL-AMOUNT｜{&quot;returned_skus&quot;:[&quot;B&quot;,&quot;C&quot;],&quot;prior_refund&quot;:&quot;待确认的历史退款金额&quot;}｜4｜2｜5｜40｜1｜待确认
+SC32｜重复退同一SKU｜refund｜state｜R-PARTIAL-AMOUNT｜{&quot;returned_skus&quot;:[&quot;B&quot;,&quot;B&quot;]}｜4｜2｜5｜40｜1｜待确认
+SC33｜支付渠道明确返回失败｜refund｜external_dependency｜R-RETRY｜{&quot;channel_result&quot;:&quot;failure&quot;}｜5｜2｜5｜50｜2｜待确认
+SC34｜渠道响应超时后用户重试｜refund｜external_dependency｜R-RETRY｜{&quot;channel_result&quot;:&quot;timeout&quot;,&quot;client_retry&quot;:true}｜5｜2｜5｜50｜2｜待确认
+SC35｜退款成功后渠道重复回调｜refund｜external_dependency｜R-RETRY｜{&quot;channel_result&quot;:&quot;success&quot;,&quot;callback_count&quot;:2}｜5｜2｜5｜50｜2｜待确认
+SC36｜金卡混合支付且优惠失效的部分退款｜refund｜combination｜R-MEMBER、R-PAYMENT、R-PARTIAL-AMOUNT、R-RETRY｜{&quot;member_at_order&quot;:&quot;gold&quot;,&quot;payment&quot;:&quot;mixed&quot;,&quot;remaining_gross&quot;:&quot;258.00&quot;,&quot;promotion&quot;:&quot;threshold_300_50&quot;,&quot;return_type&quot;:&quot;partial&quot;,&quot;channel_timeout&quot;:true}｜5｜3｜5｜75｜2｜待确认
+SC37｜订单无运费按商品退款｜refund｜normal｜R-PARTIAL-AMOUNT｜{&quot;freight&quot;:&quot;0.00&quot;}｜2｜3｜2｜12｜1｜候选
+SC38｜订单有运费但退款范围未说明｜refund｜external_dependency｜R-FREIGHT｜{&quot;freight&quot;:&quot;8.00&quot;,&quot;policy&quot;:&quot;unknown&quot;}｜5｜2｜5｜50｜2｜待确认
+SC43｜退款成功后关闭售后单｜close｜normal｜R-STATUS｜{&quot;refund&quot;:&quot;success&quot;,&quot;close&quot;:true}｜2｜3｜2｜12｜1｜候选
+SC44｜退款处理中提前关闭售后单｜close｜state｜R-STATUS｜{&quot;refund&quot;:&quot;pending&quot;,&quot;close&quot;:true}｜4｜2｜5｜40｜1｜待确认
+SC45｜已关闭售后单再次发起申请｜close｜state｜R-STATUS｜{&quot;case_state&quot;:&quot;closed&quot;,&quot;new_request&quot;:true}｜4｜2｜5｜40｜1｜待确认</textarea></section><footer>本材料包由学生输入资产自动导出，内容来源：<code>practice/student/demo3_scenario_design.json</code>、<code>prd/prd_v1_0.json</code>、<code>business/analysis.json</code>、<code>business/rules_v1_0.json</code>、<code>scenarios/candidates_v1_0.json</code>；提示词由本地业务资产拼装。纯文本版见 prompts.txt。本案例为虚构课堂案例，不作为真实商城售后政策。</footer></div><script>
+(function(){
+  function legacy(text){
+    var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();
+    var ok=false;try{ok=document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);return ok;
+  }
+  function copy(text){
+    if(navigator.clipboard&&window.isSecureContext){
+      return navigator.clipboard.writeText(text).then(function(){return true;},function(){return legacy(text);});
+    }
+    return Promise.resolve(legacy(text));
+  }
+  function flash(btn,cls,msg){
+    var old=btn.getAttribute('data-label')||btn.textContent;btn.setAttribute('data-label',old);
+    btn.textContent=msg;btn.classList.add(cls);
+    setTimeout(function(){btn.textContent=old;btn.classList.remove(cls);},2200);
+  }
+  document.addEventListener('click',function(ev){
+    var btn=ev.target.closest('[data-copy-from]');if(!btn)return;
+    ev.preventDefault();ev.stopPropagation();
+    var src=document.getElementById(btn.getAttribute('data-copy-from'));if(!src)return;
+    var text=('value' in src)?src.value:src.textContent;
+    copy(text).then(function(ok){
+      if(ok){flash(btn,'ok','已复制 ✓');return;}
+      if(src.tagName==='PRE'){var r=document.createRange();r.selectNodeContents(src);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+        flash(btn,'err','已选中，请按 ⌘C / Ctrl+C');}
+      else{flash(btn,'err','复制失败，请改用 prompts.txt');}
+    });
+  });
+})();
+</script></body></html>

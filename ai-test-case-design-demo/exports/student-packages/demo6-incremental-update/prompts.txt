@@ -1,0 +1,160 @@
+================================================================
+Demo 6 · V1.0→V1.1 测试资产增量更新 · 提示词（纯文本，可整体复制）
+沿“变更→规则→场景→用例”依赖链，推导保留 / 修改 / 作废 / 新增，并选出不超过 25 条回归用例
+================================================================
+
+使用方法：每个提示词位于 BEGIN / END 两行之间，复制两行之间的全部内容，粘贴到全新的 AI 对话。
+对应的阅读版材料见同目录 student-package.html。
+
+────────────────────────────────────────────────────────────────
+【提示词 A · 需求变更影响分析（V1.0 → V1.1）】
+自带 V1.0 基线、财务规范、V1.1 三项变更、历史场景与全部历史用例；粘贴到全新的 AI 对话。
+
+----- BEGIN -----
+你是一名测试资产维护顾问。悦选商城售后需求从 V1.0 升级到 V1.1。请只依据下面的材料，分析这次变更对既有测试资产的影响，并给出每条历史用例的处置建议：保留 / 修改 / 作废，以及需要新增的用例。
+
+【判断原则】
+- 沿“变更 → 规则 → 场景 → 用例”的依赖链判断，不要凭印象；
+- 区分“行为或断言发生变化（需要修改/作废/新增）”和“只是需求来源或依据被更新、行为与金额不变（仍可保留）”；
+- 能保留就不要重建，避免为凑数量而重做已验证的资产；也不要漏掉真正受影响的用例。
+
+【V1.0 基线需求】
+P10：消费者可在订单签收后7日内提交退货申请；申请需选择退货商品和数量，并填写原因。
+P20：客服审核申请。审核通过后，消费者按页面提供的地址寄回商品并填写物流单号。
+P30：仓库签收退货后检查商品；质检通过的商品进入退款处理，未通过时由客服联系消费者处理。
+P40：退款退回原支付渠道。部分退货按商品实付金额退款；优惠分摊及退款金额以财务规则为准。
+P50：页面展示售后申请、审核、待寄回、运输中、仓库签收、质检、退款中、已退款及已关闭等处理状态。
+P60：订单支持银行卡或余额支付，可同时使用满减优惠；用户可在订单详情发起售后。
+
+【V1.0 业务规则】（规则ID｜内容）
+R-RETURN-WINDOW｜签收后期限内可申请退货，期限边界待确认。
+R-REVIEW｜客服审核通过后方可寄回。
+R-LOGISTICS｜消费者填写退货物流单号。
+R-QC｜仓库签收且质检通过后进入退款。
+R-REFUND-CHANNEL｜退款退回原支付渠道。
+R-PARTIAL-AMOUNT｜部分退款按商品实付金额；优惠具体口径未提供，另指向财务规则。
+R-MEMBER｜会员等级存在，但对售后期限的影响未定义。
+R-PAYMENT｜银行卡或余额支付，可同时使用满减优惠。
+R-FREIGHT｜运费是否退还未定义。
+R-RETRY｜渠道退款失败、重试和重复回调规则未定义。
+R-RETURN-INPUT｜退货商品和数量应能定位到订单明细；数量有效范围未定义，此校验属于待确认推断。
+R-STATUS｜售后展示状态包括已退款、已关闭等状态；终态转换条件未定义。
+
+【已独立验证的财务规范（历史金额用例的依据）】
+F10：部分退货后，以剩余商品原价合计重新判断满减门槛；未达门槛时，剩余订单优惠为0。
+F20：按同一订单已经退款的SKU集合计算累计退款：本次退款=原订单实付-(退货后剩余商品原价-按剩余商品重算的优惠)-此前已退款。
+F30：同一订单多次部分退款使用已退SKU集合累计计算；金额下限为0，上限为原订单实付减此前已退款，不得负退款或超付。重复退同一SKU不得产生第二次退款。
+F40：按F20计算出的本次退款小于0时，不执行负数退款，暂停自动退款并转财务人工复核；厘清差额前不记为独立验证通过。
+
+【V1.1 三项变更】（变更ID｜对应规则｜新增或替换的需求原文）
+C10｜R-FAST-REFUND｜P31：当订单输入中的极速退款资格标识 eligible=true 时，消费者填写退货物流单号后即可退款，不等待仓库质检；质检仍继续进行，失败时转客服处理并追偿。符合资格与否由上游标识给出，本需求 不推定资格算法。
+C20｜R-RETURN-WINDOW｜P11：退货期限以签收时刻起算：普通及银卡会员7日，金卡会员15日；以提交订单时记录的会员等级判定。时间统一使用订单时区的时间戳，截止时刻含在期限内（<=7×24小时或<=15×24小时），超出1秒拒绝。
+C30｜R-PROMO-RECALC｜P41：部分退货退款时，按退货后剩余商品重新计算满减优惠。按同一订单已退SKU集合累计：本次退款=原订单实付-(退货后剩余商品原价-按剩余商品重算的优惠)-此前已退款；计算为负时暂停并交财务复核，不产生负数退款。累计退款不得超过订单实付。
+
+【历史场景】（场景ID｜标题｜关联规则）
+HS-F01｜旧规则断言：所有订单必须先质检后退款｜R-QC
+HS-F02｜普通质检通过后原支付渠道退款｜R-QC、R-REFUND-CHANNEL
+HS-F03｜普通会员签收第6天申请｜R-RETURN-WINDOW
+HS-F04｜普通会员签收第8天申请｜R-RETURN-WINDOW
+HS-F05｜金卡会员签收第10天申请（V1.0）｜R-RETURN-WINDOW、R-MEMBER
+HS-F06｜余额支付退款回原余额｜R-PAYMENT、R-REFUND-CHANNEL
+HS-M01｜经典B部分退款｜R-PROMO-RECALC、F10、F20、F30
+SC28｜退货后剩余原价低于优惠门槛｜R-PARTIAL-AMOUNT
+SC31｜多个SKU连续部分退款累计金额｜R-PARTIAL-AMOUNT
+HS-M02｜经典A部分退款｜R-PROMO-RECALC、F10、F20、F30
+HS-M03｜经典C部分退款｜R-PROMO-RECALC、F10、F20、F30
+HS-M04｜经典B与C组合退货｜R-PROMO-RECALC、F10、F20、F30
+HS-M05｜经典订单整单退款｜R-PROMO-RECALC、F10、F20、F30
+SC25｜余额整单退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL
+HS-M06｜无优惠未达门槛部分退款｜R-PROMO-RECALC、F10、F20、F30
+SC24｜银行卡无优惠部分退款｜R-PAYMENT、R-PARTIAL-AMOUNT、R-REFUND-CHANNEL
+HS-M07｜原价恰为300元且优惠启用｜R-PROMO-RECALC、F10、F20、F30
+SC29｜剩余原价恰为300元门槛｜R-PARTIAL-AMOUNT
+HS-M08｜无优惠299.99元订单｜R-PROMO-RECALC、F10、F20、F30
+SC30｜剩余原价299.99元｜R-PARTIAL-AMOUNT
+HS-M09｜原价300.01元优惠启用｜R-PROMO-RECALC、F10、F20、F30
+HS-M10｜满减订单构造：退货后剩余原价恰为300元｜R-PROMO-RECALC、F10、F20、F30
+HS-M11｜满减订单构造：退货后剩余原价299.99元｜R-PROMO-RECALC、F10、F20、F30
+HS-M12｜满减订单构造：退货后剩余原价300.01元｜R-PROMO-RECALC、F10、F20、F30
+SC27｜退货后剩余原价仍达优惠门槛｜R-PARTIAL-AMOUNT
+HS-M13｜无优惠一元商品退款｜R-PROMO-RECALC、F10、F20、F30
+HS-M14｜300.01元订单极小SKU舍入｜R-PROMO-RECALC、F10、F20、F30
+HS-M15｜400元订单满减后退一件｜R-PROMO-RECALC、F10、F20、F30
+HS-M16｜500元订单连续两件部分退货｜R-PROMO-RECALC、F10、F20、F30
+HS-M17｜500元订单非相邻SKU退货｜R-PROMO-RECALC、F10、F20、F30
+HS-M18｜301元订单退一元SKU｜R-PROMO-RECALC、F10、F20、F30
+HS-M19｜无优惠89.99元订单部分退款｜R-PROMO-RECALC、F10、F20、F30
+HS-M20｜满减订单多SKU退货尾差｜R-PROMO-RECALC、F10、F20、F30
+HS-V10-01｜银卡会员签收第6天申请｜R-RETURN-WINDOW
+HS-V10-02｜银卡会员签收第8天申请｜R-RETURN-WINDOW
+HS-V10-03｜金卡会员签收第6天申请｜R-RETURN-WINDOW
+HS-V10-04｜金卡会员签收第8天申请（V1.0统一7日口径）｜R-RETURN-WINDOW
+HS-V10-05｜客服拒绝售后申请｜R-REVIEW
+HS-V10-06｜经典订单先退B再退C累计退款｜R-PARTIAL-AMOUNT、F10、F20、F30
+
+【历史测试用例 32 条（均已独立验证）】（ID｜标题｜类型｜用例依赖规则｜场景｜输入｜预期）
+H-F01｜旧规则断言（范围：所有订单）：退款必须先质检后进行｜workflow｜用例依赖规则 R-QC｜场景 HS-F01｜输入 {"qc":"pending"}｜预期 {"outcome":"refund_blocked"}｜断言范围 all_orders
+H-F02｜普通质检通过后原支付渠道退款｜workflow｜用例依赖规则 R-QC、R-REFUND-CHANNEL｜场景 HS-F02｜输入 {"qc":"pass","payment":"card"}｜预期 {"outcome":"refund_to_original_channel"}
+H-F03｜普通会员签收第6天申请｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-F03｜输入 {"member_at_order":"ordinary","elapsed_hours":144}｜预期 {"outcome":"accept"}
+H-F04｜普通会员签收第8天申请｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-F04｜输入 {"member_at_order":"ordinary","elapsed_hours":192}｜预期 {"outcome":"reject"}
+H-F05｜金卡会员签收第10天申请（V1.0）｜eligibility｜用例依赖规则 R-RETURN-WINDOW、R-MEMBER｜场景 HS-F05｜输入 {"member_at_order":"gold","elapsed_hours":240}｜预期 {"outcome":"reject"}
+H-F06｜余额支付退款回原余额｜workflow｜用例依赖规则 R-QC、R-PAYMENT、R-REFUND-CHANNEL｜场景 HS-F06｜输入 {"payment":"balance","qc":"pass"}｜预期 {"outcome":"refund_to_original_balance"}
+H-M01｜经典B部分退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M01、SC28、SC31｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["B"],"previously_refunded":"0.00"}｜预期 {"refund":"49.00","cumulative_refunded":"49.00","remaining_goods_original":"258.00","recalculated_remaining_discount":"0.00"}
+H-M02｜经典A部分退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M02、SC31｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"149.00","cumulative_refunded":"149.00","remaining_goods_original":"158.00","recalculated_remaining_discount":"0.00"}
+H-M03｜经典C部分退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M03、SC31｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["C"],"previously_refunded":"0.00"}｜预期 {"refund":"9.00","cumulative_refunded":"9.00","remaining_goods_original":"298.00","recalculated_remaining_discount":"0.00"}
+H-M04｜经典B与C组合退货｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M04、SC31｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["B","C"],"previously_refunded":"0.00"}｜预期 {"refund":"108.00","cumulative_refunded":"108.00","remaining_goods_original":"199.00","recalculated_remaining_discount":"0.00"}
+H-M05｜经典订单整单退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M05、SC25｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["A","B","C"],"previously_refunded":"0.00"}｜预期 {"refund":"307.00","cumulative_refunded":"307.00","remaining_goods_original":"0.00","recalculated_remaining_discount":"0.00"}
+H-M06｜无优惠未达门槛部分退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M06、SC24｜输入 {"items":{"A":"100.00","B":"99.99","C":"100.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":false},"original_discount":"0.00","paid":"299.99","return_skus":["B"],"previously_refunded":"0.00"}｜预期 {"refund":"99.99","cumulative_refunded":"99.99","remaining_goods_original":"200.00","recalculated_remaining_discount":"0.00"}
+H-M07｜原价恰为300元且优惠启用｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M07、SC29｜输入 {"items":{"A":"100.00","B":"100.00","C":"100.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"250.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"50.00","cumulative_refunded":"50.00","remaining_goods_original":"200.00","recalculated_remaining_discount":"0.00"}
+H-M08｜无优惠299.99元订单｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M08、SC30｜输入 {"items":{"A":"200.00","B":"99.99"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":false},"original_discount":"0.00","paid":"299.99","return_skus":["B"],"previously_refunded":"0.00"}｜预期 {"refund":"99.99","cumulative_refunded":"99.99","remaining_goods_original":"200.00","recalculated_remaining_discount":"0.00"}
+H-M09｜原价300.01元优惠启用｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M09、SC29｜输入 {"items":{"A":"100.00","B":"100.00","C":"100.01"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"250.01","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"50.00","cumulative_refunded":"50.00","remaining_goods_original":"200.01","recalculated_remaining_discount":"0.00"}
+H-M10｜满减订单构造：退货后剩余原价恰为300元｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M10、SC29｜输入 {"items":{"A":"57.00","B":"300.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"57.00","cumulative_refunded":"57.00","remaining_goods_original":"300.00","recalculated_remaining_discount":"50.00"}
+H-M11｜满减订单构造：退货后剩余原价299.99元｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M11、SC30｜输入 {"items":{"A":"57.01","B":"299.99"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"7.01","cumulative_refunded":"7.01","remaining_goods_original":"299.99","recalculated_remaining_discount":"0.00"}
+H-M12｜满减订单构造：退货后剩余原价300.01元｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M12、SC27｜输入 {"items":{"A":"56.99","B":"300.01"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"307.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"56.99","cumulative_refunded":"56.99","remaining_goods_original":"300.01","recalculated_remaining_discount":"50.00"}
+H-M13｜无优惠一元商品退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M13、SC24｜输入 {"items":{"A":"1.00","B":"98.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":false},"original_discount":"0.00","paid":"99.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"1.00","cumulative_refunded":"1.00","remaining_goods_original":"98.00","recalculated_remaining_discount":"0.00"}
+H-M14｜300.01元订单极小SKU舍入｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT、F40｜场景 HS-M14、SC27｜输入 {"items":{"A":"1.00","B":"299.01"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"250.01","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"0.00","status":"financial_review_required","formula_due":"-49.00","gap":"49.00"}
+H-M15｜400元订单满减后退一件｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M15、SC31｜输入 {"items":{"A":"100.00","B":"100.00","C":"100.00","D":"100.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"350.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"100.00","cumulative_refunded":"100.00","remaining_goods_original":"300.00","recalculated_remaining_discount":"50.00"}
+H-M16｜500元订单连续两件部分退货｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M16、SC31｜输入 {"items":{"A":"125.00","B":"125.00","C":"125.00","D":"125.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"450.00","return_skus":["A","B"],"previously_refunded":"0.00"}｜预期 {"refund":"200.00","cumulative_refunded":"200.00","remaining_goods_original":"250.00","recalculated_remaining_discount":"0.00"}
+H-M17｜500元订单非相邻SKU退货｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M17、SC31｜输入 {"items":{"A":"220.00","B":"180.00","C":"100.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"450.00","return_skus":["A","C"],"previously_refunded":"0.00"}｜预期 {"refund":"270.00","cumulative_refunded":"270.00","remaining_goods_original":"180.00","recalculated_remaining_discount":"0.00"}
+H-M18｜301元订单退一元SKU｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M18、SC27｜输入 {"items":{"A":"1.00","B":"300.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"251.00","return_skus":["A"],"previously_refunded":"0.00"}｜预期 {"refund":"1.00","cumulative_refunded":"1.00","remaining_goods_original":"300.00","recalculated_remaining_discount":"50.00"}
+H-M19｜无优惠89.99元订单部分退款｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M19、SC24｜输入 {"items":{"A":"20.00","B":"30.00","C":"39.99"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":false},"original_discount":"0.00","paid":"89.99","return_skus":["C"],"previously_refunded":"0.00"}｜预期 {"refund":"39.99","cumulative_refunded":"39.99","remaining_goods_original":"50.00","recalculated_remaining_discount":"0.00"}
+H-M20｜满减订单多SKU退货尾差｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30、R-PAYMENT｜场景 HS-M20、SC31｜输入 {"items":{"A":"101.00","B":"103.00","C":"97.00"},"promotion":{"threshold":"300.00","discount":"50.00","enabled":true},"original_discount":"50.00","paid":"251.00","return_skus":["A","C"],"previously_refunded":"0.00"}｜预期 {"refund":"148.00","cumulative_refunded":"148.00","remaining_goods_original":"103.00","recalculated_remaining_discount":"0.00"}
+H-V10-01｜银卡会员签收第6天申请｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-V10-01｜输入 {"member_at_order":"silver","elapsed_hours":144}｜预期 {"outcome":"accept"}
+H-V10-02｜银卡会员签收第8天申请｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-V10-02｜输入 {"member_at_order":"silver","elapsed_hours":192}｜预期 {"outcome":"reject"}
+H-V10-03｜金卡会员签收第6天申请｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-V10-03｜输入 {"member_at_order":"gold","elapsed_hours":144}｜预期 {"outcome":"accept"}
+H-V10-04｜金卡会员签收第8天申请（V1.0统一7日口径）｜eligibility｜用例依赖规则 R-RETURN-WINDOW｜场景 HS-V10-04｜输入 {"member_at_order":"gold","elapsed_hours":192}｜预期 {"outcome":"reject"}
+H-V10-05｜客服拒绝售后申请｜workflow｜用例依赖规则 R-REVIEW｜场景 HS-V10-05｜输入 {"decision":"reject"}｜预期 {"outcome":"application_rejected"}
+H-V10-06｜经典订单先退B再退C，累计优惠重算｜money｜用例依赖规则 R-PARTIAL-AMOUNT、F10、F20、F30｜场景 HS-V10-06｜输入 {"items":{"A":"199.00","B":"99.00","C":"59.00"},"promotion":{"enabled":true,"threshold":"300.00","discount":"50.00"},"paid":"307.00","return_sequence":[["B"],["B","C"]],"previously_refunded_before_first":"0.00"}｜预期 {"first_refund":"49.00","second_refund":"59.00","cumulative_after_second":"108.00"}
+
+【输出格式】
+1. 受影响规则与场景：说明为什么受影响（沿依赖链）。然后各占一行输出：
+AFFECTED_RULES: <规则ID，英文逗号分隔>
+AFFECTED_SCENARIOS: <上面历史场景清单中的场景ID，英文逗号分隔>
+2. 逐条处置表：每条历史用例必须独占一行，不得合并或用范围表示，格式：
+| 用例ID | 保留/修改/作废 | 理由（说明是行为变化，还是仅来源更新） |
+3. 新增用例建议：每条独占一行，编号 N01、N02……，格式：| N01 | 标题 | 关联规则 | 关键断言 | 为什么现有用例不能覆盖 |
+4. 最后单独一行：NEW_CASE_COUNT=<新增用例的条数>
+----- END -----
+
+────────────────────────────────────────────────────────────────
+【提示词 B · 练习任务说明（在 A 的回答之后追问）】
+逐字取自练习任务；如需 AI 参与，请先发提示词 A，再在同一对话里发这一段。
+
+----- BEGIN -----
+练习：PRACTICE-D4-01（第四讲：V1.0到V1.1测试资产增量更新）
+
+【任务】
+从Demo4/5独立验证后的有效历史资产开始。结合V1.1需求变化、规则ID依赖和历史场景/用例引用，推导每项资产保留、修改、作废或新增的原因；区分行为变化与来源正式化。为变更结果选择不超过25条回归用例，并列出被排除项及风险依据。不要把比例分摊85.13作为有效历史预期，也不要为了凑增量声称V1.1改了已验证的优惠算法。
+
+【约束】
+- 回归用例上限：25
+- 历史基线已独立验证：是
+- 必须沿规则/场景/用例 ID 依赖推导：是
+- 保留已验证的财务预期值：是
+
+【交付物】
+- 规则→资产追溯：受影响规则到场景/用例ID
+- 迁移动作：动作和可复核理由
+- 回归选择：最多25条及风险优先级
+- 来源变更：来源更新与行为修改分开
+----- END -----

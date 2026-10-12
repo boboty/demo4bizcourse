@@ -4,6 +4,7 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from urllib.request import Request, urlopen
 
@@ -13,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from app import ailab
 from app.assets import validate_assets
 from app.migration import build_migration
+from app.student_export import export_all
 from app.state import ResetState
 
 
@@ -32,6 +34,10 @@ def main():
         second = ailab.build_d5_prompt(2)
         assert second['prompt'].replace(second['finance_block'], '') == ailab.build_prompt('d5_review1')['prompt']
         print('[PASS] AI实验提示词：6类提示词自带数据；财务规范揭示前不含49.00；Demo 5两轮仅差独立财务规范')
+        with tempfile.TemporaryDirectory() as folder:
+            written = export_all(Path(folder))
+            assert sorted(written) == ['demo3-scenario-selection', 'demo6-incremental-update'], written
+        print('[PASS] 两套学员材料包可导出（HTML+TXT），且已通过讲师答案泄漏扫描')
         ResetState().read()
         for name in ('index.html', 'app.js', 'style.css'):
             assert (ROOT / 'app/static' / name).is_file(), '缺少页面材料：' + name

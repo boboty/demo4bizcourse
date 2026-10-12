@@ -88,6 +88,25 @@ Demo 3／Demo 6页面提供学生输入下载，也可在服务启动后访问�
 
 稳定输入任务在 `demo_assets/practice/student/`；其中 `input_files` 以 `demo_assets/` 为根。讲师参考独立存放在 `demo_assets/practice/instructor/`，不要连同学生输入发出。参考展示一种符合约束的选择，学生可提出其他有依据的预算方案；依赖图扫描与金额正确性仍须核对。
 
+### 导出学员材料包（HTML + TXT）
+
+从学生输入资产一键导出两套**彼此独立**的材料包，可直接发给学员：
+
+```bash
+make export-students        # 等价于 .venv/bin/python scripts/export_student_packages.py [--out DIR]
+```
+
+默认输出到 `exports/student-packages/`（每个目录另有同名 `.zip`，仅含该包的 HTML 与 TXT，便于微信群分发；ZIP 固定时间戳，重复导出字节一致）：
+
+| 目录 | 内容 |
+| --- | --- |
+| `demo3-scenario-selection/` | `student-package.html`：任务、约束、交付物、预算 10/15/20 三档 AI 提示词、需求/结构化分析/业务规则/41条候选场景；`prompts.txt`：全部提示词纯文本 |
+| `demo6-incremental-update/` | `student-package.html`：任务、约束、交付物、提示词 A（变更影响分析）与 B（练习任务说明）、V1.0/V1.1 需求、财务规范、32条已验证历史用例、Rule Diff、规则版本差异；`prompts.txt` |
+
+HTML 为单文件离线页面（无外链、无 CDN），每段材料和每个提示词都有“复制”按钮，剪贴板被限制时自动选中文本；支持浅/深色与打印。输出不含 Markdown。
+
+**讲师答案隔离**：内容只来自 `practice/student/*.json` 及其 `input_files`，提示词来自 `app/ailab.py`。`practice/instructor/`、`frozen/`、`cases/` 与 `history/v1_1_additions.json` 若出现在输入清单中会被直接拒绝；导出前再用讲师参考中的全部长文本与长清单做反向泄漏扫描，命中任何一条则整批不写盘、返回非零退出码。候选场景表不展示 `note` 字段（SC36 的备注直接写明“应人工补回”）；Demo 6 不展示 `migration_criteria`、`baseline_status`（如 `legacy_unconditional_gate`）及指向 V1.1 目标答案文件的 `target_additions`。原始业务资产不变。输出是确定性的，重复导出字节一致。
+
 ## Reset与异常恢复
 
 页面不使用localStorage，不修改稳定业务资产。阶段、预算和执行报告只存在浏览器内存；刷新始终回到课堂起点。全局重置与CLI复位更新共享本地序号，已打开页面约3秒自动恢复Demo2／阶段1、预算15、未补漏、无执行结果、财务隐藏；休眠或断开服务的页面请刷新。Reset不删除实践导出文件或修改源码。

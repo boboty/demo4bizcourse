@@ -1,4 +1,4 @@
-.PHONY: setup dev test validate reset
+.PHONY: setup dev test validate reset export-students
 setup:
 	python3 -m venv .venv
 	.venv/bin/python -m pip install -r requirements.txt
@@ -10,3 +10,5 @@ validate:
 	.venv/bin/python scripts/validate_demo.py
 reset:
 	.venv/bin/python scripts/reset_demo.py
+export-students:
+	.venv/bin/python scripts/export_student_packages.py
