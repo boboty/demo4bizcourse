@@ -19,8 +19,40 @@
   const rowsTable=(heads,rows)=>`<div class="table-wrap"><table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${v??''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   function stageHtml(content){stage.innerHTML=`<div class="step-content">${content}</div>`}
   async function render(){const seq=++renderSeq, target=demo;clearError();try{if(target===2)await d2(seq);if(target===3)await d3(seq);if(target===4)await d4(seq);if(target===5)await d5(seq);if(target===6)await d6(seq)}catch(e){if(seq===renderSeq)showError(e)}}
+  function buildDemo2Prompt(prd) {
+    const paragraphs=(prd.paragraphs||[]).map(p=>p.source_id+'：'+p.text).join('\n');
+    const openQuestions=(prd.open_questions||[]).map(q=>q.question_id+'：'+q.text).join('\n');
+    return [
+      '请根据下面的商城售后需求设计10条有代表性的业务测试用例，覆盖正常流程、异常流程和边界条件。',
+      '每条包含：编号、测试场景、前置条件、操作步骤、预期结果。请用表格输出，并在最后列出需求尚待确认的规则。',
+      '以下是本轮输入的全部需求资料，不存在额外的项目文件或校验器说明。',
+      '文档：'+prd.document_id+'@'+prd.version+'《'+prd.title+'》',
+      '需求正文：\n'+paragraphs,
+      '待确认问题：\n'+openQuestions
+    ].join('\n\n');
+  }
   async function d2(seq){const d=await data('d2','/api/lesson/2');if(seq!==renderSeq||demo!==2)return;const title=d.prd.title; shell(`Demo 2｜${title}`,3);const cases=d.direct_generation.result.sample_cases||[];
-    if(step===0){stageHtml(`<section class="panel"><h2>需求输入 · 直接生成样例</h2><p class="lead">依据 V1.0 需求整理出 ${cases.length} 条示例用例。内容是冻结的预置演示结果，不是实时 AI 生成。</p><div class="grid">${cases.slice(0,6).map(c=>card(`${c.case_id} · ${c.title}`,`<span class="tag badge">${c.priority}</span>${c.expected}`)).join('')}</div>${details('查看全部用例与需求原文',rowsTable(['ID','优先级','前置条件','步骤','预期','来源'],cases.map(c=>[c.case_id,c.priority,esc((c.preconditions||[]).join('；')),esc((c.steps||[]).join(' → ')),esc(c.expected),esc((c.source_ids||[]).join(', '))]))+details('PRD V1.0',pre(d.prd)))}</section>`)}
+    if(step===0){const prompt=buildDemo2Prompt(d.prd);stageHtml(`<section class="panel"><h2>需求输入 · 直接生成样例</h2><p class="lead">依据 V1.0 需求整理出 ${cases.length} 条示例用例。内容是冻结的预置演示结果，不是实时 AI 生成。</p><div class="toolbar"><button id="demo2-copy-prompt" type="button" class="primary">复制 AI 生成提示词（含完整 PRD）</button><span id="demo2-copy-status" role="status" class="muted small">可直接粘贴到 AI 对话框进行实时生成</span></div><details id="demo2-prompt-details"><summary>预览完整提示词 / 手动复制</summary><textarea id="demo2-prompt-preview" readonly rows="14" style="width:100%;min-height:260px;resize:vertical;background:#111c2b;color:#f5f7fb;border:1px solid #52627a;border-radius:7px;padding:12px;font:16px/1.5 monospace;">${esc(prompt)}</textarea></details><div class="grid">${cases.slice(0,6).map(c=>card(`${c.case_id} · ${c.title}`,`<span class="tag badge">${c.priority}</span>${c.expected}`)).join('')}</div>${details('查看全部用例与需求原文',rowsTable(['ID','优先级','前置条件','步骤','预期','来源'],cases.map(c=>[c.case_id,c.priority,esc((c.preconditions||[]).join('；')),esc((c.steps||[]).join(' → ')),esc(c.expected),esc((c.source_ids||[]).join(', '))]))+details('PRD V1.0',pre(d.prd)))}</section>`);
+      const button=stage.querySelector('#demo2-copy-prompt');
+      const preview=stage.querySelector('#demo2-prompt-preview');
+      const status=stage.querySelector('#demo2-copy-status');
+      button.onclick=async()=>{
+        try {
+          if(navigator.clipboard&&window.isSecureContext) await navigator.clipboard.writeText(prompt);
+          else {
+            stage.querySelector('#demo2-prompt-details').open=true;
+            preview.focus();preview.select();
+            if(!document.execCommand('copy')) throw new Error('clipboard denied');
+          }
+          button.textContent='已复制 ✓';
+          status.textContent='已复制完整提示词，可以粘贴到 AI 对话框。';
+        } catch(error) {
+          stage.querySelector('#demo2-prompt-details').open=true;
+          preview.focus();preview.select();
+          status.textContent='浏览器阻止自动复制；已选中全文，请按 ⌘C / Ctrl+C。';
+        }
+      };
+    }
     if(step===1){const axes=d.structured_analysis, names={roles:'角色',inputs:'输入',flow:'业务流程',states:'状态',rules:'业务规则',external_dependencies:'外部依赖',risks:'风险',questions:'待确认问题'};const cards=Object.entries(axes).map(([k,v])=>{let arr=Array.isArray(v)?v:[];const body=arr.slice(0,4).map(x=>{if(typeof x==='string')return esc(x);const ev=x.evidence_status?tag(x.evidence_status):'';return `${ev} ${esc(x.name||x.statement||x.question||x.rule_id||text(x))}`}).join('<br>')||esc(text(v));return card(names[k]||k,body)});stageHtml(`<section class="panel"><h2>八维结构化分析 · 证据分级</h2><p>绿色事实 · 黄色推断 · 红色缺失或冲突。流程与状态是需求整理项，不单独标成证据结论。</p><div class="grid">${cards.join('')}</div>${details('查看完整分析资产',pre(axes))}</section>`)}
     if(step===2){let m=d.scenario_map, ruleById=Object.fromEntries(d.rules.map(r=>[r.rule_id,r]));let sceneEvidence=s=>{const rr=(s.rule_ids||[]).map(id=>ruleById[id]).filter(Boolean), statuses=rr.map(r=>r.evidence_status);if(statuses.includes('conflict'))return 'conflict';if(statuses.includes('missing'))return 'missing';if(statuses.includes('inference')||s.validity==='needs_confirmation')return 'inference';return 'fact'};let h=`<div class="scene-map"><div class="map-head">场景类型</div>${m.columns.map(c=>`<div class="map-head">${esc(c)}</div>`).join('')}`;m.rows.forEach(r=>{h+=`<div class="map-row">${esc(r)}</div>`+m.columns.map(c=>{let ids=m.cells[c][r]||[];return `<div>${ids.length?ids.map(id=>{let s=d.scenarios.find(x=>x.scenario_id===id);return `<details><summary>${esc(id)} · ${esc(s?.title||'场景')}</summary>${esc(s?.description||'场景定义见候选资产')}<br>${tag(sceneEvidence(s))}<br>规则：${esc((s?.rule_ids||[]).join(', '))}<br>条件：${esc(text(s?.conditions||{}))}<br>来源：${esc((s?.rule_ids||[]).flatMap(id=>ruleById[id]?.source_ids||[]).join(', ')||'未标注')}</details>`}).join(''):'<span class="empty">—</span>'}</div>`}).join('')});h+='</div>';stageHtml(`<section class="panel"><h2>V1.0 场景地图</h2><p>5 行 × 6 列。点击场景 ID 查看场景细节。</p><div class="table-wrap">${h}</div>${details('图例与全部场景',`正常 · 分支 · 异常 · 边界 · 外部依赖${pre(d.scenarios)}`)}<p class="teaching">教学观点：需求理解不足时，过早生成用例容易把假设写成预期。</p></section>`)}
   }
