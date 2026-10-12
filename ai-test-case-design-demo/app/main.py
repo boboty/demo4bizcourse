@@ -5,7 +5,9 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
+from app import ailab
 from app.assets import load, project_demo2
 from app.engine import calculate_finance_refund, calculate_proportional_refund, execute_v1_0_cases
 from app.migration import build_migration
@@ -26,7 +28,23 @@ def run_tests():
     return report
 
 
-def lesson_data(number, budget=15, manual=False):
+class PromptRequest(BaseModel):
+    kind: str
+    budget: int = 15
+    previous: str = Field('', max_length=ailab.MAX_TEXT)
+
+
+class AnalyzeRequest(BaseModel):
+    kind: str
+    budget: int = 15
+    manual: bool = False
+    text: str = Field('', max_length=ailab.MAX_TEXT)
+    text2: str = Field('', max_length=ailab.MAX_TEXT)
+    label1: str = Field('', max_length=80)
+    label2: str = Field('', max_length=80)
+
+
+def lesson_data(number, budget=15, manual=False, reveal=False):
     if number == 2:
         return project_demo2()
     if number == 3:
@@ -42,12 +60,15 @@ def lesson_data(number, budget=15, manual=False):
         correct = calculate_finance_refund(order, return_skus=order['return_skus'])
         gross = sum(Decimal(item['gross']) for item in order['items'])
         returning = sum(Decimal(item['gross']) for item in order['items'] if item['sku'] in order['return_skus'])
-        return {'cases': fixture, 'order': order, 'finance': load('finance/after_sales_funds.json'),
-                'comparison': {'assumed_refund': assumed, 'correct_refund': correct['refund'],
+        base = {'cases': fixture, 'order': order}
+        if not reveal:
+            return base  # 财务规范揭示前，接口也不返回规范与正确金额
+        return dict(base, finance=load('finance/after_sales_funds.json'), finance_reference=ailab.finance_reference(),
+                    comparison={'assumed_refund': assumed, 'correct_refund': correct['refund'],
                                'difference': str(Decimal(assumed) - Decimal(correct['refund'])),
                                'remaining_gross': correct['remaining_gross'], 'remaining_discount': correct['remaining_discount'],
                                'discount_share': str(returning - Decimal(assumed)), 'gross_total': str(gross),
-                               'paid': order['paid'], 'original_discount': order['original_discount']}}
+                               'paid': order['paid'], 'original_discount': order['original_discount']})
     if number == 5:
         return {'round1': load('frozen/demo5_review_round1.json'), 'round2': load('frozen/demo5_review_round2.json'),
                 'execution_report': run_tests(), 'finance': load('finance/after_sales_funds.json')}
@@ -86,11 +107,27 @@ def create_app(state_dir=None):
         return run_tests()
 
     @service.get('/api/lesson/{number}')
-    def lesson(number: int, budget: int = 15, manual: bool = False):
+    def lesson(number: int, budget: int = 15, manual: bool = False, reveal: bool = False):
         if number not in range(2, 7):
             raise HTTPException(404, '课堂只包含Demo 2～6')
         try:
-            return lesson_data(number, budget, manual)
+            return lesson_data(number, budget, manual, reveal)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @service.post('/api/ai-lab/prompt')
+    def ai_lab_prompt(request: PromptRequest):
+        try:
+            return JSONResponse(ailab.build_prompt(request.kind, request.budget, request.previous),
+                                headers={'Cache-Control': 'no-store'})
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @service.post('/api/ai-lab/analyze')
+    def ai_lab_analyze(request: AnalyzeRequest):
+        try:
+            return JSONResponse(ailab.analyze(request.kind, request.text, request.text2, request.budget, request.manual,
+                                              request.label1, request.label2), headers={'Cache-Control': 'no-store'})
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
 

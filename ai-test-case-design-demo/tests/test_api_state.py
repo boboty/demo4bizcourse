@@ -15,7 +15,7 @@ def test_all_lesson_routes_and_local_execution(tmp_path):
         assert client.get('/api/lesson/1').status_code == 404
         report = client.post('/api/run-tests').json()
         assert (report['total'], report['passed'], report['failed']) == (20, 20, 0)
-        assert client.get('/api/lesson/4').json()['comparison']['correct_refund'] == '49.00'
+        assert client.get('/api/lesson/4?reveal=true').json()['comparison']['correct_refund'] == '49.00'
 
 
 def test_reset_epoch_and_cli_state_share_baseline_signal(tmp_path):

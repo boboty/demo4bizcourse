@@ -10,6 +10,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from app import ailab
 from app.assets import validate_assets
 from app.migration import build_migration
 from app.state import ResetState
@@ -23,6 +24,14 @@ def main():
         migration = build_migration()
         assert migration['regression']['report']['failed'] == 0
         print('[PASS] 三项Rule Diff、增量动作与实际25条回归：', migration['summary'])
+        for kind in ailab.PROMPT_KINDS:
+            built = ailab.build_prompt(kind, 15)
+            assert built['prompt'] and 'demo_assets' not in built['prompt'], kind
+        assert '49.00' not in ailab.build_prompt('d4_eval1')['prompt'] + ailab.build_prompt('d4_eval2')['prompt']
+        assert 'F10' not in ailab.build_prompt('d5_review1')['prompt']
+        second = ailab.build_d5_prompt(2)
+        assert second['prompt'].replace(second['finance_block'], '') == ailab.build_prompt('d5_review1')['prompt']
+        print('[PASS] AI实验提示词：6类提示词自带数据；财务规范揭示前不含49.00；Demo 5两轮仅差独立财务规范')
         ResetState().read()
         for name in ('index.html', 'app.js', 'style.css'):
             assert (ROOT / 'app/static' / name).is_file(), '缺少页面材料：' + name
@@ -45,10 +54,17 @@ def main():
         for route in ['/', '/static/app.js', '/static/style.css'] + ['/api/lesson/%s' % n for n in range(2, 7)] + ['/api/practice/3', '/api/practice/6']:
             with urlopen(base + route, timeout=5) as response:
                 assert response.status == 200 and response.read(), route
+        with urlopen(base + '/api/lesson/4', timeout=5) as response:
+            assert '49.00' not in response.read().decode('utf-8'), '财务规范揭示前接口不得返回正确金额'
+        for kind in ailab.PROMPT_KINDS:
+            request = Request(base + '/api/ai-lab/prompt', method='POST', data=json.dumps({'kind': kind, 'budget': 10}).encode(),
+                              headers={'Content-Type': 'application/json'})
+            with urlopen(request, timeout=5) as response:
+                assert json.load(response)['prompt'], kind
         with urlopen(Request(base + '/api/run-tests', method='POST', data=b''), timeout=5) as response:
             report = json.load(response)
             assert (report['total'], report['passed'], report['failed']) == (20, 20, 0)
-        print('[PASS] 真实HTTP启动、页面本地资源、Demo 2～6、学员输入导出、20/20执行')
+        print('[PASS] 真实HTTP启动、页面本地资源、Demo 2～6、学员输入导出、AI实验提示词接口、20/20执行')
         print('DEMO READY — 无网络、无LLM API也可完整演示')
         return 0
     except Exception as exc:
