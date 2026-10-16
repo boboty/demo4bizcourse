@@ -18,6 +18,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 from starlette.exceptions import HTTPException
 
+from .demo_a import router as demo_a_router
+from .demo_c import router as demo_c_router
+from .demo_d import router as demo_d_router
+from .errors import ApiError
+
 STATIC = Path(__file__).parent / "static"
 ACTOR = {"id": "buyer-017", "role": "procurement_reader", "name": "采购观察员（固定演示身份）"}
 INITIAL = {
@@ -41,6 +46,9 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 logger.propagate = False
 app = FastAPI(title="某产业集团 · AI 安全课堂沙箱")
+app.include_router(demo_a_router)
+app.include_router(demo_c_router)
+app.include_router(demo_d_router)
 lock = threading.RLock()
 state: dict = {}
 
@@ -56,11 +64,6 @@ def reset_state():
 
 
 reset_state()
-
-
-class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str):
-        self.status, self.code, self.message = status, code, message
 
 
 @app.middleware("http")

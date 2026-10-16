@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>提示词注入与智能体越权 · 某产业集团</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/design-system/styles.css"><link rel="stylesheet" href="/static/app.css"><script src="/static/app.js" defer></script></head>
 <body><main class="by-container">
-<header><div><p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO B</p><h1>文档里的指令，能批准采购单吗？</h1><p class="subtitle">某产业集团 · 采购助手 / 全部数据虚构 / 离线确定性模拟，非真实大模型</p></div><button id="reset" class="secondary">重置全部状态</button></header>
+<header><div><p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO B</p><h1>文档里的指令，能批准采购单吗？</h1><p class="subtitle">某产业集团 · 采购助手 / 全部数据虚构 / 离线确定性模拟，非真实大模型</p><nav class="demo-nav" aria-label="课程 Demo"><a href="/demo/a">Demo A · 敏感数据边界</a><a href="/demo/b" aria-current="page">Demo B · 提示词注入</a><a href="/demo/c">Demo C · 合规审计</a><a href="/demo/d">Demo D · 日志分析</a></nav></div><button id="reset" class="secondary">重置全部状态</button></header>
 <section class="boundary"><strong>可信边界</strong><span>固定身份：采购观察员 buyer-017，仅可读取 PO-2026-017。检索文档与模型提案均不能授予审批权限。</span></section>
 <section class="controls card"><div><h2>课堂控制台</h2><p>先正常查询，再注入污染；用同一提案对比两个隔离沙箱。阶段为课堂分步展示。</p></div><div class="buttons"><button id="normal" class="secondary">1 正常只读查询</button><button id="pollute" class="secondary">2 注入污染文档</button><button id="replay">一键完整复演</button></div><p id="health" role="status">正在检查本地服务…</p></section>
 <section class="steps" aria-label="执行进度"><span id="step1">01 检索文档</span><span id="step2">02 模型提出工具调用</span><span id="step3">03 后端授权与执行</span><span id="step4">04 比对状态及审计</span></section>
@@ -10,5 +10,5 @@
 <section class="grid"><article class="card unsafe"><h2>03A 故障系统 <span class="tag danger">授权检查被跳过</span></h2><p>仅影响本地隔离虚构状态，用于展示错误实现。</p><div id="unsafe-state" class="business">待审批</div><button id="unsafe" class="secondary" disabled>故障注入：执行当前提案</button><p id="unsafe-result" class="result">尚未执行</p></article><article class="card safe"><h2>03B 安全系统 <span class="tag">真实后端授权</span></h2><p>角色、对象、动作由后端核验，前端无权授予审批权限。</p><div id="safe-state" class="business">待审批</div><button id="safe" disabled>安全模式：执行相同提案</button><p id="safe-result" class="result">尚未执行</p></article></section>
 <section class="conclusion" aria-live="polite"><h2>课堂结论</h2><p id="conclusion">模型可以建议调用工具；后端必须独立决定是否允许。点击“正常只读查询”开始。</p></section>
 <section class="card audit"><h2>04 审计证据</h2><p class="caption">授权结果：ALLOW 只读允许 · BYPASS 故障绕过 · DENY 后端拒绝。重置清空本轮审计。</p><div class="table-wrap"><table><thead><tr><th>时间 / 请求标识</th><th>运行 / 身份</th><th>对象 / 动作</th><th>系统 / 授权结果</th><th>前后状态</th></tr></thead><tbody id="audits"><tr><td colspan="5">尚无审计记录</td></tr></tbody></table></div><details><summary>当前提案执行详情（含前后快照）</summary><pre id="audit-detail">尚未执行</pre></details></section>
-<footer>课堂沙箱 · 单进程内存状态 · 不连接真实模型、采购平台或生产工具 · A / C / D 尚未实现</footer>
+<footer>课堂沙箱 · 单进程内存状态 · 不连接真实模型、采购平台或生产工具</footer>
 </main></body></html>
