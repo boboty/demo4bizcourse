@@ -1,0 +1,67 @@
+/* ============================================================
+   BenYan AI — Typography tokens
+   Display: Manrope · UI/Body: Inter · CJK: Noto Sans SC · Mono: JetBrains Mono
+   ============================================================ */
+:root {
+  /* ---- Families ---- */
+  --font-display: 'Manrope', 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --font-sans:    'Inter', 'Noto Sans SC', system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-cjk:     'Noto Sans SC', 'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Weights ---- */
+  --fw-regular: 400; /* @kind other */
+  --fw-medium:  500; /* @kind other */
+  --fw-semibold: 600; /* @kind other */
+  --fw-bold:    700; /* @kind other */
+  --fw-extrabold: 800; /* @kind other */
+
+  /* ---- Type scale (1.0 = 16px base, modular ~1.25) ---- */
+  --text-3xs: 11px;
+  --text-2xs: 12px;
+  --text-xs:  13px;
+  --text-sm:  14px;
+  --text-md:  16px;  /* body base */
+  --text-lg:  18px;
+  --text-xl:  21px;
+  --text-2xl: 26px;
+  --text-3xl: 33px;
+  --text-4xl: 42px;
+  --text-5xl: 54px;
+  --text-6xl: 68px;
+  --text-7xl: 86px;
+
+  /* ---- Line heights ---- */
+  --leading-tight: 1.1;
+  --leading-snug:  1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* ---- Letter spacing ---- */
+  --tracking-tighter: -0.03em;
+  --tracking-tight:   -0.015em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.04em;
+  --tracking-wider:   0.12em;  /* eyebrows / all-caps labels */
+  --tracking-widest:  0.22em;  /* logo subline "COURSES & DESIGN SYSTEMS" */
+
+  /* ---- Semantic roles ---- */
+  --role-display-font: var(--font-display);
+  --role-display-weight: var(--fw-extrabold);
+  --role-display-tracking: var(--tracking-tight);
+
+  --role-heading-font: var(--font-display);
+  --role-heading-weight: var(--fw-bold);
+
+  --role-body-font: var(--font-sans);
+  --role-body-weight: var(--fw-regular);
+  --role-body-size: var(--text-md);
+  --role-body-leading: var(--leading-relaxed);
+
+  --role-eyebrow-font: var(--font-sans);
+  --role-eyebrow-weight: var(--fw-semibold);
+  --role-eyebrow-tracking: var(--tracking-wider);
+  --role-eyebrow-size: var(--text-xs);
+
+  --role-mono-font: var(--font-mono);
+}

@@ -1,0 +1,45 @@
+/* ============================================================
+   BenYan AI — Effects: shadows, borders, blur, motion
+   Restrained elevation. Shadows are cool-ink tinted, never black.
+   ============================================================ */
+:root {
+  /* ---- Elevation (ink-tinted, soft) ---- */
+  --shadow-xs: 0 1px 2px rgba(31, 41, 51, 0.06);
+  --shadow-sm: 0 1px 3px rgba(31, 41, 51, 0.08), 0 1px 2px rgba(31, 41, 51, 0.05);
+  --shadow-md: 0 4px 12px rgba(31, 41, 51, 0.08), 0 2px 4px rgba(31, 41, 51, 0.05);
+  --shadow-lg: 0 12px 28px rgba(31, 41, 51, 0.10), 0 4px 10px rgba(31, 41, 51, 0.05);
+  --shadow-xl: 0 24px 56px rgba(31, 41, 51, 0.14), 0 8px 18px rgba(31, 41, 51, 0.06);
+
+  /* brand-tinted glow for emphasis (use rarely) */
+  --shadow-brand: 0 10px 30px rgba(13, 139, 118, 0.22);
+
+  /* inner / focus */
+  --shadow-inset: inset 0 1px 2px rgba(31, 41, 51, 0.06);
+  --ring-brand: 0 0 0 3px rgba(13, 139, 118, 0.28);
+  --ring-focus: 0 0 0 3px rgba(22, 169, 143, 0.35);
+
+  /* ---- Borders ---- */
+  --border-w: 1px;
+  --border-w-thick: 1.5px;
+  --hairline: 1px solid var(--border-subtle);
+  --rule: 1px solid var(--border-default);
+
+  /* ---- Blur / glass ---- */
+  --blur-sm: 6px;
+  --blur-md: 14px;
+  --glass-bg: rgba(247, 250, 248, 0.72);
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 320ms; /* @kind other */
+
+  /* signature brand gradients (use as accents, not full bgs) */
+  --grad-brand: linear-gradient(120deg, var(--emerald-700) 0%, var(--emerald-500) 100%);
+  --grad-wing:  linear-gradient(150deg, var(--ink-800) 0%, var(--emerald-700) 55%, var(--emerald-300) 100%);
+  --grad-dark:  linear-gradient(160deg, var(--ink-800) 0%, var(--ink-900) 100%);
+  --grad-mint-fade: linear-gradient(180deg, var(--emerald-50) 0%, var(--paper) 100%);
+}

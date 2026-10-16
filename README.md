@@ -12,6 +12,7 @@
 | `ai-test-case-design-demo/` | AI赋能业务测试用例设计与优化：悦选商城连续 Demo 2～6，场景预算、可信预期与增量更新（FastAPI，离线） |
 | `ai-rd-system-demo/` | AI 研发体系建设课堂 Demo：连续执行、工程环境、独立验证与能力沉淀 |
 | `token-task-lab/` | 通用“任务 → 调用链 → Token”教学实验台；天津货代为首个场景，可扩展到财务/研发/测试 |
+| `ai-security-demo/` | 人工智能安全保障课程：Demo B 提示词注入与智能体越权（FastAPI，离线） |
 | `price-benchmark-demo/` | 今日采购价格对标：正常判断与异常场景 A/B 对比（FastAPI，离线数据） |
 
 ## 课堂演示检查点

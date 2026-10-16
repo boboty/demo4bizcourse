@@ -1,0 +1,81 @@
+/* ============================================================
+   BenYan AI — Color tokens
+   Brand: Ink #1F2933 · Emerald #0D8B76 · Mint #D7F3EC · Paper #F7FAF8
+   ============================================================ */
+:root {
+  /* ---- Ink (charcoal-navy neutral) ---- */
+  --ink-900: #141b21;
+  --ink-800: #1f2933; /* BRAND ink */
+  --ink-700: #2c3a45;
+  --ink-600: #415362;
+  --ink-500: #5b6b78;
+  --ink-400: #7d8a94;
+  --ink-300: #a7b1b9;
+  --ink-200: #cfd6db;
+  --ink-100: #e7ebee;
+  --ink-50:  #f2f4f5;
+
+  /* ---- Emerald (brand primary) ---- */
+  --emerald-900: #073f35;
+  --emerald-800: #0a5a4c;
+  --emerald-700: #0c7361;
+  --emerald-600: #0d8b76; /* BRAND emerald */
+  --emerald-500: #16a98f;
+  --emerald-400: #4fc3ab;
+  --emerald-300: #8fd9c8;
+  --emerald-200: #bfe7db;
+  --emerald-100: #d7f3ec; /* BRAND mint */
+  --emerald-50:  #eaf7f3;
+
+  /* ---- Base surfaces ---- */
+  --paper: #f7faf8; /* BRAND paper */
+  --white: #ffffff;
+
+  /* ---- Functional accents (used sparingly) ---- */
+  --amber-500: #c98a16;
+  --amber-100: #f6ecd2;
+  --rose-500:  #c0493f;
+  --rose-100:  #f4ddda;
+  --blue-500:  #2f6f9e;
+  --blue-100:  #dcebf3;
+
+  /* ============================================================
+     Semantic aliases — reference these in components
+     ============================================================ */
+  --brand: var(--emerald-600);
+  --brand-strong: var(--emerald-700);
+  --brand-deep: var(--emerald-900);
+  --brand-soft: var(--emerald-100);
+  --brand-tint: var(--emerald-50);
+  --ink: var(--ink-800);
+
+  /* text */
+  --text-strong: var(--ink-900);
+  --text-body:   var(--ink-800);
+  --text-muted:  var(--ink-500);
+  --text-faint:  var(--ink-400);
+  --text-brand:  var(--emerald-700);
+  --text-on-brand: #ffffff;
+  --text-on-dark:  #eef2f4;
+  --text-on-dark-muted: #9aa7b0;
+
+  /* surfaces */
+  --surface-page:   var(--paper);
+  --surface-card:   var(--white);
+  --surface-raised: var(--white);
+  --surface-sunken: var(--ink-50);
+  --surface-brand-soft: var(--emerald-50);
+  --surface-dark:   var(--ink-800);
+  --surface-dark-2: var(--ink-900);
+
+  /* borders */
+  --border-subtle:  var(--ink-100);
+  --border-default: var(--ink-200);
+  --border-strong:  var(--ink-300);
+  --border-brand:   var(--emerald-300);
+  --border-on-dark: rgba(255,255,255,0.14);
+
+  /* states */
+  --focus-ring: var(--emerald-500);
+  --selection:  var(--emerald-100);
+}
