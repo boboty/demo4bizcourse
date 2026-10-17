@@ -46,7 +46,8 @@ def main():
     assert status == 200 and preview["authorization"] == "ALLOW"
     status, redacted = call("a/documents/PO-A-017/process/" + permitted["id"], {"confirmation": "CONFIRM_NEXT_STEP"})
     assert status == 200 and redacted["authorization"] == "ALLOW"
-    assert "DEMO-PERSON-017" not in redacted["after"] and "128000 元" in redacted["after"]
+    assert "110101199001010016" not in redacted["after"]
+    assert "19900000000" not in redacted["after"] and "128000 元" in redacted["after"]
 
     status, denied = call("a/documents/PO-A-018/identify", {})
     assert status == 201 and {field["category"] for field in denied["fields"]}

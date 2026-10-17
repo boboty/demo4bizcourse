@@ -1,13 +1,117 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>安全日志分析与人工核查 · 某产业集团</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/design-system/styles.css"><link rel="stylesheet" href="/static/app.css"><link rel="stylesheet" href="/static/demo-d.css"><script src="/static/demo-d.js" defer></script></head>
-<body><main class="by-container">
-<header><div><p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO D</p><h1>日志异常线索，怎样变成可核对的事实？</h1><p class="subtitle">某产业集团 · 小规模合成账号登录与 API 日志 / 本地离线模拟，不连接真实平台</p><nav class="demo-nav" aria-label="课程 Demo"><a href="/demo/a">Demo A · 敏感数据边界</a><a href="/demo/b">Demo B · 提示词注入</a><a href="/demo/c">Demo C · 合规审计</a><a href="/demo/d" aria-current="page">Demo D · 日志分析</a></nav></div><button id="reset" class="secondary">重置 D 演示</button></header>
-<section class="boundary"><strong>事实边界</strong><span>规则只筛查本地合成日志中的频率、时段和权限拒绝；离线模拟 AI 的风险判断仍是推测。人工核对必须引用本次原始日志并写明理由。示例不会封禁账号、隔离系统或变更生产环境。</span></section>
-<section class="controls card"><div><h2>课堂控制台</h2><p>按顺序执行日志汇总 → 确定性规则 → 离线模拟 AI 分析 → 人工核查 → 四栏简报。完整复演停在人工核查之前。</p></div><div class="d-actions"><button id="start" class="secondary">开始分析</button><button id="analyze" class="secondary" disabled>1 规则分析</button><button id="explain" class="secondary" disabled>2 模拟 AI 分析</button><button id="review" class="secondary" disabled>3 提交人工核查</button><button id="brief-button" class="secondary" disabled>4 生成四栏简报</button><button id="replay">一键复演至人工核查前</button></div><p id="health" role="status">正在连接本地服务…</p></section>
-<section class="steps" aria-label="执行进度"><span id="step1">01 汇总原始日志</span><span id="step2">02 规则异常线索</span><span id="step3">03 模拟 AI 风险解释</span><span id="step4">04 人工核对并修正</span><span id="step5">05 四栏简报</span></section>
-<p id="progress" role="status" aria-live="polite">初始状态：尚无 D 运行和审计记录。</p><p id="error" role="alert" hidden></p>
-<section class="grid"><article class="card"><h2>01 原始合成日志</h2><p id="time-basis" class="caption"></p><div class="table-wrap"><table><thead><tr><th>日志 ID</th><th>时间</th><th>账号</th><th>来源 IP</th><th>事件</th><th>内容</th></tr></thead><tbody id="logs"></tbody></table></div></article><article class="card"><h2>02 规则分析 <span class="tag">确定性规则</span></h2><p class="caption">候选事件带原始日志链接。未命中的记录作为正常/误报核查参照。</p><div id="findings">尚未分析。</div><pre id="normal">规则尚未运行。</pre></article></section>
-<section class="grid"><article class="card"><h2>03 离线模拟 AI 分析 <span class="tag danger">辅助信息，非事实</span></h2><div id="explanation">尚未分析。</div></article><article class="card"><h2>04 人工核查与修正</h2><p>固定演示身份：<strong>安全日志核查员（服务端固定）</strong>。核查结论针对所选规则线索或 AI 推测；客户端不能传入或篡改身份。“确认线索”仅确认可观察异常，不等于证实账号失陷或数据外传。</p><label for="finding">要核查的线索或 AI 推测</label><select id="finding" disabled></select><fieldset><legend>核查结论</legend><label><input type="radio" name="decision" value="确认"> 确认异常线索</label><label><input type="radio" name="decision" value="排除" checked> 排除 AI 推测</label><label><input type="radio" name="decision" value="待补证"> 待补充证据</label></fieldset><label for="rationale">核查理由（必填）</label><textarea id="rationale" rows="4" placeholder="例如：日志只显示一次非工作时段登录；没有凭据来源、响应字节数或出口流量证据。"></textarea><fieldset><legend>引用的原始日志（至少一条与所选线索相关的 ID）</legend><div id="evidence-select">完成分析后载入日志。</div></fieldset></article></section>
-<section class="card"><h2>05 核查结果、四栏简报与审计</h2><div id="review-result">等待人工核查。</div><button id="download-brief" class="secondary" disabled>导出四栏简报 JSON</button><div id="brief" hidden></div><h3>本课审计轨迹</h3><ol id="audit" class="audit-list"><li>暂无审计记录。</li></ol></section>
-<footer>本地合成课堂样本，不代表真实安全事件。推测不得自动写入已证实事实；所有建议动作仅为文字说明。</footer>
-</main></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Demo D · 从日志线索到事件简报</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/design-system/styles.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/demo-d.css">
+  <script src="/static/demo-d.js" defer></script>
+</head>
+<body>
+<main class="by-container classroom-shell d-classroom">
+  <header>
+    <div>
+      <p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO D</p>
+      <h1>从零散日志，到可核查的事件简报</h1>
+      <p class="subtitle">某产业集团 · 虚构账号与 API 日志 · 完全离线，不连接真实平台</p>
+      <nav class="demo-nav" aria-label="课程 Demo">
+        <a href="/demo/a">Demo A · 文档处理</a><a href="/demo/b">Demo B · 提示词注入</a>
+        <a href="/demo/c">Demo C · 合规审计</a><a href="/demo/d" aria-current="page">Demo D · 日志研判</a>
+      </nav>
+    </div>
+    <button id="reset" class="secondary">重置 D</button>
+  </header>
+
+  <section class="d-boundary" aria-label="研判边界">
+    <strong>研判边界</strong><span>日志和规则提供可观察线索；AI 只给待核实推测。最终简报分栏呈现，建议仅供人工参考。</span>
+    <span class="d-fiction">本课不会封禁账号或隔离系统</span>
+  </section>
+
+  <section class="steps" aria-label="事件研判流程">
+    <span id="step1">01 查看日志线索</span><span id="step2">02 聚合异常事件</span>
+    <span id="step3">03 辅助研判</span><span id="step4">04 人工核查</span><span id="step5">05 形成四栏简报</span>
+  </section>
+
+  <section class="controls d-control" aria-label="当前操作与反馈">
+    <div class="d-current"><span class="d-kicker">当前进度</span><p id="progress" role="status" aria-live="polite">尚未开始。先从一组分散的合成日志中找线索。</p><p id="next-step" class="d-next">下一步：汇总本次日志线索</p></div>
+    <div class="d-actions">
+      <button id="start">汇总日志线索</button>
+      <button id="analyze" hidden>聚合异常事件</button>
+      <button id="explain" hidden>生成辅助研判</button>
+      <button id="review" hidden>提交人工核查</button>
+      <button id="brief-button" hidden>生成四栏简报</button>
+      <button id="replay" class="secondary">复演到人工核查前</button>
+    </div>
+    <section class="conclusion d-feedback" aria-live="polite"><h2>当前结论</h2><p id="conclusion">尚无分析结论。建议与推测均不会自动执行或确认为事实。</p></section>
+    <p id="health" role="status">正在检查本地服务…</p>
+    <p id="error" role="alert" hidden></p>
+  </section>
+
+  <section class="d-workspace" aria-label="单屏事件研判工作区">
+    <article class="d-evidence card">
+      <div class="d-card-head"><div><span id="evidence-kicker" class="d-kicker">线索来源</span><h2 id="evidence-title">分散的日志记录</h2></div><span id="log-count" class="d-status">等待汇总</span></div>
+      <p id="log-intro" class="d-lead">来自认证、API 网关与授权审计的片段，先看它们各自记录了什么。</p>
+      <div id="signal-list" class="d-signals" aria-live="polite"></div>
+      <section id="left-ai" class="d-left-ai" hidden aria-label="AI辅助研判内容">
+        <div class="d-ai-banner"><span aria-hidden="true">AI</span><strong>辅助研判 · 不是已证实事实</strong><span class="d-status">离线模拟</span></div>
+        <details class="d-ai-detail"><summary>查看辅助研判依据</summary><p id="risk-explanation" class="d-risk-note"></p><p class="d-caption">相关日志：<span id="inference-evidence"></span></p></details>
+        <div class="d-inference"><span class="d-inference-label">待核实推测</span><p id="inference"></p><small id="uncertainty"></small></div>
+      </section>
+      <details class="d-technical"><summary>查看全部合成日志原文</summary>
+        <p id="time-basis" class="d-caption"></p>
+        <div class="table-wrap"><table><thead><tr><th>日志</th><th>时间</th><th>账号</th><th>来源 IP</th><th>事件与内容</th></tr></thead><tbody id="logs"></tbody></table></div>
+      </details>
+    </article>
+
+    <article class="d-focus card" aria-live="polite">
+      <div class="d-card-head"><div><span class="d-kicker" id="focus-kicker">课堂步骤 01</span><h2 id="focus-title">先把线索放到一起</h2></div><span id="focus-mark" class="d-status">待开始</span></div>
+      <section id="panel-start" class="d-panel">
+        <p class="d-lead">同一账号的多条记录分散在不同来源。汇总后，沿时间、账号和事件关系继续核对。</p>
+        <div class="d-spotlight"><span>课堂样本</span><strong>10 条</strong><span>认证 · API · 授权审计</span></div>
+        <div class="d-source-chips"><span>认证日志</span><span>API 网关</span><span>权限拒绝</span></div>
+      </section>
+      <section id="panel-analyzed" class="d-panel" hidden>
+        <p class="d-lead">确定性规则把相关记录归到同一账号和事件。候选线索仍需结合业务背景核对。</p>
+        <div class="d-aggregate-summary"><strong id="finding-count">—</strong><span>条候选事件</span><span class="d-divider"></span><strong id="normal-count">—</strong><span>条未命中记录</span></div>
+        <div id="findings" class="d-findings"></div>
+        <p class="d-note">未命中规则只作参照，不代表已确认正常。</p>
+      </section>
+      <section id="panel-reviewed" class="d-panel" hidden>
+        <div class="d-review-confirm"><span class="d-confirm-icon" aria-hidden="true">✓</span><div><strong>人工核查已记录</strong><p id="review-result"></p></div></div>
+        <div class="d-spotlight d-spotlight--soft"><span>核查边界</span><strong>线索结论 ≠ 账号失陷或数据外传事实</strong></div>
+      </section>
+      <section id="panel-brief" class="d-panel" hidden>
+        <div class="d-brief-heading"><div><span class="d-kicker">研判结果</span><h3>四栏事件简报</h3></div><span class="d-status d-status--safe">建议仅供人工参考</span></div>
+        <p id="brief-review-note" class="d-brief-review-note"></p>
+        <div id="brief" class="d-brief-grid"></div>
+        <p id="brief-meta" class="d-caption"></p>
+      </section>
+
+      <section id="review-form" class="d-review-form" hidden aria-label="人工核查表单">
+        <div class="d-form-heading"><strong>请核对线索并给出人工结论</strong><span>后端只接受本次相关日志 ID 与理由</span></div>
+        <label for="finding">本次核查对象</label><select id="finding"></select>
+        <fieldset><legend>人工判断</legend>
+          <label><input type="radio" name="decision" value="确认"> 确认可观察线索</label>
+          <label><input type="radio" name="decision" value="排除" checked> 排除该推测</label>
+          <label><input type="radio" name="decision" value="待补证"> 证据仍不足</label>
+        </fieldset>
+        <label for="rationale">核查理由</label><textarea id="rationale" rows="2" placeholder="说明现有日志能证明什么、仍缺少什么"></textarea>
+        <fieldset><legend>引用相关原始日志（至少一条）</legend><div id="evidence-select"></div></fieldset>
+      </section>
+    </article>
+  </section>
+
+  <details class="d-audit card"><summary>技术详情：审计轨迹、请求标识与当前运行</summary>
+    <p class="d-caption">审计记录由本地后端生成；重置只清空 Demo D。</p>
+    <ol id="audit" class="d-audit-list"><li>尚无审计记录。</li></ol>
+    <h3>当前运行完整数据</h3><pre id="detail">尚无运行。</pre>
+    <button id="download-brief" class="secondary" disabled>导出四栏简报 JSON</button>
+  </details>
+  <footer>所有账号、IP 与日志均为合成样本。AI 推测不自动进入事实，建议动作仅为文本。</footer>
+</main>
+<script src="/static/classroom-framework.js" defer></script>
+</body>
+</html>

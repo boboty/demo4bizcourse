@@ -1,16 +1,112 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI 使用合规审计与人工认定 · 某产业集团</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/design-system/styles.css"><link rel="stylesheet" href="/static/app.css"><link rel="stylesheet" href="/static/demo-c.css"><script src="/static/demo-c.js" defer></script></head>
-<body><main class="by-container">
-<header><div><p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO C</p><h1>发现规则线索后，谁来作出认定？</h1><p class="subtitle">某产业集团 · 虚构平台调用与制度条文 / 离线演示，不连接真实模型或平台</p><nav class="demo-nav" aria-label="课程 Demo"><a href="/demo/a">Demo A · 敏感数据边界</a><a href="/demo/b">Demo B · 提示词注入</a><a href="/demo/c" aria-current="page">Demo C · 合规审计</a><a href="/demo/d">Demo D · 日志分析</a></nav></div><button id="reset" class="secondary">重置 C 演示</button></header>
-<section class="boundary"><strong>认定边界</strong><span>规则命中只提供可追溯线索；离线模拟 AI 只做辅助解释。必须查看原始证据、填写理由并由固定演示人工身份认定，系统不会自动得出最终结论。</span></section>
-<section class="controls card"><div><h2>课堂控制台</h2><p>按顺序演示规则分析、辅助解释、证据核对和人工认定。完整复演停在人工认定按钮之前。</p></div><div class="c-actions"><label for="case-select">调用案例</label><select id="case-select"></select><button id="start" class="secondary">开始运行</button><button id="analyze" class="secondary" disabled>1 规则分析</button><button id="explain" class="secondary" disabled>2 模拟 AI 解释</button><button id="check" class="secondary" disabled>3 核对所选证据</button><button id="review" disabled>4 提交人工认定</button><button id="replay">完整复演至人工认定</button></div><p id="health" role="status">正在检查本地服务…</p></section>
-<section class="steps" aria-label="执行进度"><span id="step1">01 选择调用案例</span><span id="step2">02 确定性规则命中</span><span id="step3">03 离线辅助解释</span><span id="step4">04 核对原始证据</span><span id="step5">05 人工认定</span></section>
-<p id="progress" role="status" aria-live="polite">初始状态：尚无 C 运行和审计记录。</p><p id="error" role="alert" hidden></p>
-<section class="grid"><article class="card"><h2>01 虚构平台调用日志</h2><p class="caption">带稳定日志标识的本地演示记录。请勿输入真实业务信息。</p><pre id="log">选择案例并开始运行。</pre></article><article class="card"><h2>02 企业制度条文</h2><p class="caption">制度原文为课堂虚构资料，条文 ID 稳定可追溯。</p><pre id="policy">等待载入制度条文。</pre></article></section>
-<section class="grid"><article class="card"><h2>规则分析 <span class="tag">确定性后端规则</span></h2><pre id="analysis">尚未分析。</pre><button id="export" class="secondary" disabled>导出候选问题清单 JSON</button></article><article class="card"><h2>辅助解释 <span class="tag danger">离线模拟 AI · 非最终结论</span></h2><pre id="explanation">尚未生成。解释器不能写入人工认定。</pre></article></section>
-<section class="card"><h2>03 原始证据核对</h2><p class="caption">勾选并打开本运行的日志、制度或审批原文；只有明确按下核对按钮后才记为已核查。</p><div id="evidence" class="evidence-list">等待运行。</div><p id="evidence-status" class="result">尚未核对原始证据。</p></section>
-<section class="card"><h2>04 人工认定</h2><p class="caption">认定角色由服务端固定为合规审计员 audit-024。需引用本次已核对证据并填写理由；自动复演不会点击此按钮。</p><div class="review-form"><label for="decision">认定结论</label><select id="decision"><option>不违规</option><option>违规</option><option>证据不足</option></select><label for="rationale">人工理由</label><textarea id="rationale" rows="3" placeholder="说明规则线索与原始证据如何支持结论"></textarea></div><p id="review-result" class="result">尚未认定。</p></section>
-<section class="conclusion" aria-live="polite"><h2>课堂结论</h2><p id="conclusion">规则只能筛查线索；证据和制度原文须由人核对，最终认定始终由人工作出。</p></section>
-<section class="card audit"><h2>C 专属审计证据</h2><p class="caption">逐步记录固定人工身份、案例对象、动作、结果、运行 ID 和 request ID。C 重置只清空 C 的运行与审计。</p><div class="table-wrap"><table><thead><tr><th>时间 / 请求 ID</th><th>运行 / 身份</th><th>案例 / 动作</th><th>结果 / 理由</th></tr></thead><tbody id="audits"><tr><td colspan="4">尚无审计记录</td></tr></tbody></table></div><details><summary>当前运行完整追溯详情</summary><pre id="detail">尚无运行</pre></details></section>
-<footer>课堂沙箱 · C 专属内存状态 · 案例、模型解释和人工身份均为虚构演示</footer>
-</main></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Demo C · 从异常记录到人工认定</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/design-system/styles.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/demo-c.css">
+  <script src="/static/demo-c.js" defer></script>
+</head>
+<body>
+<main class="by-container classroom-shell c-classroom">
+  <header>
+    <div>
+      <p class="by-eyebrow by-eyebrow--tick">研习 · 人工智能安全保障 / DEMO C</p>
+      <h1>从异常记录，到有依据的人工认定</h1>
+      <p class="subtitle">某产业集团 · 虚构平台调用记录 · 全程离线，不连接真实模型或业务平台 <span class="c-health-separator" aria-hidden="true">·</span> <span id="health" role="status">正在检查本地服务…</span></p>
+      <nav class="demo-nav" aria-label="课程 Demo">
+        <a href="/demo/a">Demo A · 文档处理</a><a href="/demo/b">Demo B · 提示词注入</a>
+        <a href="/demo/c" aria-current="page">Demo C · 合规审计</a><a href="/demo/d">Demo D · 日志研判</a>
+      </nav>
+    </div>
+    <button id="reset" class="secondary c-reset">重置 C</button>
+  </header>
+
+  <section class="c-boundary" aria-label="人工认定边界">
+    <strong>认定边界</strong><span>规则负责发现线索，离线 AI 只辅助解释；只有人工核对原始证据、填写理由并提交，才会形成最终认定。</span>
+  </section>
+
+  <section class="steps" aria-label="审计流程">
+    <span id="step1">01 发现一条记录</span><span id="step2">02 查看规则线索</span>
+    <span id="step3">03 阅读辅助解释</span><span id="step4">04 核对原始证据</span>
+    <span id="step5">05 人工作出认定</span>
+  </section>
+
+  <section class="c-control card" aria-label="当前操作">
+    <div class="c-current"><span class="c-kicker">当前进度</span><p id="progress" role="status" aria-live="polite">尚未创建审计运行。</p><p id="next-step" class="c-next">下一步：建立本次审计案例</p></div>
+    <div class="c-actions">
+      <button id="start">建立审计案例</button>
+      <button id="analyze" hidden>查看规则线索</button>
+      <button id="explain" hidden>生成辅助解释</button>
+      <button id="check" hidden>记录证据核对</button>
+      <button id="review" hidden>提交人工认定</button>
+      <button id="replay" class="secondary">复演到认定前</button>
+    </div>
+    <div class="conclusion c-feedback" aria-live="polite"><h2>当前结论</h2><p id="conclusion">尚无运行，尚无结论。规则命中和 AI 解释都不等于违规认定。</p></div>
+    <p id="error" role="alert" hidden></p>
+  </section>
+
+  <section class="c-workspace" aria-label="单案例审计工作区">
+    <article class="c-record card">
+      <div class="c-card-head"><div><span class="c-kicker">审计案例</span><h2 id="case-title">等待载入案例</h2></div><span id="case-mark" class="c-status">待开始</span></div>
+      <p id="case-summary" class="c-summary">选择一条调用记录，沿着线索、解释、证据和人工认定逐步核查。</p>
+      <div class="c-facts" id="record-facts"></div>
+      <details class="c-technical"><summary>查看完整原始日志、制度条文与案例列表</summary>
+        <label for="case-select">切换课堂案例</label><select id="case-select"></select>
+        <h3>原始调用日志</h3><pre id="log">等待载入。</pre>
+        <h3>适用制度原文</h3><pre id="policy">等待载入。</pre>
+      </details>
+    </article>
+
+    <article class="c-focus card" aria-live="polite">
+      <div class="c-card-head"><div><span class="c-kicker" id="focus-kicker">课堂步骤 01</span><h2 id="focus-title">发现异常记录</h2></div><span id="focus-mark" class="c-status">等待开始</span></div>
+      <section id="panel-start" class="c-panel">
+        <p class="c-lead">先看这条记录的业务背景。系统将创建一个独立审计运行，后续每一步都关联到同一条原始记录。</p>
+        <div class="c-spotlight"><span>审计对象</span><strong id="record-id">—</strong><span id="record-date">—</span></div>
+        <p class="c-hint">演示默认聚焦“采购纪要 · 违规线索”；也可在左侧技术详情切换常规或证据不足案例。</p>
+      </section>
+      <section id="panel-analyzed" class="c-panel" hidden>
+        <p class="c-lead">后端确定性规则将调用字段与制度进行比对。命中只说明值得核查，不代表最终违规。</p>
+        <div id="rule-result" class="c-result"></div>
+        <details class="c-technical"><summary>查看规则编号与匹配字段</summary><pre id="analysis-detail">尚未分析。</pre></details>
+      </section>
+      <section id="panel-explained" class="c-panel" hidden>
+        <div class="c-explain-work">
+          <section class="c-explanation-summary">
+            <div class="c-ai-banner"><span aria-hidden="true">AI</span><strong>辅助解释 · 不是违规认定</strong></div>
+            <p id="explanation-text" class="c-lead"></p>
+            <div class="c-inference"><span>仍需人工核实</span><ul id="pending-list"></ul></div>
+          </section>
+          <section class="c-human-evidence">
+            <div class="c-evidence-heading"><strong>人工核对原始证据</strong><span>先阅读，再勾选</span></div>
+            <div id="evidence-list" class="c-evidence-list"></div>
+            <p id="evidence-status" class="c-inline-status">尚未记录证据核对。</p>
+          </section>
+        </div>
+      </section>
+      <section id="panel-review" class="c-panel" hidden>
+        <div class="c-review-status"><span>证据核查</span><strong id="review-evidence-status">—</strong><span>固定演示人工身份</span><strong>合规审计员 audit-024</strong></div>
+        <div class="c-review-form">
+          <label for="decision">人工认定</label>
+          <select id="decision"><option value="违规">违规</option><option value="不违规">不违规</option><option value="证据不足">证据不足</option></select>
+          <label for="rationale">认定理由</label>
+          <textarea id="rationale" rows="3" placeholder="引用已核对的原始记录与制度，说明结论依据"></textarea>
+        </div>
+        <p id="review-result" class="c-inline-status">结论由后端校验已核对证据和理由后记录。</p>
+      </section>
+    </article>
+  </section>
+
+  <details class="c-audit card"><summary>技术详情：审计轨迹、请求标识与运行 JSON</summary>
+    <p class="c-caption">这里只展示本地演示运行的追溯材料；重置只清空 Demo C 状态。</p>
+    <div class="table-wrap"><table><thead><tr><th>时间 / 请求标识</th><th>运行 / 身份</th><th>案例 / 动作</th><th>结果 / 原因</th></tr></thead><tbody id="audits"><tr><td colspan="4">尚无审计记录</td></tr></tbody></table></div>
+    <h3>当前运行完整详情</h3><pre id="detail">尚无运行。</pre>
+    <button id="export" class="secondary" disabled>导出候选问题清单 JSON</button>
+  </details>
+  <footer>课堂沙箱 · 案例、制度、解释器和人工身份均为虚构演示</footer>
+</main>
+<script src="/static/classroom-framework.js" defer></script>
+</body></html>

@@ -18,13 +18,13 @@ LOCK = threading.RLock()
 ACTOR = {"id": "buyer-017", "role": "procurement_reader", "name": "采购观察员（固定演示身份）"}
 CONTRACT_TEXT = (
     "某产业集团采购合同 HT-DEMO-017：供应商恒川设备（虚构）；签订日期 2026-10-01；"
-    "采购设备 40 台，总金额 128000 元。经办人林岚，演示身份号 DEMO-PERSON-017，"
-    "演示联系电话 DEMO-CONTACT-017。商业条款：单价 3200 元/台，年度采购上限 200 台，"
+    "采购设备 40 台，总金额 128000 元。经办人林岚，身份证号 110101199001010016（虚构无效示例），"
+    "联系电话 19900000000（明显占位号码，不对应真实个人）。商业条款：单价 3200 元/台，年度采购上限 200 台，"
     "达到 100 台后返利 8%。当前状态：待归档。"
 )
 RULES = {
     "ordinary": "RULE-BIZ-01：合同编号、供应商、日期、数量、金额、状态属于本示例的一般业务资料。",
-    "personal": "RULE-PII-01：经办人姓名、身份标识、联系方式可识别个人，按个人信息处理。",
+    "personal": "RULE-PII-01：经办人姓名、身份证号、联系电话可识别个人，按个人信息处理。",
     "commercial": "RULE-COM-01：单价、采购上限、返利条件属于虚构商业敏感信息。",
 }
 FIELDS = (
@@ -34,8 +34,8 @@ FIELDS = (
     ("quantity", "采购数量", "ordinary", "40 台"),
     ("amount", "合同金额", "ordinary", "128000 元"),
     ("owner_name", "经办人姓名", "personal", "林岚"),
-    ("owner_id", "身份标识", "personal", "DEMO-PERSON-017"),
-    ("owner_contact", "联系方式", "personal", "DEMO-CONTACT-017"),
+    ("owner_id", "身份证号", "personal", "110101199001010016"),
+    ("owner_contact", "联系电话", "personal", "19900000000"),
     ("unit_price", "采购单价", "commercial", "3200 元/台"),
     ("annual_limit", "年度采购上限", "commercial", "200 台"),
     ("rebate", "返利条件", "commercial", "100 台后返利 8%"),

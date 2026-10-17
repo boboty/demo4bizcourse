@@ -63,13 +63,14 @@ def run() -> dict:
     post(f"/api/v1/a/documents/PO-A-017/process/{aid}", {"confirmation": "CONFIRM_NEXT_STEP"}, 409)
     finding = post(f"/api/v1/a/runs/{aid}/assistant-review")
     assert finding["finding"]["evidence"] == "128000 元" and finding["finding"]["suggested_category"] == "personal"
-    post(f"/api/v1/a/runs/{aid}/correction", {"evidence": "DEMO-PERSON-017", "suggested_category": "personal",
+    post(f"/api/v1/a/runs/{aid}/correction", {"evidence": "恒川设备", "suggested_category": "personal",
         "corrected_category": "ordinary", "reason": "无效证据测试。"}, 422)
     correction = post(f"/api/v1/a/runs/{aid}/correction", {"evidence": "128000 元", "suggested_category": "personal",
         "corrected_category": "ordinary", "reason": "合同金额不是可识别自然人的证据。"})
     assert correction["status"] == "human_corrected"
     preview = post(f"/api/v1/a/runs/{aid}/preview")
-    assert preview["authorization"] == "ALLOW" and "DEMO-PERSON-017" not in preview["after"]
+    assert (preview["authorization"] == "ALLOW" and "110101199001010016" not in preview["after"]
+            and "19900000000" not in preview["after"])
     post(f"/api/v1/a/documents/PO-A-017/process/{aid}", {}, 422)
     result = post(f"/api/v1/a/documents/PO-A-017/process/{aid}", {"confirmation": "CONFIRM_NEXT_STEP"})
     assert result["authorization"] == "ALLOW" and "128000 元" in result["after"]

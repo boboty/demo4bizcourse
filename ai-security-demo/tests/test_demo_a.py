@@ -40,12 +40,23 @@ def test_deterministic_identification_and_authorized_server_redaction(client):
     assert identified["source_text"] == CONTRACT_TEXT
     assert {field["category"] for field in identified["fields"]} == {"ordinary", "personal", "commercial"}
     assert all(field["evidence"] == field["value"] for field in identified["fields"])
+    personal = {field["label"]: field for field in identified["fields"] if field["category"] == "personal"}
+    assert personal["身份证号"]["value"] == "110101199001010016"
+    assert len(personal["身份证号"]["value"]) == 18
+    assert personal["联系电话"]["value"] == "19900000000"
+    assert len(personal["联系电话"]["value"]) == 11
+    assert personal["身份证号"]["start"] == CONTRACT_TEXT.index("110101199001010016")
+    assert personal["身份证号"]["evidence"] == "110101199001010016"
+    assert personal["联系电话"]["start"] == CONTRACT_TEXT.index("19900000000")
+    assert personal["联系电话"]["evidence"] == "19900000000"
+    assert "身份证号" in personal["身份证号"]["rule"] and "联系电话" in personal["联系电话"]["rule"]
     result = process(client, identified)
     assert result.status_code == 200
     body = result.json()
     assert body["authorization"] == "ALLOW"
     assert "HT-DEMO-017" in body["after"] and "128000 元" in body["after"]
-    assert "DEMO-PERSON-017" not in body["after"] and "3200 元/台" not in body["after"]
+    assert "110101199001010016" not in body["after"] and "19900000000" not in body["after"]
+    assert "3200 元/台" not in body["after"]
     assert body["after"].count("[已脱敏]") == 6
     assert "不保证匿名化" in body["notice"]
     assert [audit["action"] for audit in client.get("/api/v1/a/state").json()["audits"]] == [
@@ -139,7 +150,7 @@ def test_a_human_review_and_explicit_confirmation_are_required(client):
     correction = {"evidence": "128000 元", "suggested_category": "personal",
                   "corrected_category": "ordinary", "reason": "金额不是可识别自然人的证据。"}
     assert client.post(f"/api/v1/a/runs/{run['id']}/correction",
-                       json={**correction, "evidence": "DEMO-PERSON-017"}).status_code == 422
+                       json={**correction, "evidence": "恒川设备"}).status_code == 422
     assert client.post(f"/api/v1/a/runs/{run['id']}/correction", json=correction).status_code == 200
     assert client.post(path, json={"confirmation": "CONFIRM_NEXT_STEP"}).status_code == 409
     assert client.post(f"/api/v1/a/runs/{run['id']}/preview", json={}).status_code == 200
@@ -165,7 +176,8 @@ def test_a_reset_invalidates_only_a_state_and_b_reset_stays_independent(client):
 def test_a_page_and_assets_are_offline_and_separate(client):
     assert client.get("/demo/a").status_code == 200
     assert client.get("/demo/b").status_code == 200
-    assert "DOC-CLASSIFIED-009" in client.get("/demo/a").text
+    assert "演示涉密前置阻断" in client.get("/demo/a").text
+    assert "DOC-CLASSIFIED-009" in client.get("/static/demo-a.js").text
     assert client.get("/api/v1/a/documents").json()["items"][-1]["body_available"] is False
     for path in ["demo-a.js", "demo-a.css", "design-system/styles.css", "design-system/tokens/fonts.css"]:
         assert client.get(f"/static/{path}").status_code == 200
